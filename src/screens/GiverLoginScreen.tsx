@@ -58,7 +58,7 @@ export default function GiverLoginScreen({ navigation }: any) {
           const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
           
           if (sessionData.session) {
-            navigation.navigate('GiverCreate');
+            navigation.navigate('GiverDashboard');
           } else {
              // If manual parsing is needed (often for deep links), we'd do it here.
              // For now, let's assume successful redirect means we can proceed 
@@ -69,7 +69,7 @@ export default function GiverLoginScreen({ navigation }: any) {
              
              // Fallback: Just navigate for now if result is success (MVP)
              // In prod, verify session strictly.
-             navigation.navigate('GiverCreate');
+             navigation.navigate('GiverDashboard');
           }
         }
       }
@@ -83,11 +83,11 @@ export default function GiverLoginScreen({ navigation }: any) {
   // Check if already logged in
   useEffect(() => {
     // Auto-redirect disabled for testing/MVP visibility
-    // supabase.auth.getSession().then(({ data: { session } }) => {
-    //   if (session) {
-    //     navigation.navigate('GiverCreate');
-    //   }
-    // });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigation.navigate('GiverDashboard');
+      }
+    });
   }, []);
 
   return (

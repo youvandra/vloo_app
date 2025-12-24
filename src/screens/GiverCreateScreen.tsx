@@ -5,7 +5,7 @@ import { COLORS, FONTS } from '../lib/theme';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Card } from '../components/Card';
-import { ArrowLeft, LogOut } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
 
 export default function GiverCreateScreen({ navigation }: any) {
@@ -22,11 +22,6 @@ export default function GiverCreateScreen({ navigation }: any) {
     navigation.navigate('GiverBind', { purpose, message, passphrase, unlockDate: unlockDate.toISOString() });
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigation.navigate('GiverLogin');
-  };
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -34,9 +29,6 @@ export default function GiverCreateScreen({ navigation }: any) {
           <ArrowLeft color={COLORS.foreground} size={24} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Create VLOO</Text>
-        <TouchableOpacity onPress={handleLogout} style={{ marginLeft: 'auto' }}>
-          <LogOut color={COLORS.error || '#FF4444'} size={24} />
-        </TouchableOpacity>
       </View>
 
       <KeyboardAvoidingView 

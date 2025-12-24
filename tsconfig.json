@@ -10,8 +10,7 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    ".eslintrc.js",
-    "babel.config.js"
+    ".eslintrc.js"
   ],
   "exclude": [
     "node_modules",

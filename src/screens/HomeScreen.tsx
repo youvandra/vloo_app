@@ -4,8 +4,18 @@ import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, FONTS } from '../lib/theme';
 import { Button } from '../components/Button';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { supabase } from '../lib/supabase';
 
 export default function HomeScreen({ navigation }: any) {
+  const handleGiverPress = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      navigation.navigate('GiverDashboard');
+    } else {
+      navigation.navigate('GiverLogin');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -17,7 +27,7 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.actions}>
           <Button 
             title="Giver" 
-            onPress={() => navigation.navigate('GiverLogin')}
+            onPress={handleGiverPress}
             variant="primary"
             style={styles.button}
           />
