@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, StatusBar, RefreshControl, ActivityIndicator, BackHandler } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, RefreshControl, BackHandler } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
-import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, ChevronRight } from 'lucide-react-native';
+import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid } from 'lucide-react-native';
 
-const { width } = Dimensions.get('window');
+import SwipeableCardStack from '../../components/SwipeableCardStack';
 
 export default function GiverDashboardScreen({ navigation }: any) {
   const [vloos, setVloos] = useState<any[]>([]);
@@ -27,7 +27,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
       const { data, error } = await supabase
         .from('vloos')
-        .select('*')
+        .select('*, cards(id)')
         .eq('giver_id', session.user.id)
         .order('created_at', { ascending: false });
 
@@ -55,14 +55,36 @@ export default function GiverDashboardScreen({ navigation }: any) {
     fetchVloos();
   };
 
-  // Mock Data for UI
-  const recentTransactions = [
-    { id: 1, name: 'Thibaut', image: 'https://i.pravatar.cc/150?u=1' },
-    { id: 2, name: 'David', image: 'https://i.pravatar.cc/150?u=2' },
-    { id: 3, name: 'Antoni', image: 'https://i.pravatar.cc/150?u=3' },
-    { id: 4, name: 'Fade', image: 'https://i.pravatar.cc/150?u=4' },
-    { id: 5, name: 'Lucas', image: 'https://i.pravatar.cc/150?u=5' },
-  ];
+  const renderCard = (item: any) => {
+    return (
+      <View style={[styles.mainCard, { backgroundColor: COLORS.primary }]}>
+        <View style={styles.cardTop}>
+          <View style={styles.cardLogo}>
+            <View style={styles.logoLeft} />
+            <View style={styles.logoRight} />
+          </View>
+        </View>
+        
+        <Text style={styles.cardNumber}>
+          {item.cards?.[0]?.id || 'No Card Linked'}
+        </Text>
+        
+        <View style={styles.cardBottom}>
+          <View>
+            <Text style={styles.cardLabel}>Holder Name</Text>
+            <Text style={styles.cardValue}>{user?.user_metadata?.full_name || 'VLOO Giver'}</Text>
+          </View>
+          <View>
+            <Text style={styles.cardLabel}>Exp</Text>
+            <Text style={styles.cardValue}>
+              {item.unlock_date ? new Date(item.unlock_date).toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' }) : '09/29'}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
 
   return (
     <View style={styles.container}>
@@ -96,34 +118,10 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
           {/* Cards Stack */}
           <View style={styles.cardStackContainer}>
-            {/* Stacked Cards Effect */}
-            <View style={[styles.stackedCard, styles.stack3]} />
-            <View style={[styles.stackedCard, styles.stack2]} />
-            <View style={[styles.stackedCard, styles.stack1]} />
-            
-            {/* Main Card */}
-            <View style={[styles.mainCard, { backgroundColor: COLORS.primary }]}>
-              <View style={styles.cardTop}>
-                {/* V-Shape Logo Mock */}
-                <View style={styles.cardLogo}>
-                  <View style={styles.logoLeft} />
-                  <View style={styles.logoRight} />
-                </View>
-              </View>
-              
-              <Text style={styles.cardNumber}>2781 8191 6671 3190</Text>
-              
-              <View style={styles.cardBottom}>
-                <View>
-                  <Text style={styles.cardLabel}>Holder Name</Text>
-                  <Text style={styles.cardValue}>{user?.user_metadata?.full_name || 'VLOO Giver'}</Text>
-                </View>
-                <View>
-                  <Text style={styles.cardLabel}>Exp</Text>
-                  <Text style={styles.cardValue}>09/29</Text>
-                </View>
-              </View>
-            </View>
+            <SwipeableCardStack
+              data={vloos.length > 0 ? vloos : [{ id: 'mock', cards: [{ id: '2781 8191 6671 3190' }], unlock_date: new Date().toISOString() }]}
+              renderItem={renderCard}
+            />
           </View>
 
           {/* Action Buttons */}
@@ -150,24 +148,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
-          {/* Recent Transactions */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent Transaction</Text>
-              <TouchableOpacity>
-                <Text style={styles.seeAllText}>View All</Text>
-              </TouchableOpacity>
-            </View>
-            
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentList}>
-              {recentTransactions.map((item) => (
-                <View key={item.id} style={styles.recentItem}>
-                  <Image source={{ uri: item.image }} style={styles.recentAvatar} />
-                  <Text style={styles.recentName}>{item.name}</Text>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
 
           {/* Card Detail */}
           <View style={[styles.section, { paddingBottom: 100 }]}>
@@ -189,7 +169,9 @@ export default function GiverDashboardScreen({ navigation }: any) {
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Card Number</Text>
               <View style={styles.detailValueContainer}>
-                <Text style={styles.detailValue}>2781 8191 6671 3190</Text>
+                <Text style={styles.detailValue}>
+                  {vloos.length > 0 && vloos[0].cards?.[0]?.id ? vloos[0].cards[0].id : '2781 8191 6671 3190'}
+                </Text>
                 <Copy size={16} color={COLORS.accent} style={{ marginLeft: 8 }} />
               </View>
             </View>
@@ -291,29 +273,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
     marginTop: 10,
-  },
-  stackedCard: {
-    position: 'absolute',
-    height: 220,
-    borderRadius: 24,
-  },
-  stack3: {
-    width: width * 0.75,
-    top: -24,
-    backgroundColor: COLORS.primary,
-    opacity: 0.3,
-  },
-  stack2: {
-    width: width * 0.82,
-    top: -12,
-    backgroundColor: COLORS.accent,
-    opacity: 0.5,
-  },
-  stack1: {
-    width: width * 0.88,
-    top: -6,
-    backgroundColor: COLORS.primary,
-    opacity: 0.8,
+    zIndex: 10, // Ensure stack is above other elements if needed
   },
   mainCard: {
     width: '100%',
@@ -443,26 +403,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodySemiBold,
     fontSize: 12,
     color: COLORS.accent,
-  },
-  recentList: {
-    gap: 20,
-    paddingHorizontal: 4,
-  },
-  recentItem: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  recentAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 2,
-    borderColor: '#333',
-  },
-  recentName: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 12,
-    color: '#888',
   },
 
   // Detail Row
