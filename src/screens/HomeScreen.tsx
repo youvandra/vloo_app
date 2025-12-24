@@ -5,6 +5,7 @@ import { COLORS, FONTS } from '../lib/theme';
 import { Button } from '../components/Button';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
+import { HeroCard } from '../components/HeroCard';
 
 export default function HomeScreen({ navigation }: any) {
   const handleGiverPress = async () => {
@@ -20,7 +21,7 @@ export default function HomeScreen({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.branding}>
-          <Text style={styles.title}>VLOO</Text>
+          <HeroCard />
           <Text style={styles.subtitle}>Your Crypto Access</Text>
         </View>
 

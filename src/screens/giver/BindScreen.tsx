@@ -37,25 +37,53 @@ export default function GiverBindScreen({ route, navigation }: any) {
       }
 
       // 4. Get User
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      let user = session?.user;
+      
+      if (sessionError || !user) {
+        console.log('Session missing or invalid in BindScreen, attempting refresh...');
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshData.session?.user) {
+          user = refreshData.session.user;
+          console.log('Session successfully refreshed');
+        } else {
+           console.error('Auth User Error (after refresh):', refreshError || sessionError);
+           Alert.alert('Session Expired', 'Please log in again to continue.', [
+             { text: 'OK', onPress: () => navigation.navigate('GiverLogin') }
+           ]);
+           setLoading(false);
+           return;
+        }
+      }
+
+      console.log('Binding VLOO for User:', user.id);
 
       // 5. Save to Supabase
       setStatus('Saving to VLOO network...');
       
+      const insertPayload = {
+        encrypted_private_key: encryptedKey,
+        wallet_address: address,
+        unlock_date: unlockDate,
+        message: message,
+        status: 'locked',
+        giver_id: user.id
+      };
+      
+      console.log('Insert Payload:', JSON.stringify(insertPayload));
+
       const { data: vlooData, error: vlooError } = await supabase
         .from('vloos')
-        .insert([{
-          encrypted_private_key: encryptedKey,
-          wallet_address: address,
-          unlock_date: unlockDate,
-          message: message,
-          status: 'locked',
-          giver_id: user?.id
-        }])
+        .insert([insertPayload])
         .select()
         .single();
 
-      if (vlooError) throw vlooError;
+      if (vlooError) {
+         console.error('Supabase Insert Error:', vlooError);
+         throw new Error(`Database Error: ${vlooError.message} (Code: ${vlooError.code})`);
+      }
 
       const { error: cardError } = await supabase
         .from('cards')

@@ -21,7 +21,11 @@ export default function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="GiverLogin" component={GiverLoginScreen} />
-        <Stack.Screen name="GiverDashboard" component={GiverDashboardScreen} />
+        <Stack.Screen 
+          name="GiverDashboard" 
+          component={GiverDashboardScreen} 
+          options={{ gestureEnabled: false }}
+        />
         <Stack.Screen name="GiverCreate" component={GiverCreateScreen} />
         <Stack.Screen name="GiverBind" component={GiverBindScreen} />
         <Stack.Screen name="GiverSuccess" component={GiverSuccessScreen} />
