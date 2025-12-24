@@ -1,6 +1,6 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, BackHandler, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, BackHandler, Dimensions, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Defs, Pattern, Rect, Circle } from 'react-native-svg';
@@ -161,126 +161,130 @@ export default function GiverDashboardScreen({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>My VLOOs</Text>
-          <Text style={styles.headerSubtitle}>Manage your crypto gifts</Text>
-        </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <LogOut color={COLORS.error} size={24} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Summary Section */}
-      <View style={styles.summaryContainer}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total VLOOs</Text>
-          <Text style={styles.summaryValue}>{vloos.length}</Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Claimed</Text>
-          <Text style={styles.summaryValue}>
-            {vloos.filter(v => v.status === 'claimed').length}
-          </Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Unclaimed</Text>
-          <Text style={styles.summaryValue}>
-            {vloos.filter(v => v.status !== 'claimed').length}
-          </Text>
-        </View>
-      </View>
-
-      {loading && !refreshing ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
-      ) : (
-        <View style={styles.deckContainer}>
-          <View style={styles.listContainer}>
-            <FlatList
-              data={vloos}
-              renderItem={renderItem}
-              keyExtractor={(item) => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={CARD_WIDTH + 20} // Card width + margin
-              decelerationRate="fast"
-              onViewableItemsChanged={onViewableItemsChanged}
-              viewabilityConfig={viewabilityConfig}
-              contentContainerStyle={styles.listContent}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
-              ListEmptyComponent={
-                <View style={[styles.emptyState, { width: width - 48 }]}>
-                  <Gift size={64} color={COLORS.primary} style={{ opacity: 0.3, marginBottom: 20 }} />
-                  <Text style={styles.emptyText}>You haven't created any VLOOs yet.</Text>
-                  <Button 
-                    title="Create your first VLOO" 
-                    onPress={() => navigation.navigate('GiverCreate')}
-                    variant="primary"
-                    style={{ marginTop: 20 }}
-                  />
-                </View>
-              }
-            />
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.headerTitle}>My VLOOs</Text>
+            <Text style={styles.headerSubtitle}>Manage your crypto gifts</Text>
           </View>
-
-          {/* Address Display - Now directly under the cards */}
-          {vloos.length > 0 && vloos[activeIndex] && (
-            <View style={styles.addressContainer}>
-               <Text style={styles.addressLabel}>Card Wallet Address</Text>
-               <View style={styles.addressBox}>
-                 <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="middle">
-                   {vloos[activeIndex].wallet_address || 'No address provided'}
-                 </Text>
-               </View>
-            </View>
-          )}
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <LogOut color={COLORS.error} size={24} />
+          </TouchableOpacity>
         </View>
-      )}
 
-      {vloos.length > 0 && (
-        <TouchableOpacity 
-          style={styles.fab}
-          onPress={() => navigation.navigate('GiverCreate')}
-        >
-          <Plus color={COLORS.inverse} size={32} />
-        </TouchableOpacity>
-      )}
+        {/* Summary Section */}
+        <View style={styles.summaryContainer}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Total VLOOs</Text>
+            <Text style={styles.summaryValue}>{vloos.length}</Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Claimed</Text>
+            <Text style={styles.summaryValue}>
+              {vloos.filter(v => v.status === 'claimed').length}
+            </Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Unclaimed</Text>
+            <Text style={styles.summaryValue}>
+              {vloos.filter(v => v.status !== 'claimed').length}
+            </Text>
+          </View>
+        </View>
+
+        {loading && !refreshing ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+          </View>
+        ) : (
+          <View style={styles.deckContainer}>
+            <View style={styles.listContainer}>
+              <FlatList
+                data={vloos}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={CARD_WIDTH + 20} // Card width + margin
+                decelerationRate="fast"
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={viewabilityConfig}
+                contentContainerStyle={styles.listContent}
+                refreshControl={
+                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />
+                }
+                ListEmptyComponent={
+                  <View style={[styles.emptyState, { width: width - 48 }]}>
+                    <Gift size={64} color={COLORS.primary} style={{ opacity: 0.3, marginBottom: 20 }} />
+                    <Text style={styles.emptyText}>You haven't created any VLOOs yet.</Text>
+                    <Button 
+                      title="Create your first VLOO" 
+                      onPress={() => navigation.navigate('GiverCreate')}
+                      variant="primary"
+                      style={{ marginTop: 20 }}
+                      gradient={['#d199f9', '#9F60D1']}
+                    />
+                  </View>
+                }
+              />
+            </View>
+
+            {/* Address Display - Now directly under the cards */}
+            {vloos.length > 0 && vloos[activeIndex] && (
+              <View style={styles.addressContainer}>
+                 <Text style={styles.addressLabel}>Card Wallet Address</Text>
+                 <View style={styles.addressBox}>
+                   <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="middle">
+                     {vloos[activeIndex].wallet_address || 'No address provided'}
+                   </Text>
+                 </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {vloos.length > 0 && (
+          <TouchableOpacity 
+            style={styles.fab}
+            onPress={() => navigation.navigate('GiverCreate')}
+          >
+            <Plus color={COLORS.inverse} size={32} />
+          </TouchableOpacity>
+        )}
+      </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#000',
+  },
+  safeArea: {
+    flex: 1,
   },
   header: {
-    paddingTop: 60,
-    paddingHorizontal: 24,
-    paddingBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.background, // Ensure header is opaque if needed
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     zIndex: 10,
   },
   headerTitle: {
     fontFamily: FONTS.displayBold,
     fontSize: 28,
-    color: COLORS.foreground,
+    color: '#fff',
   },
   headerSubtitle: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 14,
-    color: COLORS.foreground,
-    opacity: 0.6,
+    color: '#888',
   },
   logoutButton: {
     padding: 8,
@@ -381,11 +385,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 60,
+    backgroundColor: '#111',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#333',
   },
   emptyText: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 16,
-    color: COLORS.foreground,
+    color: '#ccc',
     textAlign: 'center',
     opacity: 0.6,
   },
@@ -399,7 +407,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: "#000",
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -409,16 +417,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#111',
     marginHorizontal: 24,
     padding: 16,
     borderRadius: 16,
     marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    borderColor: '#333',
+    borderWidth: 1,
   },
   summaryItem: {
     flex: 1,
@@ -427,19 +432,19 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 12,
-    color: COLORS.foreground,
-    opacity: 0.5,
+    color: '#888',
     marginBottom: 4,
+    textTransform: 'uppercase',
   },
   summaryValue: {
     fontFamily: FONTS.displaySemiBold,
     fontSize: 20,
-    color: COLORS.foreground,
+    color: '#fff',
   },
   summaryDivider: {
     width: 1,
     height: 30,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: '#333',
   },
   deckContainer: {
     flex: 1,
@@ -447,9 +452,6 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   listContainer: {
-    // Container for the list to ensure it doesn't take up more space than needed if we want address visible
-    // But since it's a deck, we might want it centered or fixed height?
-    // Let's give it a minHeight to ensure cards fit
     minHeight: 250,
   },
   addressContainer: {
@@ -461,23 +463,24 @@ const styles = StyleSheet.create({
   addressLabel: {
     fontFamily: FONTS.bodySemiBold,
     fontSize: 12,
-    color: COLORS.foreground,
-    opacity: 0.5,
+    color: '#888',
     marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   addressBox: {
-    backgroundColor: 'rgba(0,0,0,0.03)',
+    backgroundColor: '#111',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 30,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderColor: '#333',
     width: '100%',
   },
   addressText: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 13,
-    color: COLORS.foreground,
+    color: '#fff',
     textAlign: 'center',
   },
 });

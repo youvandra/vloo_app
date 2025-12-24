@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Card } from '../../components/Card';
@@ -63,85 +64,116 @@ export default function ReceiverScanScreen({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft color={COLORS.foreground} size={24} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Scan VLOO</Text>
-      </View>
-      
-      <View style={styles.content}>
-        <Card style={styles.card}>
-          <View style={styles.iconContainer}>
-            <Scan color={COLORS.primary} size={60} />
-          </View>
-          
-          <Text style={styles.title}>Tap to Receive</Text>
-          <Text style={styles.subtitle}>
-            Hold your VLOO card near the phone to check its status and claim your gift.
-          </Text>
-          
-          {loading ? (
-            <View style={styles.loader}>
-              <ActivityIndicator size="large" color={COLORS.primary} />
-              <Text style={styles.status}>{status}</Text>
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <ArrowLeft color="#fff" size={24} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Scan VLOO</Text>
+        </View>
+        
+        <View style={styles.content}>
+          <Card style={styles.card}>
+            <View style={styles.iconContainer}>
+              <Scan color={COLORS.primary} size={60} />
             </View>
-          ) : (
-            <Button 
-              title="Tap to Simulate Scan (Dev)" 
-              onPress={() => handleScan(true)} 
-              variant="primary"
-              style={{ marginTop: 20, width: '100%' }}
-            />
-          )}
-        </Card>
-      </View>
+            
+            <Text style={styles.title}>Tap to Receive</Text>
+            <Text style={styles.subtitle}>
+              Hold your VLOO card near the phone to check its status and claim your gift.
+            </Text>
+            
+            {loading ? (
+              <View style={styles.loader}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+                <Text style={styles.status}>{status}</Text>
+              </View>
+            ) : (
+              <Button 
+                title="Tap to Simulate Scan (Dev)" 
+                onPress={() => handleScan(true)} 
+                variant="primary"
+                style={{ marginTop: 20, width: '100%' }}
+                gradient={['#d199f9', '#9F60D1']}
+              />
+            )}
+          </Card>
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  header: { 
-    paddingTop: 60, 
-    paddingHorizontal: 24, 
-    paddingBottom: 20, 
-    flexDirection: 'row', 
-    alignItems: 'center' 
+  mainContainer: {
+    flex: 1,
+    backgroundColor: '#000',
   },
-  backButton: { marginRight: 16 },
-  headerTitle: { 
-    fontFamily: FONTS.displayBold, 
-    fontSize: 28, 
-    color: COLORS.foreground 
+  safeArea: {
+    flex: 1,
   },
-  content: { flex: 1, justifyContent: 'center', padding: 24 },
-  card: { alignItems: 'center', paddingVertical: 40 },
-  iconContainer: { 
-    marginBottom: 20, 
-    padding: 20, 
-    backgroundColor: 'rgba(11, 28, 196, 0.1)', 
-    borderRadius: 50 
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
-  title: { 
-    fontFamily: FONTS.displayBold, 
-    fontSize: 24, 
-    color: COLORS.foreground, 
-    marginBottom: 10 
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
-  subtitle: { 
-    fontFamily: FONTS.bodyRegular, 
-    fontSize: 16, 
-    textAlign: 'center', 
-    color: COLORS.foreground, 
-    marginBottom: 30,
-    opacity: 0.7
+  headerTitle: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 24,
+    color: '#fff',
+    marginLeft: 8,
   },
-  loader: { alignItems: 'center', marginTop: 20 },
-  status: { 
-    marginTop: 10, 
-    color: COLORS.foreground, 
-    fontFamily: FONTS.bodySemiBold 
+  content: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+  },
+  card: {
+    backgroundColor: '#111',
+    borderColor: '#333',
+    alignItems: 'center',
+    padding: 32,
+  },
+  iconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(11, 28, 196, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  title: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 28,
+    color: '#fff',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 16,
+    color: '#ccc',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+  },
+  loader: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  status: {
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.accent,
+    marginTop: 12,
   }
 });

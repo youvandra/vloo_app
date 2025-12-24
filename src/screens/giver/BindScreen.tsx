@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { createRandomWallet } from '../../lib/wallet';
 import { encryptData } from '../../lib/crypto';
 import { supabase } from '../../lib/supabase';
@@ -106,85 +107,112 @@ export default function GiverBindScreen({ route, navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft color={COLORS.foreground} size={24} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Bind Card</Text>
-      </View>
-      
-      <View style={styles.content}>
-        <Card style={styles.card}>
-          <View style={styles.iconContainer}>
-            <Radio color={COLORS.primary} size={60} />
-          </View>
-          
-          <Text style={styles.title}>Tap to Bind</Text>
-          <Text style={styles.subtitle}>
-            Hold the NFC card near the phone to securely bind this VLOO.
-          </Text>
-          
-          {loading ? (
-            <View style={styles.loader}>
-              <ActivityIndicator size="large" color={COLORS.primary} />
-              <Text style={styles.status}>{status}</Text>
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <ArrowLeft color="#fff" size={24} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Bind Card</Text>
+        </View>
+        
+        <View style={styles.content}>
+          <Card style={styles.card}>
+            <View style={styles.iconContainer}>
+              <Radio color={COLORS.primary} size={60} />
             </View>
-          ) : (
-            <Button 
-              title="Tap to Simulate NFC (Dev)" 
-              onPress={() => handleBind(true)} 
-              variant="primary"
-              style={{ marginTop: 20, width: '100%' }}
-            />
-          )}
-        </Card>
-      </View>
+            
+            <Text style={styles.title}>Tap to Bind</Text>
+            <Text style={styles.subtitle}>
+              Hold the NFC card near the phone to securely bind this VLOO.
+            </Text>
+            
+            {loading ? (
+              <View style={styles.loader}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+                <Text style={styles.status}>{status}</Text>
+              </View>
+            ) : (
+              <Button 
+                title="Tap to Simulate NFC (Dev)" 
+                onPress={() => handleBind(true)} 
+                variant="primary"
+                style={{ marginTop: 20, width: '100%' }}
+                gradient={['#d199f9', '#9F60D1']}
+              />
+            )}
+          </Card>
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  header: { 
-    paddingTop: 60, 
-    paddingHorizontal: 24, 
-    paddingBottom: 20, 
-    flexDirection: 'row', 
-    alignItems: 'center' 
+  mainContainer: {
+    flex: 1,
+    backgroundColor: '#000',
   },
-  backButton: { marginRight: 16 },
-  headerTitle: { 
-    fontFamily: FONTS.displayBold, 
-    fontSize: 28, 
-    color: COLORS.foreground 
+  safeArea: {
+    flex: 1,
   },
-  content: { flex: 1, justifyContent: 'center', padding: 24 },
-  card: { alignItems: 'center', paddingVertical: 40 },
-  iconContainer: { 
-    marginBottom: 20, 
-    padding: 20, 
-    backgroundColor: 'rgba(11, 28, 196, 0.1)', 
-    borderRadius: 50 
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
-  title: { 
-    fontFamily: FONTS.displayBold, 
-    fontSize: 24, 
-    color: COLORS.foreground, 
-    marginBottom: 10 
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
-  subtitle: { 
-    fontFamily: FONTS.bodyRegular, 
-    fontSize: 16, 
-    textAlign: 'center', 
-    color: COLORS.foreground, 
+  headerTitle: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 24,
+    color: '#fff',
+    marginLeft: 8,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  card: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    backgroundColor: '#111',
+    borderColor: '#333',
+  },
+  iconContainer: {
+    marginBottom: 20,
+    padding: 20,
+    backgroundColor: 'rgba(159, 96, 209, 0.1)',
+    borderRadius: 50,
+  },
+  title: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 24,
+    color: '#fff',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#ccc',
     marginBottom: 30,
-    opacity: 0.7
+    lineHeight: 24,
   },
-  loader: { alignItems: 'center', marginTop: 20 },
-  status: { 
-    marginTop: 10, 
-    color: COLORS.foreground, 
-    fontFamily: FONTS.bodySemiBold 
+  loader: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  status: {
+    marginTop: 10,
+    color: '#fff',
+    fontFamily: FONTS.bodySemiBold,
   }
 });
