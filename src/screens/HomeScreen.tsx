@@ -11,7 +11,7 @@ export default function HomeScreen({ navigation }: any) {
       <View style={styles.content}>
         <View style={styles.branding}>
           <Text style={styles.title}>VLOO</Text>
-          <Text style={styles.subtitle}>Access as a Gift</Text>
+          <Text style={styles.subtitle}>Your Crypto Access</Text>
         </View>
 
         <View style={styles.actions}>
@@ -54,7 +54,11 @@ const styles = StyleSheet.create({
     fontSize: 80, 
     color: COLORS.primary, 
     marginBottom: 0,
-    lineHeight: 90,
+    lineHeight: 120,
+    letterSpacing: -8, // Interpreted from -100 tracking (approx -0.1em)
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   subtitle: { 
     fontFamily: FONTS.bodyRegular,
