@@ -1,47 +1,30 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, BackHandler, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, StatusBar, RefreshControl, ActivityIndicator, BackHandler } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Defs, Pattern, Rect, Circle } from 'react-native-svg';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
-import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
-import { Plus, LogOut, Gift, Clock, Lock, Unlock } from 'lucide-react-native';
+import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, ChevronRight } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.85;
-const CARD_SPACING = (width - CARD_WIDTH) / 2;
 
 export default function GiverDashboardScreen({ navigation }: any) {
   const [vloos, setVloos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const onViewableItemsChanged = useCallback(({ viewableItems }: any) => {
-    if (viewableItems.length > 0) {
-      setActiveIndex(viewableItems[0].index || 0);
-    }
-  }, []);
-
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 50
-  };
+  const [user, setUser] = useState<any>(null);
 
   const fetchVloos = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
-         console.log('No session found in Dashboard, redirecting to Login...');
-         setVloos([]);
          navigation.replace('GiverLogin');
          return;
       }
       
+      setUser(session.user);
+
       const { data, error } = await supabase
         .from('vloos')
         .select('*')
@@ -52,8 +35,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
       setVloos(data || []);
     } catch (error) {
       console.error('Error fetching vloos:', error);
-      // Fallback/Mock data for demonstration if DB is empty or fails
-      // setVloos([]); 
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -63,13 +44,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
   useFocusEffect(
     useCallback(() => {
       fetchVloos();
-
-      const onBackPress = () => {
-        return true;
-      };
-
+      const onBackPress = () => true;
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
       return () => subscription.remove();
     }, [])
   );
@@ -79,179 +55,172 @@ export default function GiverDashboardScreen({ navigation }: any) {
     fetchVloos();
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Home' }],
-    });
-  };
-
-  const renderItem = ({ item }: any) => {
-    const isLocked = new Date(item.unlock_date) > new Date();
-    const ITEM_HEIGHT = 200;
-    
-    return (
-      <TouchableOpacity 
-        activeOpacity={0.9}
-        // onPress={() => navigation.navigate('VlooDetails', { id: item.id })} // Future detail view
-      >
-        <View style={[styles.card, { height: ITEM_HEIGHT, padding: 0, overflow: 'hidden', borderWidth: 0, backgroundColor: 'transparent' }]}>
-          <LinearGradient
-            colors={[COLORS.primary, '#060e62']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          >
-            {/* Pattern Background */}
-            <View style={StyleSheet.absoluteFill}>
-              <Svg height="100%" width="100%">
-                <Defs>
-                  <Pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                    <Circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.15)" />
-                  </Pattern>
-                </Defs>
-                <Rect x="0" y="0" width="100%" height="100%" fill="url(#dots)" />
-                <Path 
-                  d={`M0 ${ITEM_HEIGHT} C ${CARD_WIDTH * 0.4} ${ITEM_HEIGHT * 0.4}, ${CARD_WIDTH * 0.6} ${ITEM_HEIGHT * 0.6}, ${CARD_WIDTH} 0 L ${CARD_WIDTH} ${ITEM_HEIGHT} Z`} 
-                  fill="rgba(255,255,255,0.05)"
-                />
-              </Svg>
-            </View>
-
-            {/* Large VLOO Text Background */}
-            <Text style={styles.cardBrandText}>VLOO</Text>
-
-            {/* Content */}
-            <View style={{ padding: 24, flex: 1, justifyContent: 'space-between', zIndex: 10 }}>
-              <View style={styles.cardHeader}>
-                <View style={[styles.iconBg, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-                  <Gift size={20} color="#fff" />
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-                  {isLocked ? (
-                    <Lock size={14} color="#fff" style={{ opacity: 0.8 }} />
-                  ) : (
-                    <Unlock size={14} color="#4ADE80" />
-                  )}
-                  <Text style={[styles.statusText, { color: '#fff' }]}>{item.status || (isLocked ? 'Locked' : 'Unlocked')}</Text>
-                </View>
-              </View>
-
-              <Text style={[styles.cardTitle, { color: '#fff' }]} numberOfLines={2}>
-                {item.message || 'Untitled VLOO'}
-              </Text>
-              
-              <View style={[styles.cardFooter, { borderTopColor: 'rgba(255,255,255,0.1)' }]}>
-                <View style={styles.dateContainer}>
-                  <Clock size={14} color="#fff" style={{ opacity: 0.7, marginRight: 6 }} />
-                  <Text style={[styles.dateText, { color: '#fff', opacity: 0.9 }]}>
-                    {new Date(item.unlock_date).toLocaleDateString()}
-                  </Text>
-                </View>
-                <Text style={[styles.amountText, { color: '#fff' }]}>
-                  Manage
-                </Text>
-              </View>
-            </View>
-          </LinearGradient>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  // Mock Data for UI
+  const recentTransactions = [
+    { id: 1, name: 'Thibaut', image: 'https://i.pravatar.cc/150?u=1' },
+    { id: 2, name: 'David', image: 'https://i.pravatar.cc/150?u=2' },
+    { id: 3, name: 'Antoni', image: 'https://i.pravatar.cc/150?u=3' },
+    { id: 4, name: 'Fade', image: 'https://i.pravatar.cc/150?u=4' },
+    { id: 5, name: 'Lucas', image: 'https://i.pravatar.cc/150?u=5' },
+  ];
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>My VLOOs</Text>
-          <Text style={styles.headerSubtitle}>Manage your crypto gifts</Text>
-        </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <LogOut color={COLORS.error} size={24} />
-        </TouchableOpacity>
-      </View>
+      <StatusBar barStyle="light-content" />
+      
+      {/* Dark Header Background with Curve */}
+      <View style={styles.headerBackground} />
 
-      {/* Summary Section */}
-      <View style={styles.summaryContainer}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total VLOOs</Text>
-          <Text style={styles.summaryValue}>{vloos.length}</Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Claimed</Text>
-          <Text style={styles.summaryValue}>
-            {vloos.filter(v => v.status === 'claimed').length}
-          </Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Unclaimed</Text>
-          <Text style={styles.summaryValue}>
-            {vloos.filter(v => v.status !== 'claimed').length}
-          </Text>
-        </View>
-      </View>
-
-      {loading && !refreshing ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        </View>
-      ) : (
-        <View style={styles.deckContainer}>
-          <View style={styles.listContainer}>
-            <FlatList
-              data={vloos}
-              renderItem={renderItem}
-              keyExtractor={(item) => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={CARD_WIDTH + 20} // Card width + margin
-              decelerationRate="fast"
-              onViewableItemsChanged={onViewableItemsChanged}
-              viewabilityConfig={viewabilityConfig}
-              contentContainerStyle={styles.listContent}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
-              ListEmptyComponent={
-                <View style={[styles.emptyState, { width: width - 48 }]}>
-                  <Gift size={64} color={COLORS.primary} style={{ opacity: 0.3, marginBottom: 20 }} />
-                  <Text style={styles.emptyText}>You haven't created any VLOOs yet.</Text>
-                  <Button 
-                    title="Create your first VLOO" 
-                    onPress={() => navigation.navigate('GiverCreate')}
-                    variant="primary"
-                    style={{ marginTop: 20 }}
-                  />
-                </View>
-              }
-            />
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
+        showsVerticalScrollIndicator={false}
+      >
+        <SafeAreaView edges={['top']} style={styles.safeArea}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.userInfo}>
+              <Image 
+                source={{ uri: user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/150?u=giver' }} 
+                style={styles.avatar} 
+              />
+              <View>
+                <Text style={styles.greeting}>Morning {user?.user_metadata?.full_name?.split(' ')[0] || 'Giver'},</Text>
+                <Text style={styles.accountType}>Free Account</Text>
+              </View>
+            </View>
+            <TouchableOpacity style={styles.bellButton}>
+              <Bell color="#fff" size={20} />
+            </TouchableOpacity>
           </View>
 
-          {/* Address Display - Now directly under the cards */}
-          {vloos.length > 0 && vloos[activeIndex] && (
-            <View style={styles.addressContainer}>
-               <Text style={styles.addressLabel}>Card Wallet Address</Text>
-               <View style={styles.addressBox}>
-                 <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="middle">
-                   {vloos[activeIndex].wallet_address || 'No address provided'}
-                 </Text>
-               </View>
+          {/* Cards Stack */}
+          <View style={styles.cardStackContainer}>
+            {/* Stacked Cards Effect */}
+            <View style={[styles.stackedCard, styles.stack3]} />
+            <View style={[styles.stackedCard, styles.stack2]} />
+            <View style={[styles.stackedCard, styles.stack1]} />
+            
+            {/* Main Card */}
+            <View style={[styles.mainCard, { backgroundColor: COLORS.primary }]}>
+              <View style={styles.cardTop}>
+                {/* V-Shape Logo Mock */}
+                <View style={styles.cardLogo}>
+                  <View style={styles.logoLeft} />
+                  <View style={styles.logoRight} />
+                </View>
+              </View>
+              
+              <Text style={styles.cardNumber}>2781 8191 6671 3190</Text>
+              
+              <View style={styles.cardBottom}>
+                <View>
+                  <Text style={styles.cardLabel}>Holder Name</Text>
+                  <Text style={styles.cardValue}>{user?.user_metadata?.full_name || 'VLOO Giver'}</Text>
+                </View>
+                <View>
+                  <Text style={styles.cardLabel}>Exp</Text>
+                  <Text style={styles.cardValue}>09/29</Text>
+                </View>
+              </View>
             </View>
-          )}
-        </View>
-      )}
+          </View>
 
-      {vloos.length > 0 && (
-        <TouchableOpacity 
-          style={styles.fab}
-          onPress={() => navigation.navigate('GiverCreate')}
-        >
-          <Plus color={COLORS.inverse} size={32} />
-        </TouchableOpacity>
-      )}
+          {/* Action Buttons */}
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('GiverCreate')}>
+              <Text style={styles.actionText}>Add</Text>
+              <View style={styles.actionIconCircle}>
+                <Plus size={16} color={COLORS.accent} strokeWidth={3} />
+              </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionButton}>
+              <Text style={styles.actionText}>Send</Text>
+              <View style={styles.actionIconCircle}>
+                <Send size={16} color={COLORS.accent} strokeWidth={3} />
+              </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionButton}>
+              <Text style={styles.actionText}>Pay</Text>
+              <View style={styles.actionIconCircle}>
+                <Wallet size={16} color={COLORS.accent} strokeWidth={3} />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Recent Transactions */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Recent Transaction</Text>
+              <TouchableOpacity>
+                <Text style={styles.seeAllText}>View All</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentList}>
+              {recentTransactions.map((item) => (
+                <View key={item.id} style={styles.recentItem}>
+                  <Image source={{ uri: item.image }} style={styles.recentAvatar} />
+                  <Text style={styles.recentName}>{item.name}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Card Detail */}
+          <View style={[styles.section, { paddingBottom: 100 }]}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Card Detail</Text>
+              <TouchableOpacity>
+                <Text style={styles.seeAllText}>Show</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Holder Name</Text>
+              <View style={styles.detailValueContainer}>
+                <Text style={styles.detailValue}>{user?.user_metadata?.full_name || 'VLOO Giver'}</Text>
+                <Copy size={16} color={COLORS.accent} style={{ marginLeft: 8 }} />
+              </View>
+            </View>
+            
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Card Number</Text>
+              <View style={styles.detailValueContainer}>
+                <Text style={styles.detailValue}>2781 8191 6671 3190</Text>
+                <Copy size={16} color={COLORS.accent} style={{ marginLeft: 8 }} />
+              </View>
+            </View>
+          </View>
+
+        </SafeAreaView>
+      </ScrollView>
+
+      {/* Floating Bottom Navigation */}
+      <View style={styles.bottomNavContainer}>
+        <View style={styles.bottomNav}>
+          <TouchableOpacity style={styles.navItemActive}>
+            <View style={[styles.navIconActive, { backgroundColor: COLORS.primary }]}>
+              <Home size={20} color="#fff" />
+            </View>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.navItem}>
+            <BarChart2 size={20} color="#666" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.navItem}>
+            <CreditCard size={20} color="#666" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.navItem}>
+            <Grid size={20} color="#666" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
     </View>
   );
 }
@@ -259,225 +228,306 @@ export default function GiverDashboardScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#000',
   },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 24,
+  headerBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 320, // Covers header and part of card
+    backgroundColor: '#1A1A1A',
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+  },
+  scrollContent: {
     paddingBottom: 20,
+  },
+  safeArea: {
+    paddingHorizontal: 24,
+  },
+  
+  // Header
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: COLORS.background, // Ensure header is opaque if needed
-    zIndex: 10,
+    marginBottom: 30,
+    marginTop: 10,
   },
-  headerTitle: {
-    fontFamily: FONTS.displayBold,
-    fontSize: 28,
-    color: COLORS.foreground,
-  },
-  headerSubtitle: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 14,
-    color: COLORS.foreground,
-    opacity: 0.6,
-  },
-  logoutButton: {
-    padding: 8,
-    backgroundColor: 'rgba(255, 68, 68, 0.1)',
-    borderRadius: 12,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listContent: {
-    paddingHorizontal: CARD_SPACING, // Center the first item
-    paddingVertical: 40,
-    gap: 20, // Space between cards
-    alignItems: 'center', // Vertically center cards
-  },
-  card: {
-    padding: 16,
-    width: CARD_WIDTH,
-    // Add some elevation/shadow for better separation in horizontal view
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  cardHeader: {
+  userInfo: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    gap: 12,
   },
-  iconBg: {
+  avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(11, 28, 196, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#333',
   },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    gap: 6,
-  },
-  statusText: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: 12,
-    color: COLORS.foreground,
-    textTransform: 'capitalize',
-  },
-  cardBrandText: {
-    position: 'absolute',
-    bottom: 12,
-    left: 24,
+  greeting: {
     fontFamily: FONTS.displayBold,
-    fontSize: 72,
-    color: 'rgba(255,255,255,0.15)', // Reduced opacity so it doesn't clash with content
-    letterSpacing: -4,
-    zIndex: 1,
-  },
-  cardTitle: {
-    fontFamily: FONTS.displaySemiBold,
     fontSize: 18,
-    color: COLORS.foreground,
-    marginBottom: 16,
+    color: '#fff',
   },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
-    paddingTop: 12,
-  },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dateText: {
+  accountType: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 12,
-    color: COLORS.foreground,
-    opacity: 0.6,
+    color: '#888',
   },
-  amountText: {
-    fontFamily: FONTS.bodyBold,
-    fontSize: 12,
-    color: COLORS.primary,
-  },
-  emptyState: {
-    padding: 40,
-    alignItems: 'center',
+  bellButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
-    marginTop: 60,
+    alignItems: 'center',
   },
-  emptyText: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 16,
-    color: COLORS.foreground,
-    textAlign: 'center',
-    opacity: 0.6,
+
+  // Card Stack
+  cardStackContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+    marginTop: 10,
   },
-  fab: {
+  stackedCard: {
     position: 'absolute',
-    bottom: 32,
-    right: 24,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    height: 220,
+    borderRadius: 24,
   },
-  summaryContainer: {
+  stack3: {
+    width: width * 0.75,
+    top: -24,
+    backgroundColor: COLORS.primary,
+    opacity: 0.3,
+  },
+  stack2: {
+    width: width * 0.82,
+    top: -12,
+    backgroundColor: COLORS.accent,
+    opacity: 0.5,
+  },
+  stack1: {
+    width: width * 0.88,
+    top: -6,
+    backgroundColor: COLORS.primary,
+    opacity: 0.8,
+  },
+  mainCard: {
+    width: '100%',
+    height: 220,
+    borderRadius: 24,
+    padding: 24,
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  cardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+  },
+  cardLogo: {
+    width: 30,
+    height: 30,
+    position: 'relative',
+  },
+  logoLeft: {
+    position: 'absolute',
+    width: 8,
+    height: 20,
     backgroundColor: '#fff',
-    marginHorizontal: 24,
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    transform: [{ rotate: '-45deg' }],
+    left: 4,
+    top: 5,
+    borderRadius: 4,
   },
-  summaryItem: {
-    flex: 1,
-    alignItems: 'center',
+  logoRight: {
+    position: 'absolute',
+    width: 8,
+    height: 12,
+    backgroundColor: '#fff',
+    transform: [{ rotate: '45deg' }],
+    right: 4,
+    top: 5,
+    borderRadius: 4,
   },
-  summaryLabel: {
+  cardNumber: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 22,
+    color: '#fff',
+    textAlign: 'center',
+    letterSpacing: 2,
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  cardBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    marginHorizontal: -24,
+    marginBottom: -24,
+    padding: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  cardLabel: {
     fontFamily: FONTS.bodyRegular,
-    fontSize: 12,
-    color: COLORS.foreground,
-    opacity: 0.5,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.6)',
     marginBottom: 4,
   },
-  summaryValue: {
-    fontFamily: FONTS.displaySemiBold,
-    fontSize: 20,
-    color: COLORS.foreground,
+  cardValue: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 14,
+    color: '#fff',
   },
-  summaryDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+
+  // Actions
+  actionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 16,
+    marginBottom: 32,
   },
-  deckContainer: {
+  actionButton: {
     flex: 1,
-    justifyContent: 'flex-start',
-    paddingTop: 20,
-  },
-  listContainer: {
-    // Container for the list to ensure it doesn't take up more space than needed if we want address visible
-    // But since it's a deck, we might want it centered or fixed height?
-    // Let's give it a minHeight to ensure cards fit
-    minHeight: 250,
-  },
-  addressContainer: {
-    marginTop: 20,
-    marginHorizontal: 24,
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingBottom: 100, // Space for FAB
+    justifyContent: 'center',
+    backgroundColor: '#1A1A1A',
+    paddingVertical: 14,
+    borderRadius: 100,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  addressLabel: {
+  actionText: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 14,
+    color: '#fff',
+  },
+  actionIconCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(209, 153, 249, 0.1)', // Accent with opacity
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Section
+  section: {
+    marginBottom: 32,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 18,
+    color: '#fff',
+  },
+  seeAllText: {
     fontFamily: FONTS.bodySemiBold,
     fontSize: 12,
-    color: COLORS.foreground,
-    opacity: 0.5,
-    marginBottom: 8,
+    color: COLORS.accent,
   },
-  addressBox: {
-    backgroundColor: 'rgba(0,0,0,0.03)',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    width: '100%',
+  recentList: {
+    gap: 20,
+    paddingHorizontal: 4,
   },
-  addressText: {
+  recentItem: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  recentAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#333',
+  },
+  recentName: {
     fontFamily: FONTS.bodyRegular,
-    fontSize: 13,
-    color: COLORS.foreground,
-    textAlign: 'center',
+    fontSize: 12,
+    color: '#888',
+  },
+
+  // Detail Row
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#1A1A1A',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  detailLabel: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 14,
+    color: '#888',
+  },
+  detailValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailValue: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 14,
+    color: '#fff',
+  },
+
+  // Floating Nav
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#1A1A1A',
+    padding: 8,
+    borderRadius: 32,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  navItem: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 22,
+  },
+  navItemActive: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  navIconActive: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
