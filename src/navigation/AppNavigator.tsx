@@ -4,14 +4,14 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from '../screens/HomeScreen';
-import GiverLoginScreen from '../screens/GiverLoginScreen';
-import GiverDashboardScreen from '../screens/GiverDashboardScreen';
-import GiverCreateScreen from '../screens/GiverCreateScreen';
-import GiverBindScreen from '../screens/GiverBindScreen';
-import GiverSuccessScreen from '../screens/GiverSuccessScreen';
-import ReceiverScanScreen from '../screens/ReceiverScanScreen';
-import ReceiverViewScreen from '../screens/ReceiverViewScreen';
-import ReceiverClaimScreen from '../screens/ReceiverClaimScreen';
+import GiverLoginScreen from '../screens/giver/LoginScreen';
+import GiverDashboardScreen from '../screens/giver/DashboardScreen';
+import GiverCreateScreen from '../screens/giver/CreateScreen';
+import GiverBindScreen from '../screens/giver/BindScreen';
+import GiverSuccessScreen from '../screens/giver/SuccessScreen';
+import ReceiverScanScreen from '../screens/receiver/ScanScreen';
+import ReceiverViewScreen from '../screens/receiver/ViewScreen';
+import ReceiverClaimScreen from '../screens/receiver/ClaimScreen';
 
 const Stack = createStackNavigator();
 

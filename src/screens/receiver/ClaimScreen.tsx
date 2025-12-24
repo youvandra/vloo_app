@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
-import { decryptData } from '../lib/crypto';
-import { supabase } from '../lib/supabase';
-import { COLORS, FONTS } from '../lib/theme';
-import { Button } from '../components/Button';
-import { Input } from '../components/Input';
-import { Card } from '../components/Card';
+import { decryptData } from '../../lib/crypto';
+import { supabase } from '../../lib/supabase';
+import { COLORS, FONTS } from '../../lib/theme';
+import { Button } from '../../components/Button';
+import { Input } from '../../components/Input';
+import { Card } from '../../components/Card';
 import { ArrowLeft, Lock, Unlock, Gift } from 'lucide-react-native';
 
 export default function ReceiverClaimScreen({ route, navigation }: any) {

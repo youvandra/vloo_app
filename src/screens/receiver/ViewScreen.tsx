@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ethers } from 'ethers';
-import { Vloo } from '../lib/types';
+import { Vloo } from '../../lib/types';
 
 export default function ReceiverViewScreen({ route, navigation }: any) {
   const { vloo } = route.params as { vloo: Vloo };

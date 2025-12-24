@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import { createRandomWallet } from '../lib/wallet';
-import { encryptData } from '../lib/crypto';
-import { supabase } from '../lib/supabase';
-import { COLORS, FONTS } from '../lib/theme';
-import { Card } from '../components/Card';
-import { Button } from '../components/Button';
+import { createRandomWallet } from '../../lib/wallet';
+import { encryptData } from '../../lib/crypto';
+import { supabase } from '../../lib/supabase';
+import { COLORS, FONTS } from '../../lib/theme';
+import { Card } from '../../components/Card';
+import { Button } from '../../components/Button';
 import { ArrowLeft, Radio } from 'lucide-react-native';
 
 export default function GiverBindScreen({ route, navigation }: any) {
