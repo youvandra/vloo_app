@@ -4,9 +4,9 @@ import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
-import { supabase } from '../lib/supabase';
-import { COLORS, FONTS } from '../lib/theme';
-import { Button } from '../components/Button';
+import { supabase } from '../../lib/supabase';
+import { COLORS, FONTS } from '../../lib/theme';
+import { Button } from '../../components/Button';
 import { ArrowLeft } from 'lucide-react-native';
 
 // Needs to be manually called for web, but is automatic for native

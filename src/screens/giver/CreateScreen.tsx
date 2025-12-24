@@ -1,18 +1,50 @@
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { COLORS, FONTS } from '../lib/theme';
-import { Button } from '../components/Button';
-import { Input } from '../components/Input';
-import { Card } from '../components/Card';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { COLORS, FONTS } from '../../lib/theme';
+import { Button } from '../../components/Button';
+import { Input } from '../../components/Input';
+import { Card } from '../../components/Card';
 import { ArrowLeft } from 'lucide-react-native';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 export default function GiverCreateScreen({ navigation }: any) {
   const [purpose, setPurpose] = useState('Gift');
   const [message, setMessage] = useState('');
   const [passphrase, setPassphrase] = useState('');
-  const [unlockDate, setUnlockDate] = useState(new Date());
+  const [unlockDate, setUnlockDate] = useState(new Date(Date.now() + 60000));
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      const current = new Date(unlockDate);
+      current.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      setUnlockDate(current);
+      if (Platform.OS === 'android') {
+        setShowTimePicker(true);
+      }
+    }
+  };
+
+  const onChangeTime = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
+    if (selectedDate) {
+      const current = new Date(unlockDate);
+      current.setHours(selectedDate.getHours(), selectedDate.getMinutes());
+      setUnlockDate(current);
+    }
+  };
+
+  const showDatepicker = () => {
+    setShowDatePicker(true);
+  };
 
   const handleNext = () => {
     if (!message || !passphrase) {
@@ -70,7 +102,53 @@ export default function GiverCreateScreen({ navigation }: any) {
             <Text style={styles.hint}>This passphrase will be used to encrypt the key. Don't lose it!</Text>
 
             <Text style={styles.sectionLabel}>Unlock Date</Text>
-            <Text style={styles.dateDisplay}>Defaults to: Now + 1 min (MVP)</Text>
+            
+            {Platform.OS === 'ios' ? (
+              <View style={{ alignItems: 'flex-start', marginTop: 8 }}>
+                <DateTimePicker
+                  testID="dateTimePicker"
+                  value={unlockDate}
+                  mode="datetime"
+                  display="compact"
+                  onChange={(event, selectedDate) => {
+                    if (selectedDate) setUnlockDate(selectedDate);
+                  }}
+                  minimumDate={new Date()}
+                  style={{ alignSelf: 'flex-start' }}
+                />
+              </View>
+            ) : (
+              <>
+                <TouchableOpacity onPress={showDatepicker} style={styles.dateButton}>
+                  <Text style={styles.dateButtonText}>
+                    {unlockDate.toLocaleString()}
+                  </Text>
+                </TouchableOpacity>
+
+                {showDatePicker && (
+                  <DateTimePicker
+                    testID="dateTimePicker"
+                    value={unlockDate}
+                    mode="date"
+                    is24Hour={true}
+                    onChange={onChangeDate}
+                    minimumDate={new Date()}
+                    display="default"
+                  />
+                )}
+
+                {showTimePicker && (
+                  <DateTimePicker
+                    testID="timePicker"
+                    value={unlockDate}
+                    mode="time"
+                    is24Hour={true}
+                    onChange={onChangeTime}
+                    display="default"
+                  />
+                )}
+              </>
+            )}
 
             <View style={{ marginTop: 20 }}>
               <Button title="Next Step" onPress={handleNext} variant="primary" />
@@ -127,6 +205,19 @@ const styles = StyleSheet.create({
     color: '#666', 
     marginTop: -10, 
     marginBottom: 20 
+  },
+  dateButton: {
+    backgroundColor: COLORS.inverse,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    marginTop: 8,
+  },
+  dateButtonText: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 16,
+    color: COLORS.foreground,
   },
   dateDisplay: {
     fontFamily: FONTS.bodyRegular,

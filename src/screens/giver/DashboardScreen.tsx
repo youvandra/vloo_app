@@ -2,10 +2,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { supabase } from '../lib/supabase';
-import { COLORS, FONTS } from '../lib/theme';
-import { Button } from '../components/Button';
-import { Card } from '../components/Card';
+import { supabase } from '../../lib/supabase';
+import { COLORS, FONTS } from '../../lib/theme';
+import { Button } from '../../components/Button';
+import { Card } from '../../components/Card';
 import { Plus, LogOut, Gift, Clock, Lock, Unlock } from 'lucide-react-native';
 
 export default function GiverDashboardScreen({ navigation }: any) {

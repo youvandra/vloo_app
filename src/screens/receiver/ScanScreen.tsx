@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import { supabase } from '../lib/supabase';
-import { COLORS, FONTS } from '../lib/theme';
-import { Card } from '../components/Card';
-import { Button } from '../components/Button';
+import { supabase } from '../../lib/supabase';
+import { COLORS, FONTS } from '../../lib/theme';
+import { Card } from '../../components/Card';
+import { Button } from '../../components/Button';
 import { ArrowLeft, Scan } from 'lucide-react-native';
 
 export default function ReceiverScanScreen({ navigation }: any) {

@@ -2,9 +2,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { COLORS, FONTS } from '../lib/theme';
-import { Button } from '../components/Button';
-import { Card } from '../components/Card';
+import { COLORS, FONTS } from '../../lib/theme';
+import { Button } from '../../components/Button';
+import { Card } from '../../components/Card';
 import { CheckCircle, Copy } from 'lucide-react-native';
 
 export default function GiverSuccessScreen({ route, navigation }: any) {
