@@ -17,8 +17,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '../lib/theme';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = 300;
-const CARD_HEIGHT = 190;
+const CARD_WIDTH = 280; // Reduced from 300
+const CARD_HEIGHT = 170; // Reduced from 190
 const ROTATION_DURATION = 20000; // 20 seconds for full rotation
 
 export const HeroCard = () => {
@@ -31,14 +31,14 @@ export const HeroCard = () => {
   // Auto-rotation logic
   const startRotation = () => {
     'worklet';
-    // Rotate 360 degrees from current angle
-    // We calculate the remaining duration to keep speed constant (approx)
-    // But simplest is just to add 360 and animate over fixed duration for consistent speed loop
+    // Swaying animation: 0 -> 30 -> 0 -> -30 -> 0
     rotation.value = withRepeat(
-      withTiming(rotation.value + 360, {
-        duration: ROTATION_DURATION,
-        easing: Easing.linear,
-      }),
+      withSequence(
+        withTiming(30, { duration: 3000, easing: Easing.inOut(Easing.quad) }), // Move right 30deg
+        withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.quad) }),  // Return to center
+        withTiming(-30, { duration: 3000, easing: Easing.inOut(Easing.quad) }), // Move left 30deg
+        withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.quad) })   // Return to center
+      ),
       -1, // Infinite
       false // No reverse
     );
@@ -80,24 +80,12 @@ export const HeroCard = () => {
     .onFinalize((event) => {
       isInteracting.value = false;
       
-      // Add a little inertia based on velocity if needed, 
-      // but requirements say "Resume auto-rotation smoothly"
-      
-      // To resume smoothly without snapping, we continue from current value
-      // We essentially just restart the loop from the new angle
-      
-      // Calculate a target that is a multiple of 360 ahead to ensure forward rotation
-      // But actually, just adding 360 and starting loop works because withRepeat + withTiming 
-      // will just go from A to B.
-      
-      rotation.value = withRepeat(
-        withTiming(rotation.value + 360, {
-          duration: ROTATION_DURATION,
-          easing: Easing.linear,
-        }),
-        -1,
-        false
-      );
+      // Return to 0 then restart the swaying loop
+      rotation.value = withTiming(0, { duration: 800, easing: Easing.out(Easing.quad) }, (finished) => {
+        if (finished) {
+          startRotation();
+        }
+      });
     });
 
   // Animated Styles
@@ -153,7 +141,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 250, // Container height to accommodate float
+    height: 220, // Reduced from 250
     zIndex: 10,
   },
   cardContainer: {
@@ -183,11 +171,11 @@ const styles = StyleSheet.create({
   },
   brandText: {
     position: 'absolute',
-    bottom: -8, 
+    bottom: -6, 
     left: 8,
     width: '100%', // Ensure text container has enough width
     fontFamily: FONTS.displayBold,
-    fontSize: 72,
+    fontSize: 64, // Reduced from 72 to match new card size
     color: '#fff',
     letterSpacing: -4,
   },

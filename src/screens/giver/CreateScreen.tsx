@@ -65,174 +65,227 @@ export default function GiverCreateScreen({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft color={COLORS.foreground} size={24} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Create VLOO</Text>
-      </View>
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <ArrowLeft color="#fff" size={24} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Create VLOO</Text>
+        </View>
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <Card style={styles.formCard}>
-            <Text style={styles.sectionLabel}>Purpose</Text>
-            <View style={styles.pillContainer}>
-              {['Gift', 'Salary', 'Inheritance'].map(p => (
-                <TouchableOpacity 
-                  key={p} 
-                  style={[styles.pill, purpose === p && styles.pillActive]} 
-                  onPress={() => setPurpose(p)}
-                >
-                  <Text style={[styles.pillText, purpose === p && styles.pillTextActive]}>{p}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Input 
-              label="Message"
-              placeholder="A short message for the receiver..." 
-              value={message} 
-              onChangeText={setMessage} 
-              multiline 
-              numberOfLines={3}
-              style={{ height: 100, textAlignVertical: 'top' }}
-            />
-
-            <Input 
-              label="Passphrase"
-              placeholder="Enter a secret passphrase" 
-              value={passphrase} 
-              onChangeText={setPassphrase} 
-              secureTextEntry 
-            />
-            <Text style={styles.hint}>This passphrase will be used to encrypt the key. Don't lose it!</Text>
-
-            <Text style={styles.sectionLabel}>Unlock Date</Text>
-            
-            {Platform.OS === 'ios' ? (
-              <View style={{ alignItems: 'flex-start', marginTop: 8 }}>
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={unlockDate}
-                  mode="datetime"
-                  display="compact"
-                  onChange={(event, selectedDate) => {
-                    if (selectedDate) setUnlockDate(selectedDate);
-                  }}
-                  minimumDate={new Date()}
-                  style={{ alignSelf: 'flex-start' }}
-                />
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+            <Card style={styles.formCard}>
+              <Text style={styles.sectionLabel}>Purpose</Text>
+              <View style={styles.pillContainer}>
+                {['Gift', 'Salary', 'Inheritance'].map(p => (
+                  <TouchableOpacity 
+                    key={p} 
+                    style={[styles.pill, purpose === p && styles.pillActive]} 
+                    onPress={() => setPurpose(p)}
+                  >
+                    <Text style={[styles.pillText, purpose === p && styles.pillTextActive]}>{p}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-            ) : (
-              <>
-                <TouchableOpacity onPress={showDatepicker} style={styles.dateButton}>
-                  <Text style={styles.dateButtonText}>
-                    {unlockDate.toLocaleString()}
-                  </Text>
-                </TouchableOpacity>
 
-                {showDatePicker && (
+              <Input 
+                label="Message"
+                placeholder="A short message for the receiver..." 
+                value={message} 
+                onChangeText={setMessage} 
+                multiline 
+                numberOfLines={3}
+                style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+                labelStyle={styles.label}
+                placeholderTextColor="#666"
+              />
+
+              <Input 
+                label="Passphrase"
+                placeholder="Enter a secret passphrase" 
+                value={passphrase} 
+                onChangeText={setPassphrase} 
+                secureTextEntry 
+                style={styles.input}
+                labelStyle={styles.label}
+                placeholderTextColor="#666"
+              />
+              <Text style={styles.hint}>This passphrase will be used to encrypt the key. Don't lose it!</Text>
+
+              <Text style={styles.sectionLabel}>Unlock Date</Text>
+              
+              {Platform.OS === 'ios' ? (
+                <View style={{ alignItems: 'flex-start', marginTop: 8 }}>
                   <DateTimePicker
                     testID="dateTimePicker"
                     value={unlockDate}
-                    mode="date"
-                    is24Hour={true}
-                    onChange={onChangeDate}
+                    mode="datetime"
+                    display="compact"
+                    onChange={(event, selectedDate) => {
+                      if (selectedDate) setUnlockDate(selectedDate);
+                    }}
                     minimumDate={new Date()}
-                    display="default"
+                    style={{ alignSelf: 'flex-start' }}
+                    themeVariant="dark"
                   />
-                )}
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity onPress={showDatepicker} style={styles.dateButton}>
+                    <Text style={styles.dateButtonText}>
+                      {unlockDate.toLocaleString()}
+                    </Text>
+                  </TouchableOpacity>
 
-                {showTimePicker && (
-                  <DateTimePicker
-                    testID="timePicker"
-                    value={unlockDate}
-                    mode="time"
-                    is24Hour={true}
-                    onChange={onChangeTime}
-                    display="default"
-                  />
-                )}
-              </>
-            )}
+                  {showDatePicker && (
+                    <DateTimePicker
+                      testID="dateTimePicker"
+                      value={unlockDate}
+                      mode="date"
+                      is24Hour={true}
+                      onChange={onChangeDate}
+                      minimumDate={new Date()}
+                      display="default"
+                      themeVariant="dark"
+                    />
+                  )}
 
-            <View style={{ marginTop: 20 }}>
-              <Button title="Next Step" onPress={handleNext} variant="primary" />
-            </View>
-          </Card>
-        </ScrollView>
-      </KeyboardAvoidingView>
+                  {showTimePicker && (
+                    <DateTimePicker
+                      testID="timePicker"
+                      value={unlockDate}
+                      mode="time"
+                      is24Hour={true}
+                      onChange={onChangeTime}
+                      display="default"
+                      themeVariant="dark"
+                    />
+                  )}
+                </>
+              )}
+
+              <View style={{ marginTop: 20 }}>
+                <Button 
+                  title="Next Step" 
+                  onPress={handleNext} 
+                  variant="primary" 
+                  gradient={['#d199f9', '#9F60D1']}
+                />
+              </View>
+            </Card>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  header: { 
-    paddingTop: 60, 
-    paddingHorizontal: 24, 
-    paddingBottom: 20, 
-    flexDirection: 'row', 
-    alignItems: 'center' 
+  mainContainer: {
+    flex: 1,
+    backgroundColor: '#000',
   },
-  backButton: { marginRight: 16 },
-  headerTitle: { 
-    fontFamily: FONTS.displayBold, 
-    fontSize: 28, 
-    color: COLORS.foreground 
+  safeArea: {
+    flex: 1,
   },
-  scroll: { padding: 24 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 24,
+    color: '#fff',
+    marginLeft: 8,
+  },
+  scroll: {
+    padding: 24,
+  },
   formCard: {
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    backgroundColor: '#111',
+    borderColor: '#333',
+    padding: 24,
   },
-  sectionLabel: { 
-    fontFamily: FONTS.bodyBold, 
-    fontSize: 16, 
-    marginBottom: 12, 
-    color: COLORS.foreground 
+  sectionLabel: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 14,
+    color: '#888',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
-  pillContainer: { flexDirection: 'row', marginBottom: 24, flexWrap: 'wrap', gap: 10 },
-  pill: { 
-    paddingVertical: 10, 
-    paddingHorizontal: 20, 
-    borderRadius: 999, 
-    backgroundColor: 'rgba(255,255,255,0.5)', 
-    borderWidth: 1, 
-    borderColor: 'transparent' 
+  pillContainer: {
+    flexDirection: 'row',
+    marginBottom: 24,
+    flexWrap: 'wrap',
+    gap: 10,
   },
-  pillActive: { 
+  pill: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 999,
+    backgroundColor: '#222',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  pillActive: {
     backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
-  pillText: { fontFamily: FONTS.bodySemiBold, color: COLORS.foreground },
-  pillTextActive: { color: COLORS.inverse },
-  hint: { 
-    fontFamily: FONTS.bodyRegular, 
-    fontSize: 12, 
-    color: '#666', 
-    marginTop: -10, 
-    marginBottom: 20 
+  pillText: {
+    fontFamily: FONTS.bodySemiBold,
+    color: '#888',
+  },
+  pillTextActive: {
+    color: '#fff',
+  },
+  input: {
+    backgroundColor: '#222',
+    borderColor: '#444',
+    color: '#fff',
+  },
+  label: {
+    color: '#ccc',
+  },
+  hint: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 12,
+    color: '#666',
+    marginTop: -10,
+    marginBottom: 24,
   },
   dateButton: {
-    backgroundColor: COLORS.inverse,
+    backgroundColor: '#222',
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderColor: '#444',
     marginTop: 8,
+    alignItems: 'center',
   },
   dateButtonText: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 16,
-    color: COLORS.foreground,
+    color: '#fff',
   },
   dateDisplay: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 16,
-    color: COLORS.foreground,
+    color: '#fff',
     marginBottom: 20,
   }
 });
