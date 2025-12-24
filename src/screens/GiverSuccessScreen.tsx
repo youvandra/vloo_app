@@ -47,7 +47,7 @@ export default function GiverSuccessScreen({ route, navigation }: any) {
 
         <Button 
           title="Done" 
-          onPress={() => navigation.popToTop()} 
+          onPress={() => navigation.navigate('GiverDashboard')} 
           variant="primary"
           style={{ width: '100%', marginTop: 30 }}
         />

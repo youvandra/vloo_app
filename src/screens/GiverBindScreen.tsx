@@ -36,7 +36,10 @@ export default function GiverBindScreen({ route, navigation }: any) {
         cardId = 'simulated-real-id'; // Fallback for MVP
       }
 
-      // 4. Save to Supabase
+      // 4. Get User
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // 5. Save to Supabase
       setStatus('Saving to VLOO network...');
       
       const { data: vlooData, error: vlooError } = await supabase
@@ -46,7 +49,8 @@ export default function GiverBindScreen({ route, navigation }: any) {
           wallet_address: address,
           unlock_date: unlockDate,
           message: message,
-          status: 'locked'
+          status: 'locked',
+          giver_id: user?.id
         }])
         .select()
         .single();
