@@ -1,6 +1,7 @@
 
 import 'react-native-gesture-handler';
 import 'react-native-get-random-values';
+import '@ethersproject/shims';
 import 'react-native-url-polyfill/auto';
 import React, { useEffect, useCallback } from 'react';
 import { View, ActivityIndicator } from 'react-native';

@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, Clipboard, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { COLORS, FONTS } from '../lib/theme';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';

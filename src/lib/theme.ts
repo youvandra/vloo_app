@@ -16,6 +16,7 @@ export const COLORS = {
   accent: '#d199f9',     // Pale Violet
   foreground: '#000000', // Black
   inverse: '#FFFFFF',    // White
+  error: '#FF4444',      // Error Red
   
   // Translucency for Glassmorphism fallbacks
   glassWhite: 'rgba(255, 255, 255, 0.9)',
