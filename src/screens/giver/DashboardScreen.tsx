@@ -2,6 +2,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, BackHandler, Dimensions } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path, Defs, Pattern, Rect, Circle } from 'react-native-svg';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Button } from '../../components/Button';
@@ -87,44 +89,73 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
   const renderItem = ({ item }: any) => {
     const isLocked = new Date(item.unlock_date) > new Date();
+    const ITEM_HEIGHT = 200;
     
     return (
       <TouchableOpacity 
         activeOpacity={0.9}
         // onPress={() => navigation.navigate('VlooDetails', { id: item.id })} // Future detail view
       >
-        <Card style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconBg}>
-              <Gift size={20} color={COLORS.primary} />
+        <View style={[styles.card, { height: ITEM_HEIGHT, padding: 0, overflow: 'hidden', borderWidth: 0, backgroundColor: 'transparent' }]}>
+          <LinearGradient
+            colors={[COLORS.primary, '#060e62']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          >
+            {/* Pattern Background */}
+            <View style={StyleSheet.absoluteFill}>
+              <Svg height="100%" width="100%">
+                <Defs>
+                  <Pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <Circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.15)" />
+                  </Pattern>
+                </Defs>
+                <Rect x="0" y="0" width="100%" height="100%" fill="url(#dots)" />
+                <Path 
+                  d={`M0 ${ITEM_HEIGHT} C ${CARD_WIDTH * 0.4} ${ITEM_HEIGHT * 0.4}, ${CARD_WIDTH * 0.6} ${ITEM_HEIGHT * 0.6}, ${CARD_WIDTH} 0 L ${CARD_WIDTH} ${ITEM_HEIGHT} Z`} 
+                  fill="rgba(255,255,255,0.05)"
+                />
+              </Svg>
             </View>
-            <View style={styles.statusBadge}>
-              {isLocked ? (
-                <Lock size={14} color={COLORS.foreground} style={{ opacity: 0.6 }} />
-              ) : (
-                <Unlock size={14} color={COLORS.primary} />
-              )}
-              <Text style={styles.statusText}>{item.status || (isLocked ? 'Locked' : 'Unlocked')}</Text>
-            </View>
-          </View>
 
-          <Text style={styles.cardTitle} numberOfLines={1}>
-            {item.message || 'Untitled VLOO'}
-          </Text>
-          
-          <View style={styles.cardFooter}>
-            <View style={styles.dateContainer}>
-              <Clock size={14} color={COLORS.foreground} style={{ opacity: 0.5, marginRight: 6 }} />
-              <Text style={styles.dateText}>
-                {new Date(item.unlock_date).toLocaleDateString()}
+            {/* Large VLOO Text Background */}
+            <Text style={styles.cardBrandText}>VLOO</Text>
+
+            {/* Content */}
+            <View style={{ padding: 24, flex: 1, justifyContent: 'space-between', zIndex: 10 }}>
+              <View style={styles.cardHeader}>
+                <View style={[styles.iconBg, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+                  <Gift size={20} color="#fff" />
+                </View>
+                <View style={[styles.statusBadge, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+                  {isLocked ? (
+                    <Lock size={14} color="#fff" style={{ opacity: 0.8 }} />
+                  ) : (
+                    <Unlock size={14} color="#4ADE80" />
+                  )}
+                  <Text style={[styles.statusText, { color: '#fff' }]}>{item.status || (isLocked ? 'Locked' : 'Unlocked')}</Text>
+                </View>
+              </View>
+
+              <Text style={[styles.cardTitle, { color: '#fff' }]} numberOfLines={2}>
+                {item.message || 'Untitled VLOO'}
               </Text>
+              
+              <View style={[styles.cardFooter, { borderTopColor: 'rgba(255,255,255,0.1)' }]}>
+                <View style={styles.dateContainer}>
+                  <Clock size={14} color="#fff" style={{ opacity: 0.7, marginRight: 6 }} />
+                  <Text style={[styles.dateText, { color: '#fff', opacity: 0.9 }]}>
+                    {new Date(item.unlock_date).toLocaleDateString()}
+                  </Text>
+                </View>
+                <Text style={[styles.amountText, { color: '#fff' }]}>
+                  Manage
+                </Text>
+              </View>
             </View>
-            <Text style={styles.amountText}>
-              {/* Placeholder for amount if we had it */}
-              Manage
-            </Text>
-          </View>
-        </Card>
+          </LinearGradient>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -305,6 +336,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.foreground,
     textTransform: 'capitalize',
+  },
+  cardBrandText: {
+    position: 'absolute',
+    bottom: 12,
+    left: 24,
+    fontFamily: FONTS.displayBold,
+    fontSize: 72,
+    color: 'rgba(255,255,255,0.15)', // Reduced opacity so it doesn't clash with content
+    letterSpacing: -4,
+    zIndex: 1,
   },
   cardTitle: {
     fontFamily: FONTS.displaySemiBold,
