@@ -1,12 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, RefreshControl, BackHandler } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, RefreshControl, BackHandler, Dimensions } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Defs, RadialGradient, Stop, Circle as SvgCircle } from 'react-native-svg';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
-import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User } from 'lucide-react-native';
+import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown } from 'lucide-react-native';
+import { Button } from '../../components/Button';
 
 import SwipeableCardStack from '../../components/SwipeableCardStack';
+
+const { width } = Dimensions.get('window');
 
 export default function GiverDashboardScreen({ navigation }: any) {
   const [vloos, setVloos] = useState<any[]>([]);
@@ -102,8 +106,27 @@ export default function GiverDashboardScreen({ navigation }: any) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       
-      {/* Dark Header Background with Curve */}
-      <View style={styles.headerBackground} />
+      {/* Background Glow */}
+      <View style={styles.glowContainer}>
+        <Svg height={width} width={width} viewBox={`0 0 ${width} ${width}`}>
+          <Defs>
+            <RadialGradient
+              id="grad"
+              cx={width / 2}
+              cy={width / 2}
+              rx={width / 2}
+              ry={width / 2}
+              fx={width / 2}
+              fy={width / 2}
+              gradientUnits="userSpaceOnUse"
+            >
+              <Stop offset="0" stopColor={COLORS.primary} stopOpacity="0.4" />
+              <Stop offset="1" stopColor={COLORS.primary} stopOpacity="0" />
+            </RadialGradient>
+          </Defs>
+          <SvgCircle cx={width / 2} cy={width / 2} r={width / 2} fill="url(#grad)" />
+        </Svg>
+      </View>
 
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
@@ -154,96 +177,98 @@ export default function GiverDashboardScreen({ navigation }: any) {
             </View>
           )}
 
-          {/* Cards Stack */}
-          <View style={styles.cardStackContainer}>
-            <SwipeableCardStack
-              data={vloos.length > 0 ? vloos : [{ id: 'mock', cards: [{ id: '2781 8191 6671 3190' }], unlock_date: new Date().toISOString() }]}
-              renderItem={renderCard}
-              onIndexChange={setCurrentCardIndex}
-            />
-          </View>
+          {/* Cards Stack or Empty State */}
+          {vloos.length > 0 ? (
+            <>
+              <View style={styles.cardStackContainer}>
+                <SwipeableCardStack
+                  data={vloos}
+                  renderItem={renderCard}
+                  onIndexChange={setCurrentCardIndex}
+                />
+              </View>
 
-          {/* Action Buttons */}
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('GiverCreate')}>
-              <Text style={styles.actionText}>Add</Text>
-              <View style={styles.actionIconCircle}>
-                <Plus size={16} color={COLORS.accent} strokeWidth={3} />
+              {/* Action Buttons */}
+              <View style={styles.actionsContainer}>
+                <Button
+                  title="Deposit"
+                  onPress={() => console.log('Deposit pressed')}
+                  variant="primary"
+                  style={styles.depositButton}
+                  gradient={['#d199f9', '#9F60D1']} // Pink gradient like first screen
+                />
               </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionButton}>
-              <Text style={styles.actionText}>Send</Text>
-              <View style={styles.actionIconCircle}>
-                <Send size={16} color={COLORS.accent} strokeWidth={3} />
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionButton}>
-              <Text style={styles.actionText}>Pay</Text>
-              <View style={styles.actionIconCircle}>
-                <Wallet size={16} color={COLORS.accent} strokeWidth={3} />
-              </View>
-            </TouchableOpacity>
-          </View>
 
+              {/* Card Detail */}
+              <View style={[styles.section, { paddingBottom: 100 }]}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Card Detail</Text>
+                  <TouchableOpacity>
+                    <Text style={styles.seeAllText}>Show</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Receiver Name</Text>
+                  <View style={styles.detailValueContainer}>
+                    <Text style={styles.detailValue}>
+                      {vloos[currentCardIndex]?.receiver_name || 'VLOO Gift'}
+                    </Text>
+                    <Copy size={16} color={COLORS.accent} style={{ marginLeft: 8 }} />
+                  </View>
+                </View>
+                
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Message</Text>
+                  <View style={styles.detailValueContainer}>
+                    <Text style={styles.detailValue} numberOfLines={1} ellipsizeMode="tail">
+                      {vloos[currentCardIndex]?.message || 'No message'}
+                    </Text>
+                  </View>
+                </View>
 
-          {/* Card Detail */}
-          <View style={[styles.section, { paddingBottom: 100 }]}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Card Detail</Text>
-              <TouchableOpacity>
-                <Text style={styles.seeAllText}>Show</Text>
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Receiver Name</Text>
-              <View style={styles.detailValueContainer}>
-                <Text style={styles.detailValue}>
-                  {vloos.length > 0 && vloos[currentCardIndex]?.receiver_name ? vloos[currentCardIndex].receiver_name : 'VLOO Gift'}
-                </Text>
-                <Copy size={16} color={COLORS.accent} style={{ marginLeft: 8 }} />
-              </View>
-            </View>
-            
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Message</Text>
-              <View style={styles.detailValueContainer}>
-                <Text style={styles.detailValue} numberOfLines={1} ellipsizeMode="tail">
-                  {vloos.length > 0 && vloos[currentCardIndex]?.message ? vloos[currentCardIndex].message : 'No message'}
-                </Text>
-              </View>
-            </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Unlock Date</Text>
+                  <View style={styles.detailValueContainer}>
+                    <Text style={styles.detailValue}>
+                      {vloos[currentCardIndex]?.unlock_date 
+                        ? new Date(vloos[currentCardIndex].unlock_date).toLocaleDateString() 
+                        : new Date().toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
 
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Unlock Date</Text>
-              <View style={styles.detailValueContainer}>
-                <Text style={styles.detailValue}>
-                  {vloos.length > 0 && vloos[currentCardIndex]?.unlock_date 
-                    ? new Date(vloos[currentCardIndex].unlock_date).toLocaleDateString() 
-                    : new Date().toLocaleDateString()}
-                </Text>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Status</Text>
+                  <View style={styles.detailValueContainer}>
+                    <Text style={[
+                      styles.detailValue, 
+                      { 
+                        color: vloos[currentCardIndex]?.status === 'claimed' ? COLORS.success : 
+                               vloos[currentCardIndex]?.status === 'ready' ? COLORS.accent : '#888'
+                      }
+                    ]}>
+                      {vloos[currentCardIndex]?.status 
+                        ? vloos[currentCardIndex].status.charAt(0).toUpperCase() + vloos[currentCardIndex].status.slice(1) 
+                        : 'Draft'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </>
+          ) : (
+            <View style={styles.emptyStateContainer}>
+              <Text style={styles.emptyStateText}>
+                You don't have any Vloo cards yet.
+              </Text>
+              <Text style={styles.emptyStateSubtext}>
+                Create your first digital gift card by tapping the button below.
+              </Text>
+              <View style={styles.arrowContainer}>
+                <ArrowDown size={32} color={COLORS.accent} />
               </View>
             </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Status</Text>
-              <View style={styles.detailValueContainer}>
-                <Text style={[
-                  styles.detailValue, 
-                  { 
-                    color: vloos.length > 0 && vloos[currentCardIndex]?.status === 'claimed' ? COLORS.success : 
-                           vloos.length > 0 && vloos[currentCardIndex]?.status === 'ready' ? COLORS.accent : '#888'
-                  }
-                ]}>
-                  {vloos.length > 0 && vloos[currentCardIndex]?.status 
-                    ? vloos[currentCardIndex].status.charAt(0).toUpperCase() + vloos[currentCardIndex].status.slice(1) 
-                    : 'Draft'}
-                </Text>
-              </View>
-            </View>
-          </View>
+          )}
 
         </SafeAreaView>
       </ScrollView>
@@ -251,23 +276,41 @@ export default function GiverDashboardScreen({ navigation }: any) {
       {/* Floating Bottom Navigation */}
       <View style={styles.bottomNavContainer}>
         <View style={styles.bottomNav}>
-          <TouchableOpacity style={styles.navItemActive}>
-            <View style={[styles.navIconActive, { backgroundColor: COLORS.primary }]}>
-              <Home size={20} color="#fff" />
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.navItem}>
-            <BarChart2 size={20} color="#666" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.navItem}>
-            <CreditCard size={20} color="#666" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.navItem}>
-            <Grid size={20} color="#666" />
-          </TouchableOpacity>
+          {vloos.length > 0 ? (
+            <>
+              <TouchableOpacity style={styles.navItemActive}>
+                <View style={[styles.navIconActive, { backgroundColor: COLORS.primary }]}>
+                  <Home size={20} color="#fff" />
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.navItem}>
+                <BarChart2 size={20} color="#666" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.addButton, { marginHorizontal: 0 }]} 
+                onPress={() => navigation.navigate('GiverCreate')}
+              >
+                <Plus size={24} color="#fff" />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.navItem}>
+                <CreditCard size={20} color="#666" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.navItem}>
+                <Grid size={20} color="#666" />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity 
+              style={styles.addButton} 
+              onPress={() => navigation.navigate('GiverCreate')}
+            >
+              <Plus size={24} color="#fff" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -280,15 +323,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  headerBackground: {
+  glowContainer: {
     position: 'absolute',
-    top: 0,
+    top: -width * 0.1,
     left: 0,
     right: 0,
-    height: 320, // Covers header and part of card
-    backgroundColor: '#1A1A1A',
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
+    alignItems: 'center',
+    zIndex: -1,
   },
   scrollContent: {
     paddingBottom: 20,
@@ -339,7 +380,7 @@ const styles = StyleSheet.create({
   // Profile Menu
   profileMenu: {
     position: 'absolute',
-    top: 70, // Below header
+    top: 120, // Lowered significantly to ensure it's under the avatar
     left: 24, // Aligned with padding
     width: 200,
     backgroundColor: '#1A1A1A',
@@ -454,38 +495,12 @@ const styles = StyleSheet.create({
 
   // Actions
   actionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 16,
+    width: '100%',
     marginBottom: 32,
   },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1A1A1A',
-    paddingVertical: 14,
-    borderRadius: 100,
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  actionText: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: 14,
-    color: '#fff',
-  },
-  actionIconCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(209, 153, 249, 0.1)', // Accent with opacity
-    justifyContent: 'center',
-    alignItems: 'center',
+  depositButton: {
+    width: '100%',
+    height: 56,
   },
 
   // Section
@@ -537,6 +552,33 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
 
+  // Empty State
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 100,
+    gap: 16,
+  },
+  emptyStateText: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 20,
+    color: '#fff',
+    textAlign: 'center',
+  },
+  emptyStateSubtext: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+    maxWidth: 260,
+  },
+  arrowContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Bouncing animation could be added here later
+  },
+
   // Floating Nav
   bottomNavContainer: {
     position: 'absolute',
@@ -576,5 +618,19 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+    marginHorizontal: 8,
   },
 });

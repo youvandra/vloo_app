@@ -1,16 +1,16 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { createRandomWallet } from '../../lib/wallet';
 import { encryptData } from '../../lib/crypto';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
-import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { ArrowLeft, Radio } from 'lucide-react-native';
 
 export default function GiverBindScreen({ route, navigation }: any) {
-  const { purpose, message, passphrase, unlockDate } = route.params;
+  const { purpose, receiverName, message, passphrase, unlockDate } = route.params;
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('Ready to bind card');
 
@@ -69,7 +69,8 @@ export default function GiverBindScreen({ route, navigation }: any) {
         unlock_date: unlockDate,
         message: message,
         status: 'locked',
-        giver_id: user.id
+        giver_id: user.id,
+        receiver_name: receiverName
       };
       
       console.log('Insert Payload:', JSON.stringify(insertPayload));
@@ -106,85 +107,143 @@ export default function GiverBindScreen({ route, navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft color={COLORS.foreground} size={24} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Bind Card</Text>
-      </View>
-      
-      <View style={styles.content}>
-        <Card style={styles.card}>
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        {/* Header - Matches ReceiverScanScreen */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <ArrowLeft color="#fff" size={24} />
+          </TouchableOpacity>
+          <View style={styles.brandBadge}>
+            <Text style={styles.brandBadgeText}>BIND VLOO</Text>
+          </View>
+        </View>
+        
+        <View style={styles.content}>
           <View style={styles.iconContainer}>
-            <Radio color={COLORS.primary} size={60} />
+            <Radio color={COLORS.accent} size={80} />
           </View>
           
-          <Text style={styles.title}>Tap to Bind</Text>
-          <Text style={styles.subtitle}>
-            Hold the NFC card near the phone to securely bind this VLOO.
-          </Text>
+          <View style={styles.textWrapper}>
+            <Text style={styles.headline}>
+              Tap to <Text style={styles.headlineHighlight}>Bind</Text>
+            </Text>
+            <Text style={styles.subheadline}>
+              Hold the NFC card near the phone to securely bind this VLOO.
+            </Text>
+          </View>
           
           {loading ? (
             <View style={styles.loader}>
-              <ActivityIndicator size="large" color={COLORS.primary} />
-              <Text style={styles.status}>{status}</Text>
+              <ActivityIndicator size="large" color={COLORS.accent} />
+              <Text style={styles.statusText}>{status}</Text>
             </View>
           ) : (
-            <Button 
-              title="Tap to Simulate NFC (Dev)" 
-              onPress={() => handleBind(true)} 
-              variant="primary"
-              style={{ marginTop: 20, width: '100%' }}
-            />
+            <View style={styles.actionContainer}>
+              <Button 
+                title="Tap to Simulate NFC (Dev)" 
+                onPress={() => handleBind(true)} 
+                variant="primary"
+                gradient={['#d199f9', '#9F60D1']}
+                style={styles.actionButton}
+              />
+            </View>
           )}
-        </Card>
-      </View>
+        </View>
+      </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  header: { 
-    paddingTop: 60, 
-    paddingHorizontal: 24, 
-    paddingBottom: 20, 
-    flexDirection: 'row', 
-    alignItems: 'center' 
+  mainContainer: {
+    flex: 1,
+    backgroundColor: '#000',
   },
-  backButton: { marginRight: 16 },
-  headerTitle: { 
-    fontFamily: FONTS.displayBold, 
-    fontSize: 28, 
-    color: COLORS.foreground 
+  safeArea: {
+    flex: 1,
   },
-  content: { flex: 1, justifyContent: 'center', padding: 24 },
-  card: { alignItems: 'center', paddingVertical: 40 },
-  iconContainer: { 
-    marginBottom: 20, 
-    padding: 20, 
-    backgroundColor: 'rgba(11, 28, 196, 0.1)', 
-    borderRadius: 50 
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
   },
-  title: { 
-    fontFamily: FONTS.displayBold, 
-    fontSize: 24, 
-    color: COLORS.foreground, 
-    marginBottom: 10 
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
-  subtitle: { 
-    fontFamily: FONTS.bodyRegular, 
-    fontSize: 16, 
-    textAlign: 'center', 
-    color: COLORS.foreground, 
-    marginBottom: 30,
-    opacity: 0.7
+  brandBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  loader: { alignItems: 'center', marginTop: 20 },
-  status: { 
-    marginTop: 10, 
-    color: COLORS.foreground, 
-    fontFamily: FONTS.bodySemiBold 
-  }
+  brandBadgeText: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 12,
+    color: '#fff',
+    letterSpacing: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  textWrapper: {
+    marginBottom: 48,
+  },
+  headline: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 32,
+    color: '#fff',
+    lineHeight: 40,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  headlineHighlight: {
+    color: COLORS.accent,
+  },
+  subheadline: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 16,
+    color: '#999',
+    lineHeight: 24,
+    textAlign: 'center',
+    maxWidth: 280,
+    alignSelf: 'center',
+  },
+  loader: {
+    alignItems: 'center',
+    gap: 16,
+  },
+  statusText: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 16,
+    color: '#fff',
+  },
+  actionContainer: {
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  actionButton: {
+    width: '100%',
+    height: 56,
+  },
 });
