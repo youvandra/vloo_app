@@ -9,6 +9,7 @@ export interface Vloo {
   unlock_date: string; // ISO string
   message: string;
   status: VlooStatus;
+  receiver_name?: string;
 }
 
 export interface Card {
