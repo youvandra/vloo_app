@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from '../screens/HomeScreen';
+import GiverLoginScreen from '../screens/GiverLoginScreen';
 import GiverCreateScreen from '../screens/GiverCreateScreen';
 import GiverBindScreen from '../screens/GiverBindScreen';
 import GiverSuccessScreen from '../screens/GiverSuccessScreen';
@@ -18,6 +19,7 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="GiverLogin" component={GiverLoginScreen} />
         <Stack.Screen name="GiverCreate" component={GiverCreateScreen} />
         <Stack.Screen name="GiverBind" component={GiverBindScreen} />
         <Stack.Screen name="GiverSuccess" component={GiverSuccessScreen} />

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, FONTS } from '../lib/theme';
 import { Button } from '../components/Button';
@@ -17,7 +17,7 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.actions}>
           <Button 
             title="Giver" 
-            onPress={() => navigation.navigate('GiverCreate')}
+            onPress={() => navigation.navigate('GiverLogin')}
             variant="primary"
             style={styles.button}
           />

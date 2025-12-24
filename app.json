@@ -3,6 +3,7 @@
     "name": "vloo_mvp-app",
     "slug": "vloo_mvp-app",
     "version": "1.0.0",
+    "scheme": "vloo",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "light",
@@ -26,7 +27,8 @@
       "favicon": "./src/assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ]
   }
 }
