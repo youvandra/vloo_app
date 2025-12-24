@@ -17,6 +17,7 @@ export const COLORS = {
   foreground: '#000000', // Black
   inverse: '#FFFFFF',    // White
   error: '#FF4444',      // Error Red
+  success: '#4ADE80',    // Success Green
   
   // Translucency for Glassmorphism fallbacks
   glassWhite: 'rgba(255, 255, 255, 0.9)',

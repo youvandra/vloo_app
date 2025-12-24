@@ -14,6 +14,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   const fetchVloos = async () => {
     try {
@@ -82,8 +83,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
         
         <View style={styles.cardBottom}>
           <View>
-            <Text style={styles.cardLabel}>Holder Name</Text>
-            <Text style={styles.cardValue}>{user?.user_metadata?.full_name || 'VLOO Giver'}</Text>
+            <Text style={styles.cardLabel}>Receiver Name</Text>
+            <Text style={styles.cardValue}>{item.receiver_name || 'VLOO Gift'}</Text>
           </View>
           <View>
             <Text style={styles.cardLabel}>Exp</Text>
@@ -158,6 +159,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
             <SwipeableCardStack
               data={vloos.length > 0 ? vloos : [{ id: 'mock', cards: [{ id: '2781 8191 6671 3190' }], unlock_date: new Date().toISOString() }]}
               renderItem={renderCard}
+              onIndexChange={setCurrentCardIndex}
             />
           </View>
 
@@ -196,20 +198,49 @@ export default function GiverDashboardScreen({ navigation }: any) {
             </View>
             
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Holder Name</Text>
+              <Text style={styles.detailLabel}>Receiver Name</Text>
               <View style={styles.detailValueContainer}>
-                <Text style={styles.detailValue}>{user?.user_metadata?.full_name || 'VLOO Giver'}</Text>
+                <Text style={styles.detailValue}>
+                  {vloos.length > 0 && vloos[currentCardIndex]?.receiver_name ? vloos[currentCardIndex].receiver_name : 'VLOO Gift'}
+                </Text>
                 <Copy size={16} color={COLORS.accent} style={{ marginLeft: 8 }} />
               </View>
             </View>
             
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Card Number</Text>
+              <Text style={styles.detailLabel}>Message</Text>
+              <View style={styles.detailValueContainer}>
+                <Text style={styles.detailValue} numberOfLines={1} ellipsizeMode="tail">
+                  {vloos.length > 0 && vloos[currentCardIndex]?.message ? vloos[currentCardIndex].message : 'No message'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Unlock Date</Text>
               <View style={styles.detailValueContainer}>
                 <Text style={styles.detailValue}>
-                  {vloos.length > 0 && vloos[0].cards?.[0]?.id ? vloos[0].cards[0].id : '2781 8191 6671 3190'}
+                  {vloos.length > 0 && vloos[currentCardIndex]?.unlock_date 
+                    ? new Date(vloos[currentCardIndex].unlock_date).toLocaleDateString() 
+                    : new Date().toLocaleDateString()}
                 </Text>
-                <Copy size={16} color={COLORS.accent} style={{ marginLeft: 8 }} />
+              </View>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Status</Text>
+              <View style={styles.detailValueContainer}>
+                <Text style={[
+                  styles.detailValue, 
+                  { 
+                    color: vloos.length > 0 && vloos[currentCardIndex]?.status === 'claimed' ? COLORS.success : 
+                           vloos.length > 0 && vloos[currentCardIndex]?.status === 'ready' ? COLORS.accent : '#888'
+                  }
+                ]}>
+                  {vloos.length > 0 && vloos[currentCardIndex]?.status 
+                    ? vloos[currentCardIndex].status.charAt(0).toUpperCase() + vloos[currentCardIndex].status.slice(1) 
+                    : 'Draft'}
+                </Text>
               </View>
             </View>
           </View>
@@ -496,11 +527,14 @@ const styles = StyleSheet.create({
   detailValueContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    maxWidth: '60%',
+    justifyContent: 'flex-end',
   },
   detailValue: {
     fontFamily: FONTS.bodySemiBold,
     fontSize: 14,
     color: '#fff',
+    flexShrink: 1,
   },
 
   // Floating Nav

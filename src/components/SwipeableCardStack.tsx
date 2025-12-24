@@ -22,6 +22,7 @@ interface SwipeableCardStackProps {
   renderItem: (item: any, index: number) => React.ReactNode;
   onSwipeRight?: (item: any) => void;
   onSwipeLeft?: (item: any) => void;
+  onIndexChange?: (index: number) => void;
   containerStyle?: any;
 }
 
@@ -30,6 +31,7 @@ export default function SwipeableCardStack({
   renderItem, 
   onSwipeRight, 
   onSwipeLeft,
+  onIndexChange,
   containerStyle 
 }: SwipeableCardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -49,7 +51,11 @@ export default function SwipeableCardStack({
       onSwipeLeft(item);
     }
     
-    setCurrentIndex((prev) => (prev + 1) % data.length); // Loop or stop? Let's loop for now to always show cards if available
+    const nextIndex = (currentIndex + 1) % data.length;
+    setCurrentIndex(nextIndex); 
+    if (onIndexChange) {
+      onIndexChange(nextIndex);
+    }
     translationX.value = 0;
     translationY.value = 0;
   };
