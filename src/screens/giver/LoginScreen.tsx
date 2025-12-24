@@ -51,25 +51,28 @@ export default function GiverLoginScreen({ navigation }: any) {
           // However, Supabase's signInWithOAuth usually handles the callback 
           // if we pass the URL back to it or if it detects the session storage.
           
-          // For mobile, the easiest way is to let Supabase handle the URL parsing:
-          // But since we are in a managed workflow, we might need to extract the params.
-          // Let's check if we have a session.
-          
-          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-          
-          if (sessionData.session) {
+          // Extract access_token and refresh_token from result.url
+          // Supabase returns these in the URL fragment (#) or query params depending on config.
+          const params = new URLSearchParams(result.url.split('#')[1] || result.url.split('?')[1]);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+
+            if (error) throw error;
             navigation.navigate('GiverDashboard');
           } else {
-             // If manual parsing is needed (often for deep links), we'd do it here.
-             // For now, let's assume successful redirect means we can proceed 
-             // or check session again.
-             
-             // Extract access_token and refresh_token from result.url if needed
-             // This part depends heavily on how Supabase is configured (fragment vs query)
-             
-             // Fallback: Just navigate for now if result is success (MVP)
-             // In prod, verify session strictly.
-             navigation.navigate('GiverDashboard');
+             // Fallback: Check session again
+             const { data: sessionData } = await supabase.auth.getSession();
+             if (sessionData.session) {
+                navigation.navigate('GiverDashboard');
+             } else {
+                Alert.alert('Login Failed', 'Could not establish session.');
+             }
           }
         }
       }
@@ -82,12 +85,23 @@ export default function GiverLoginScreen({ navigation }: any) {
 
   // Check if already logged in
   useEffect(() => {
-    // Auto-redirect disabled for testing/MVP visibility
+    // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigation.navigate('GiverDashboard');
       }
     });
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        navigation.navigate('GiverDashboard');
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   return (

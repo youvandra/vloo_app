@@ -10,6 +10,16 @@ import { ArrowLeft } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 
 export default function GiverCreateScreen({ navigation }: any) {
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        Alert.alert('Session Expired', 'Please log in again.', [
+          { text: 'OK', onPress: () => navigation.navigate('GiverLogin') }
+        ]);
+      }
+    });
+  }, []);
+
   const [purpose, setPurpose] = useState('Gift');
   const [message, setMessage] = useState('');
   const [passphrase, setPassphrase] = useState('');
