@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
-import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid } from 'lucide-react-native';
+import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User } from 'lucide-react-native';
 
 import SwipeableCardStack from '../../components/SwipeableCardStack';
 
@@ -13,6 +13,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const fetchVloos = async () => {
     try {
@@ -53,6 +54,16 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const onRefresh = () => {
     setRefreshing(true);
     fetchVloos();
+  };
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigation.replace('GiverLogin');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   const renderCard = (item: any) => {
@@ -102,10 +113,12 @@ export default function GiverDashboardScreen({ navigation }: any) {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.userInfo}>
-              <Image 
-                source={{ uri: user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/150?u=giver' }} 
-                style={styles.avatar} 
-              />
+              <TouchableOpacity onPress={() => setShowProfileMenu(!showProfileMenu)}>
+                <Image 
+                  source={{ uri: user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/150?u=giver' }} 
+                  style={styles.avatar} 
+                />
+              </TouchableOpacity>
               <View>
                 <Text style={styles.greeting}>Morning {user?.user_metadata?.full_name?.split(' ')[0] || 'Giver'},</Text>
                 <Text style={styles.accountType}>Free Account</Text>
@@ -115,6 +128,30 @@ export default function GiverDashboardScreen({ navigation }: any) {
               <Bell color="#fff" size={20} />
             </TouchableOpacity>
           </View>
+
+          {/* Profile Menu Dropdown */}
+          {showProfileMenu && (
+            <View style={styles.profileMenu}>
+              <TouchableOpacity style={styles.menuItem} onPress={() => {
+                setShowProfileMenu(false);
+                // Navigate to edit profile or show modal
+                console.log('Edit Profile');
+              }}>
+                <User size={18} color="#fff" />
+                <Text style={styles.menuText}>Edit Profile</Text>
+              </TouchableOpacity>
+              
+              <View style={styles.menuDivider} />
+              
+              <TouchableOpacity style={styles.menuItem} onPress={() => {
+                setShowProfileMenu(false);
+                handleLogout();
+              }}>
+                <LogOut size={18} color="#FF4D4D" />
+                <Text style={[styles.menuText, { color: '#FF4D4D' }]}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Cards Stack */}
           <View style={styles.cardStackContainer}>
@@ -266,6 +303,42 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+
+  // Profile Menu
+  profileMenu: {
+    position: 'absolute',
+    top: 70, // Below header
+    left: 24, // Aligned with padding
+    width: 200,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 8,
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    gap: 12,
+    borderRadius: 8,
+  },
+  menuText: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 14,
+    color: '#fff',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#333',
+    marginVertical: 4,
   },
 
   // Card Stack
