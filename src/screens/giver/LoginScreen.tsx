@@ -49,11 +49,11 @@ export default function GiverLoginScreen({ navigation }: any) {
             });
 
             if (error) throw error;
-            navigation.navigate('GiverDashboard');
+            navigation.replace('GiverDashboard');
           } else {
              const { data: sessionData } = await supabase.auth.getSession();
              if (sessionData.session) {
-                navigation.navigate('GiverDashboard');
+                navigation.replace('GiverDashboard');
              } else {
                 Alert.alert('Login Failed', 'Could not establish session.');
              }
@@ -70,13 +70,13 @@ export default function GiverLoginScreen({ navigation }: any) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigation.navigate('GiverDashboard');
+        navigation.replace('GiverDashboard');
       }
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        navigation.navigate('GiverDashboard');
+        navigation.replace('GiverDashboard');
       }
     });
 
@@ -92,7 +92,7 @@ export default function GiverLoginScreen({ navigation }: any) {
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
             <ArrowLeft color="#fff" size={24} />
           </TouchableOpacity>
           

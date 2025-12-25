@@ -248,7 +248,11 @@ export default function GiverDashboardScreen({ navigation }: any) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      navigation.replace('GiverLogin');
+      // Reset stack to ensure clean history (Home -> Login)
+      navigation.reset({
+        index: 1,
+        routes: [{ name: 'Home' }, { name: 'GiverLogin' }],
+      });
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -283,10 +287,11 @@ export default function GiverDashboardScreen({ navigation }: any) {
     return (
       <View style={[styles.mainCard, { backgroundColor: COLORS.primary }]}>
         <View style={styles.cardTop}>
-          <View style={styles.cardLogo}>
-            <View style={styles.logoLeft} />
-            <View style={styles.logoRight} />
-          </View>
+          <Image 
+            source={require('../../assets/logo-min.png')} 
+            style={styles.cardLogo} 
+            resizeMode="contain"
+          />
           <View style={styles.nfcIdContainer}>
              <Text style={styles.nfcIdLabel}>CARD ID</Text>
              <Text style={styles.nfcIdValue}>{item.cards?.[0]?.id || '••••'}</Text>
@@ -817,27 +822,6 @@ const styles = StyleSheet.create({
   cardLogo: {
     width: 30,
     height: 30,
-    position: 'relative',
-  },
-  logoLeft: {
-    position: 'absolute',
-    width: 8,
-    height: 20,
-    backgroundColor: '#fff',
-    transform: [{ rotate: '-45deg' }],
-    left: 4,
-    top: 5,
-    borderRadius: 4,
-  },
-  logoRight: {
-    position: 'absolute',
-    width: 8,
-    height: 12,
-    backgroundColor: '#fff',
-    transform: [{ rotate: '45deg' }],
-    right: 4,
-    top: 5,
-    borderRadius: 4,
   },
   nfcIdContainer: {
     alignItems: 'flex-end',
