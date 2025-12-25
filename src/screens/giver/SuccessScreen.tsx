@@ -1,100 +1,103 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
+import { View, Text, StyleSheet, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
-import { CheckCircle, Copy } from 'lucide-react-native';
+import { CheckCircle } from 'lucide-react-native';
 
 export default function GiverSuccessScreen({ route, navigation }: any) {
-  const { address, cardId } = route.params;
-
-  const copyToClipboard = () => {
-    Clipboard.setString(address);
-    Alert.alert('Copied', 'Address copied to clipboard');
-  };
+  const { cardId } = route.params;
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView style={styles.content}>
         <View style={styles.iconContainer}>
-          <CheckCircle color={COLORS.primary} size={60} />
+          <CheckCircle color={COLORS.accent} size={80} />
         </View>
 
         <Text style={styles.title}>VLOO Created!</Text>
         <Text style={styles.subtitle}>
-          The card is now bound. Fund the wallet below to complete the gift.
+          The card is now bound successfully.
         </Text>
         
-        <Card style={styles.addressCard}>
-          <Text style={styles.label}>Wallet Address</Text>
-          <Text style={styles.address}>{address}</Text>
-          
-          <Button 
-            title="Copy Address" 
-            onPress={copyToClipboard}
-            variant="outline"
-            style={{ marginTop: 15, paddingVertical: 12 }}
-            textStyle={{ fontSize: 14 }}
-          />
-        </Card>
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.info}>Card ID: {cardId}</Text>
-          <Text style={styles.info}>Send ETH to this address.</Text>
+        <View style={styles.idContainer}>
+          <Text style={styles.idLabel}>CARD ID</Text>
+          <Text style={styles.idValue}>{cardId}</Text>
         </View>
 
         <Button 
           title="Done" 
           onPress={() => navigation.navigate('GiverDashboard')} 
           variant="primary"
-          style={{ width: '100%', marginTop: 30 }}
+          gradient={['#d199f9', '#9F60D1']}
+          style={styles.doneButton}
         />
-      </View>
+      </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  content: { flex: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
-  iconContainer: { marginBottom: 20 },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#000',
+  },
+  content: { 
+    flex: 1, 
+    padding: 24, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  iconContainer: { 
+    marginBottom: 32,
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+  },
   title: { 
     fontFamily: FONTS.displayBold, 
     fontSize: 32, 
-    color: COLORS.foreground, 
-    marginBottom: 10 
+    color: '#fff', 
+    marginBottom: 12,
+    textAlign: 'center',
   },
   subtitle: { 
     fontFamily: FONTS.bodyRegular, 
     fontSize: 16, 
-    color: COLORS.foreground, 
+    color: '#999', 
     textAlign: 'center', 
-    marginBottom: 40,
-    opacity: 0.7
+    marginBottom: 48,
+    maxWidth: 280,
   },
-  addressCard: { width: '100%', marginBottom: 20, backgroundColor: 'rgba(255,255,255,0.7)' },
-  label: { 
-    fontFamily: FONTS.bodyBold, 
-    fontSize: 12, 
-    color: COLORS.foreground, 
-    marginBottom: 8, 
-    opacity: 0.5,
-    textTransform: 'uppercase'
+  idContainer: {
+    backgroundColor: '#111',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+    alignItems: 'center',
+    marginBottom: 48,
   },
-  address: { 
-    fontFamily: 'Courier', 
-    fontSize: 13, 
-    color: COLORS.foreground, 
-    marginBottom: 10,
-    textAlign: 'center'
+  idLabel: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+    letterSpacing: 1,
   },
-  infoContainer: { alignItems: 'center', gap: 5 },
-  info: { 
-    fontFamily: FONTS.bodyRegular, 
-    fontSize: 14, 
-    color: COLORS.foreground, 
-    opacity: 0.6 
+  idValue: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 18,
+    color: '#fff',
+    letterSpacing: 1,
+  },
+  doneButton: { 
+    width: '100%', 
+    height: 56,
   }
 });
