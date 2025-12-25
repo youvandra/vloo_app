@@ -67,6 +67,20 @@ export default function GiverDashboardScreen({ navigation }: any) {
     })
   ).current;
 
+  const profilePanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 50) {
+          setShowProfileMenu(false);
+        }
+      },
+    })
+  ).current;
+
   const onChangeDate = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
@@ -337,7 +351,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.userInfo}>
-              <TouchableOpacity onPress={() => setShowProfileMenu(!showProfileMenu)}>
+              <TouchableOpacity onPress={() => setShowProfileMenu(true)}>
                 <Image 
                   source={{ uri: user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/150?u=giver' }} 
                   style={styles.avatar} 
@@ -354,30 +368,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
               </TouchableOpacity>
             </View>
           </View>
-
-          {/* Profile Menu Dropdown */}
-          {showProfileMenu && (
-            <View style={styles.profileMenu}>
-              <TouchableOpacity style={styles.menuItem} onPress={() => {
-                setShowProfileMenu(false);
-                // Navigate to edit profile or show modal
-                console.log('Edit Profile');
-              }}>
-                <User size={18} color="#fff" />
-                <Text style={styles.menuText}>Edit Profile</Text>
-              </TouchableOpacity>
-              
-              <View style={styles.menuDivider} />
-              
-              <TouchableOpacity style={styles.menuItem} onPress={() => {
-                setShowProfileMenu(false);
-                handleLogout();
-              }}>
-                <LogOut size={18} color="#FF4D4D" />
-                <Text style={[styles.menuText, { color: '#FF4D4D' }]}>Log Out</Text>
-              </TouchableOpacity>
-            </View>
-          )}
 
           {/* Cards Stack (Always visible now, even if empty, to show placeholder) */}
           <View style={styles.cardStackContainer}>
@@ -614,6 +604,46 @@ export default function GiverDashboardScreen({ navigation }: any) {
         </View>
       </Modal>
 
+      {/* Profile Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showProfileMenu}
+        onRequestClose={() => setShowProfileMenu(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowProfileMenu(false)}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+        <View style={[styles.modalContent, { height: '30%' }]}>
+          <View style={styles.modalHeader} {...profilePanResponder.panHandlers}>
+            <View style={styles.modalIndicator} />
+          </View>
+          <ScrollView contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+            <Text style={[styles.headline, { textAlign: 'left', fontSize: 24, marginBottom: 24 }]}>
+              Account
+            </Text>
+            
+            <TouchableOpacity style={styles.profileMenuItem} onPress={() => {
+              setShowProfileMenu(false);
+              // Navigate to edit profile
+            }}>
+              <User size={24} color="#fff" />
+              <Text style={styles.profileMenuText}>Edit Profile</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.profileMenuDivider} />
+            
+            <TouchableOpacity style={styles.profileMenuItem} onPress={() => {
+              setShowProfileMenu(false);
+              handleLogout();
+            }}>
+              <LogOut size={24} color="#FF4D4D" />
+              <Text style={[styles.profileMenuText, { color: '#FF4D4D' }]}>Log Out</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
+
       {/* Floating Bottom Navigation */}
       {vloos.length > 0 && (
         <View style={styles.bottomNavContainer}>
@@ -707,41 +737,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Profile Menu
-  profileMenu: {
-    position: 'absolute',
-    top: 120, // Lowered significantly to ensure it's under the avatar
-    left: 24, // Aligned with padding
-    right: 24, // Constrain width to safe area logic
-    width: 'auto',
-    maxWidth: 240,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
-    padding: 8,
-    zIndex: 100,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  menuItem: {
+  // Profile Menu Styles
+  profileMenuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    gap: 12,
-    borderRadius: 8,
+    paddingVertical: 16,
+    gap: 16,
   },
-  menuText: {
+  profileMenuText: {
     fontFamily: FONTS.bodySemiBold,
-    fontSize: 14,
+    fontSize: 16,
     color: '#fff',
   },
-  menuDivider: {
+  profileMenuDivider: {
     height: 1,
-    backgroundColor: '#333',
+    backgroundColor: '#222',
     marginVertical: 4,
   },
 
