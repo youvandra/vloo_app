@@ -119,8 +119,7 @@ export default function GiverLoginScreen({ navigation }: any) {
               onPress={handleGoogleLogin}
               variant="primary"
               disabled={loading}
-              style={styles.actionButton}
-              gradient={['#d199f9', '#9F60D1']}
+              style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
             />
             <Text style={styles.disclaimer}>
               By continuing, you agree to our Terms of Service and Privacy Policy.
