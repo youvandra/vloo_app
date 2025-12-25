@@ -5,9 +5,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Stop, Circle as SvgCircle } from 'react-native-svg';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
-import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, Gift } from 'lucide-react-native';
+import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, Gift, Radio, ArrowLeft } from 'lucide-react-native';
 import { Button } from '../../components/Button';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { createRandomWallet } from '../../lib/wallet';
+import { encryptData } from '../../lib/crypto';
+import { ActivityIndicator } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82; // Slightly wider for better peek
@@ -21,6 +24,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [bindModalVisible, setBindModalVisible] = useState(false);
   
   // Create Form State
   const [purpose, setPurpose] = useState('Gift');
@@ -31,6 +35,10 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
+  // Bind State
+  const [bindLoading, setBindLoading] = useState(false);
+  const [bindStatus, setBindStatus] = useState('Ready to bind card');
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -40,6 +48,20 @@ export default function GiverDashboardScreen({ navigation }: any) {
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dy > 50) {
           setCreateModalVisible(false);
+        }
+      },
+    })
+  ).current;
+
+  const bindPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 50) {
+          setBindModalVisible(false);
         }
       },
     })
@@ -80,7 +102,91 @@ export default function GiverDashboardScreen({ navigation }: any) {
       return;
     }
     setCreateModalVisible(false);
-    navigation.navigate('GiverBind', { purpose, receiverName, message, passphrase, unlockDate: unlockDate.toISOString() });
+    setBindModalVisible(true);
+  };
+
+  const handleBind = async (mock: boolean = false) => {
+    setBindLoading(true);
+    setBindStatus('Generating secure wallet...');
+
+    try {
+      // 1. Generate Wallet
+      const wallet = createRandomWallet();
+      const privateKey = wallet.privateKey;
+      const address = wallet.address;
+
+      // 2. Encrypt Private Key
+      setBindStatus('Encrypting keys...');
+      const encryptedKey = encryptData(privateKey, passphrase);
+
+      // 3. Get NFC ID (Mock or Real)
+      let cardId = '';
+      if (mock) {
+        cardId = 'mock-nfc-id-' + Math.floor(Math.random() * 10000);
+      } else {
+        cardId = 'simulated-real-id'; // Fallback for MVP
+      }
+
+      // 4. Get User (Already have 'user' state, but refresh if needed)
+      let currentUser = user;
+      if (!currentUser) {
+         const { data: { session } } = await supabase.auth.getSession();
+         currentUser = session?.user;
+      }
+      
+      if (!currentUser) {
+         Alert.alert('Session Expired', 'Please log in again.');
+         setBindLoading(false);
+         return;
+      }
+
+      // 5. Save to Supabase
+      setBindStatus('Saving to VLOO network...');
+      
+      const insertPayload = {
+        encrypted_private_key: encryptedKey,
+        wallet_address: address,
+        unlock_date: unlockDate.toISOString(),
+        message: message,
+        status: 'locked',
+        giver_id: currentUser.id,
+        receiver_name: receiverName
+      };
+      
+      const { data: vlooData, error: vlooError } = await supabase
+        .from('vloos')
+        .insert([insertPayload])
+        .select()
+        .single();
+
+      if (vlooError) throw new Error(vlooError.message);
+
+      const { error: cardError } = await supabase
+        .from('cards')
+        .insert([{
+          id: cardId,
+          vloo_id: vlooData.id
+        }]);
+
+      if (cardError) throw cardError;
+
+      setBindModalVisible(false);
+      // Reset Form
+      setReceiverName('');
+      setMessage('');
+      setPassphrase('');
+      setPurpose('Gift');
+      
+      navigation.navigate('GiverSuccess', { address, cardId });
+      fetchVloos(); // Refresh list
+
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert('Error', error.message || 'Failed to bind VLOO');
+      setBindStatus('Failed');
+    } finally {
+      setBindLoading(false);
+    }
   };
 
   const fetchVloos = async () => {
@@ -444,6 +550,66 @@ export default function GiverDashboardScreen({ navigation }: any) {
           </ScrollView>
         </View>
             </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Bind Vloo Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={bindModalVisible}
+        onRequestClose={() => setBindModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setBindModalVisible(false)}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader} {...bindPanResponder.panHandlers}>
+            <View style={styles.modalIndicator} />
+          </View>
+          
+          <ScrollView contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.iconContainer}>
+              <Radio color={COLORS.accent} size={60} />
+            </View>
+            
+            <Text style={[styles.headline, { textAlign: 'center' }]}>
+              Bind Vloo Card
+            </Text>
+            <Text style={styles.subheadline}>
+              Hold the NFC card near the phone to securely bind this VLOO.
+            </Text>
+
+            <View style={styles.formSection}>
+              {bindLoading ? (
+                <View style={{ alignItems: 'center', padding: 20 }}>
+                  <ActivityIndicator size="large" color={COLORS.accent} />
+                  <Text style={{ color: '#888', marginTop: 16, fontFamily: FONTS.bodyRegular }}>
+                    {bindStatus}
+                  </Text>
+                </View>
+              ) : (
+                <View style={{ marginTop: 20 }}>
+                  <Button 
+                    title="Tap to Simulate NFC (Dev)" 
+                    onPress={() => handleBind(true)} 
+                    variant="primary" 
+                    gradient={['#d199f9', '#9F60D1']}
+                    style={styles.actionButton}
+                  />
+                  <TouchableOpacity 
+                    style={{ marginTop: 16, alignItems: 'center' }}
+                    onPress={() => {
+                      setBindModalVisible(false);
+                      setCreateModalVisible(true);
+                    }}
+                  >
+                    <Text style={{ color: '#666', fontFamily: FONTS.bodyRegular }}>Back to details</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        </View>
       </Modal>
 
       {/* Floating Bottom Navigation */}
