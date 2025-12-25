@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, RefreshControl, BackHandler, Dimensions, FlatList } from 'react-native';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, RefreshControl, BackHandler, Dimensions, FlatList, Platform, Alert, Modal, TextInput, KeyboardAvoidingView, TouchableWithoutFeedback, PanResponder } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Stop, Circle as SvgCircle } from 'react-native-svg';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
-import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown } from 'lucide-react-native';
+import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, Gift } from 'lucide-react-native';
 import { Button } from '../../components/Button';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82; // Slightly wider for better peek
@@ -19,6 +20,68 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [user, setUser] = useState<any>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+  
+  // Create Form State
+  const [purpose, setPurpose] = useState('Gift');
+  const [receiverName, setReceiverName] = useState('');
+  const [message, setMessage] = useState('');
+  const [passphrase, setPassphrase] = useState('');
+  const [unlockDate, setUnlockDate] = useState(new Date(Date.now() + 60000));
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 50) {
+          setCreateModalVisible(false);
+        }
+      },
+    })
+  ).current;
+
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      const current = new Date(unlockDate);
+      current.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      setUnlockDate(current);
+      if (Platform.OS === 'android') {
+        setShowTimePicker(true);
+      }
+    }
+  };
+
+  const onChangeTime = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
+    if (selectedDate) {
+      const current = new Date(unlockDate);
+      current.setHours(selectedDate.getHours(), selectedDate.getMinutes());
+      setUnlockDate(current);
+    }
+  };
+
+  const showDatepicker = () => {
+    setShowDatePicker(true);
+  };
+
+  const handleNext = () => {
+    if (!receiverName || !message || !passphrase) {
+      Alert.alert('Missing fields', 'Please fill in all fields.');
+      return;
+    }
+    setCreateModalVisible(false);
+    navigation.navigate('GiverBind', { purpose, receiverName, message, passphrase, unlockDate: unlockDate.toISOString() });
+  };
 
   const fetchVloos = async () => {
     try {
@@ -80,7 +143,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
       return (
         <TouchableOpacity 
           style={[styles.mainCard, styles.placeholderCard]}
-          onPress={() => navigation.navigate('GiverCreate')}
+          onPress={() => setCreateModalVisible(true)}
           activeOpacity={0.8}
         >
           <View style={styles.placeholderContent}>
@@ -124,6 +187,9 @@ export default function GiverDashboardScreen({ navigation }: any) {
               {item.unlock_date ? new Date(item.unlock_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Sep 29, 2025'}
             </Text>
           </View>
+          <TouchableOpacity style={styles.cardSettingsButton}>
+             <Settings size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -177,12 +243,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
               </View>
             </View>
             <View style={styles.headerActions}>
-              <TouchableOpacity 
-                style={styles.headerButton}
-                onPress={() => navigation.navigate('GiverCreate')}
-              >
-                <Plus color="#fff" size={20} />
-              </TouchableOpacity>
               <TouchableOpacity style={styles.headerButton}>
                 <Bell color="#fff" size={20} />
               </TouchableOpacity>
@@ -213,87 +273,178 @@ export default function GiverDashboardScreen({ navigation }: any) {
             </View>
           )}
 
-          {/* Cards Stack or Empty State */}
-          {vloos.length > 0 ? (
-            <>
-              <View style={styles.cardStackContainer}>
-                <FlatList
-                  data={displayData}
-                  renderItem={renderCardItem}
-                  horizontal
-                  pagingEnabled={false}
-                  showsHorizontalScrollIndicator={false}
-                  keyExtractor={(item, index) => item.id || index.toString()}
-                  onMomentumScrollEnd={(ev) => {
-                    const index = Math.round(ev.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_SPACING));
-                    setCurrentCardIndex(index);
-                  }}
-                  snapToInterval={CARD_WIDTH + CARD_SPACING}
-                  decelerationRate="fast"
-                  contentContainerStyle={{ paddingHorizontal: (width - CARD_WIDTH) / 2 }}
-                  snapToAlignment="center"
-                />
-              </View>
-
-              {/* Message Section */}
-              {currentCardIndex < vloos.length ? (
-                <View style={styles.messageSection}>
-                  <Text style={styles.messageLabel}>Note for receiver</Text>
-                  <View style={styles.messageContainer}>
-                    <Text style={styles.messageText}>
-                      {vloos[currentCardIndex]?.message || 'No message attached'}
-                    </Text>
-                  </View>
-                  <Text style={styles.messageContextText}>Included with deposit</Text>
-                </View>
-              ) : (
-                <View style={[styles.messageSection, { opacity: 0 }]} pointerEvents="none">
-                   {/* Invisible placeholder to maintain layout height if needed, or just hide */}
-                   <Text style={styles.messageLabel}>Placeholder</Text>
-                   <View style={styles.messageContainer}><Text style={styles.messageText}>Placeholder</Text></View>
-                   <Text style={styles.messageContextText}>Placeholder</Text>
-                </View>
-              )}
-
-              {/* Action Buttons */}
-              <View style={styles.actionsContainer}>
-                {currentCardIndex < vloos.length ? (
-                  <Button
-                    title="Confirm Deposit"
-                    onPress={() => console.log('Deposit pressed')}
-                    variant="primary"
-                    style={styles.depositButton}
-                    gradient={['#d199f9', '#9F60D1']} // Pink gradient like first screen
-                  />
-                ) : (
-                  <Button
-                    title="Create New Card"
-                    onPress={() => navigation.navigate('GiverCreate')}
-                    variant="primary"
-                    style={styles.depositButton}
-                  />
-                )}
-              </View>
-            </>
-          ) : (
-            <View style={styles.emptyStateContainer}>
-              <Text style={styles.emptyStateText}>
-                You don't have any Vloo cards yet.
-              </Text>
-              <Text style={styles.emptyStateSubtext}>
-                Create your first digital gift card to get started.
-              </Text>
+          {/* Cards Stack (Always visible now, even if empty, to show placeholder) */}
+          <View style={styles.cardStackContainer}>
+            <FlatList
+              data={displayData}
+              renderItem={renderCardItem}
+              horizontal
+              pagingEnabled={false}
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item, index) => item.id || index.toString()}
+              onMomentumScrollEnd={(ev) => {
+                const index = Math.round(ev.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_SPACING));
+                setCurrentCardIndex(index);
+              }}
+              snapToInterval={CARD_WIDTH + CARD_SPACING}
+              decelerationRate="fast"
+              contentContainerStyle={{ paddingHorizontal: (width - CARD_WIDTH) / 2 }}
+              snapToAlignment="center"
+            />
+          </View>
+          
+          {/* Action Buttons */}
+          <View style={styles.actionsContainer}>
+            {currentCardIndex < vloos.length ? (
               <Button
-                title="Create Vloo Card"
-                onPress={() => navigation.navigate('GiverCreate')}
+                title="Confirm Deposit"
+                onPress={() => console.log('Deposit pressed')}
                 variant="primary"
-                style={{ width: 200, marginTop: 24 }}
+                style={styles.depositButton}
+                gradient={['#d199f9', '#9F60D1']} // Pink gradient like first screen
               />
-            </View>
-          )}
+            ) : (
+              <Button
+                title="Create New Card"
+                onPress={() => setCreateModalVisible(true)}
+                variant="primary"
+                style={styles.depositButton}
+              />
+            )}
+          </View>
 
         </SafeAreaView>
       </ScrollView>
+
+      {/* Create Vloo Modal */}
+      <Modal
+            animationType="slide"
+            transparent={true}
+            visible={createModalVisible}
+            onRequestClose={() => setCreateModalVisible(false)}
+          >
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={{ flex: 1 }}
+            >
+              <TouchableWithoutFeedback onPress={() => setCreateModalVisible(false)}>
+                <View style={styles.modalOverlay} />
+              </TouchableWithoutFeedback>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader} {...panResponder.panHandlers}>
+                  <View style={styles.modalIndicator} />
+                </View>
+                <ScrollView contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+                  <Text style={styles.headline}>
+                    Create New Vloo
+                  </Text>
+
+             <View style={styles.formSection}>
+              <Text style={styles.inputLabel}>PURPOSE</Text>
+              <View style={styles.pillContainer}>
+                {['Gift', 'Salary', 'Inheritance'].map(p => (
+                  <TouchableOpacity 
+                    key={p} 
+                    style={[styles.pill, purpose === p && styles.pillActive]} 
+                    onPress={() => setPurpose(p)}
+                  >
+                    <Text style={[styles.pillText, purpose === p && styles.pillTextActive]}>{p}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.inputLabel}>RECEIVER NAME</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter receiver's name"
+                placeholderTextColor="#666"
+                value={receiverName}
+                onChangeText={setReceiverName}
+              />
+
+              <Text style={styles.inputLabel}>MESSAGE</Text>
+              <TextInput
+                style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+                placeholder="A short message for the receiver..."
+                placeholderTextColor="#666"
+                value={message}
+                onChangeText={setMessage}
+                multiline
+                numberOfLines={3}
+              />
+
+              <Text style={styles.inputLabel}>PASSPHRASE</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter a secret passphrase"
+                placeholderTextColor="#666"
+                value={passphrase}
+                onChangeText={setPassphrase}
+                secureTextEntry
+              />
+              <Text style={styles.hint}>This passphrase will be used to encrypt the key. Don't lose it!</Text>
+
+              <Text style={styles.inputLabel}>UNLOCK DATE</Text>
+              {Platform.OS === 'ios' ? (
+                <View style={styles.datePickerContainerIOS}>
+                  <DateTimePicker
+                    testID="dateTimePicker"
+                    value={unlockDate}
+                    mode="datetime"
+                    display="compact"
+                    themeVariant="dark"
+                    onChange={(event, selectedDate) => {
+                      if (selectedDate) setUnlockDate(selectedDate);
+                    }}
+                    minimumDate={new Date()}
+                    style={{ alignSelf: 'flex-start' }}
+                  />
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity onPress={showDatepicker} style={styles.dateButton}>
+                    <Text style={styles.dateButtonText}>
+                      {unlockDate.toLocaleString()}
+                    </Text>
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      testID="dateTimePicker"
+                      value={unlockDate}
+                      mode="date"
+                      is24Hour={true}
+                      onChange={onChangeDate}
+                      minimumDate={new Date()}
+                      display="default"
+                    />
+                  )}
+                  {showTimePicker && (
+                    <DateTimePicker
+                      testID="timePicker"
+                      value={unlockDate}
+                      mode="time"
+                      is24Hour={true}
+                      onChange={onChangeTime}
+                      display="default"
+                    />
+                  )}
+                </>
+              )}
+
+              <View style={{ marginTop: 20 }}>
+                <Button 
+                  title="Next Step" 
+                  onPress={handleNext} 
+                  variant="primary" 
+                  gradient={['#d199f9', '#9F60D1']}
+                  style={styles.actionButton}
+                />
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+            </KeyboardAvoidingView>
+      </Modal>
 
       {/* Floating Bottom Navigation */}
       {vloos.length > 0 && (
@@ -546,6 +697,7 @@ const styles = StyleSheet.create({
   cardBottom: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center', // Align items vertically
     backgroundColor: 'rgba(0,0,0,0.15)',
     marginHorizontal: -24,
     marginBottom: -24,
@@ -564,8 +716,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
   },
+  cardSettingsButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
 
-  // Message Section
+  // Message Section (Removed but keeping commented for reference or clean up completely)
+  /* 
   messageSection: {
     width: '100%',
     marginBottom: 24,
@@ -599,14 +757,152 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginRight: 4,
   },
+  */
 
   // Actions
   actionsContainer: {
     width: '100%',
     marginBottom: 120,
-    paddingHorizontal: 24, // Added padding
+    paddingHorizontal: 24,
   },
   depositButton: {
+    width: '100%',
+    height: 56,
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+  },
+  modalContent: {
+    height: '80%',
+    backgroundColor: '#000',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    marginTop: 'auto',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  modalHeader: {
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#333',
+    borderRadius: 2,
+  },
+  modalScrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  headline: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 32,
+    color: '#fff',
+    lineHeight: 40,
+    marginBottom: 8,
+    textAlign: 'left',
+  },
+  headlineHighlight: {
+    color: COLORS.accent,
+  },
+  subheadline: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 16,
+    color: '#999',
+    lineHeight: 24,
+    textAlign: 'center',
+    maxWidth: 280,
+    alignSelf: 'center',
+    marginBottom: 32,
+  },
+  formSection: {
+    width: '100%',
+  },
+  inputLabel: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 12,
+    marginLeft: 4,
+    letterSpacing: 0.5,
+  },
+  input: {
+    backgroundColor: '#111',
+    borderWidth: 1,
+    borderColor: '#333',
+    borderRadius: 16,
+    padding: 16,
+    fontSize: 16,
+    color: '#fff',
+    fontFamily: FONTS.bodyRegular,
+    marginBottom: 24,
+  },
+  pillContainer: { 
+    flexDirection: 'row', 
+    marginBottom: 24, 
+    flexWrap: 'wrap', 
+    gap: 10 
+  },
+  pill: { 
+    paddingVertical: 10, 
+    paddingHorizontal: 20, 
+    borderRadius: 999, 
+    backgroundColor: '#111', 
+    borderWidth: 1, 
+    borderColor: '#333' 
+  },
+  pillActive: { 
+    backgroundColor: 'rgba(209, 153, 249, 0.2)',
+    borderColor: COLORS.accent,
+  },
+  pillText: { 
+    fontFamily: FONTS.bodySemiBold, 
+    color: '#666' 
+  },
+  pillTextActive: { 
+    color: COLORS.accent 
+  },
+  hint: { 
+    fontFamily: FONTS.bodyRegular, 
+    fontSize: 12, 
+    color: '#666', 
+    marginTop: -16, 
+    marginBottom: 24,
+    marginLeft: 4,
+  },
+  dateButton: {
+    backgroundColor: '#111',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+    marginBottom: 24,
+  },
+  dateButtonText: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 16,
+    color: '#fff',
+  },
+  datePickerContainerIOS: {
+    backgroundColor: '#111',
+    padding: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+    alignItems: 'flex-start',
+    marginBottom: 24,
+  },
+  actionButton: {
     width: '100%',
     height: 56,
   },
