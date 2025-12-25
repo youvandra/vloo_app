@@ -399,7 +399,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
             />
           </View>
           
-          {/* Action Buttons */}
+          {/* Action Buttons (Removed) */}
+          {/* 
           <View style={styles.actionsContainer}>
             {currentCardIndex < vloos.length ? (
               <Button
@@ -418,6 +419,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
               />
             )}
           </View>
+          */}
 
         </SafeAreaView>
       </ScrollView>
@@ -925,7 +927,8 @@ const styles = StyleSheet.create({
   },
   */
 
-  // Actions
+  // Actions (Removed)
+  /*
   actionsContainer: {
     width: '100%',
     marginBottom: 120,
@@ -935,6 +938,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 56,
   },
+  */
 
   // Modal Styles
   modalOverlay: {
