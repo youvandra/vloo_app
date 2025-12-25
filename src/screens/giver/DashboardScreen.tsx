@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, RefreshControl, BackHandler, Dimensions, FlatList, Platform, Alert, Modal, TextInput, KeyboardAvoidingView, TouchableWithoutFeedback, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar, RefreshControl, BackHandler, Dimensions, FlatList, Platform, Alert, Modal, TextInput, KeyboardAvoidingView, TouchableWithoutFeedback, PanResponder, Switch } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Stop, Circle as SvgCircle } from 'react-native-svg';
@@ -32,6 +32,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [message, setMessage] = useState('');
   const [passphrase, setPassphrase] = useState('');
   const [unlockDate, setUnlockDate] = useState(new Date(Date.now() + 60000));
+  const [isUnlockDateEnabled, setIsUnlockDateEnabled] = useState(true);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -160,7 +161,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
       const insertPayload = {
         encrypted_private_key: encryptedKey,
         wallet_address: address,
-        unlock_date: unlockDate.toISOString(),
+        unlock_date: isUnlockDateEnabled ? unlockDate.toISOString() : null,
         message: message,
         status: 'locked',
         giver_id: currentUser.id,
@@ -272,7 +273,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
         >
           <View style={styles.placeholderContent}>
             <View style={styles.placeholderIconContainer}>
-              <Plus size={40} color={COLORS.primary} />
+              <Plus size={40} color="#fff" />
             </View>
             <Text style={styles.placeholderText}>Create New Vloo Card</Text>
             <Text style={styles.placeholderSubtext}>Tap to add another recipient</Text>
@@ -309,7 +310,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
           <View>
             <Text style={styles.cardLabel}>Unlock Date</Text>
             <Text style={styles.cardValue}>
-              {item.unlock_date ? new Date(item.unlock_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Sep 29, 2025'}
+              {item.unlock_date ? new Date(item.unlock_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Whenever'}
             </Text>
           </View>
           <TouchableOpacity style={styles.cardSettingsButton}>
@@ -487,51 +488,67 @@ export default function GiverDashboardScreen({ navigation }: any) {
               />
               <Text style={styles.hint}>This passphrase will be used to encrypt the key. Don't lose it!</Text>
 
-              <Text style={styles.inputLabel}>UNLOCK DATE</Text>
-              {Platform.OS === 'ios' ? (
-                <View style={styles.datePickerContainerIOS}>
-                  <DateTimePicker
-                    testID="dateTimePicker"
-                    value={unlockDate}
-                    mode="datetime"
-                    display="compact"
-                    themeVariant="dark"
-                    onChange={(event, selectedDate) => {
-                      if (selectedDate) setUnlockDate(selectedDate);
-                    }}
-                    minimumDate={new Date()}
-                    style={{ alignSelf: 'flex-start' }}
-                  />
-                </View>
-              ) : (
-                <>
-                  <TouchableOpacity onPress={showDatepicker} style={styles.dateButton}>
-                    <Text style={styles.dateButtonText}>
-                      {unlockDate.toLocaleString()}
-                    </Text>
-                  </TouchableOpacity>
-                  {showDatePicker && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, marginBottom: 8 }}>
+                <Text style={[styles.inputLabel, { marginTop: 0, marginBottom: 0 }]}>UNLOCK DATE</Text>
+                <Switch
+                  value={isUnlockDateEnabled}
+                  onValueChange={setIsUnlockDateEnabled}
+                  trackColor={{ false: '#333', true: COLORS.primary }}
+                  thumbColor={'#fff'}
+                  ios_backgroundColor="#333"
+                />
+              </View>
+
+              {isUnlockDateEnabled ? (
+                Platform.OS === 'ios' ? (
+                  <View style={styles.datePickerContainerIOS}>
                     <DateTimePicker
                       testID="dateTimePicker"
                       value={unlockDate}
-                      mode="date"
-                      is24Hour={true}
-                      onChange={onChangeDate}
+                      mode="datetime"
+                      display="compact"
+                      themeVariant="dark"
+                      onChange={(event, selectedDate) => {
+                        if (selectedDate) setUnlockDate(selectedDate);
+                      }}
                       minimumDate={new Date()}
-                      display="default"
+                      style={{ alignSelf: 'flex-start' }}
                     />
-                  )}
-                  {showTimePicker && (
-                    <DateTimePicker
-                      testID="timePicker"
-                      value={unlockDate}
-                      mode="time"
-                      is24Hour={true}
-                      onChange={onChangeTime}
-                      display="default"
-                    />
-                  )}
-                </>
+                  </View>
+                ) : (
+                  <>
+                    <TouchableOpacity onPress={showDatepicker} style={styles.dateButton}>
+                      <Text style={styles.dateButtonText}>
+                        {unlockDate.toLocaleString()}
+                      </Text>
+                    </TouchableOpacity>
+                    {showDatePicker && (
+                      <DateTimePicker
+                        testID="dateTimePicker"
+                        value={unlockDate}
+                        mode="date"
+                        is24Hour={true}
+                        onChange={onChangeDate}
+                        minimumDate={new Date()}
+                        display="default"
+                      />
+                    )}
+                    {showTimePicker && (
+                      <DateTimePicker
+                        testID="timePicker"
+                        value={unlockDate}
+                        mode="time"
+                        is24Hour={true}
+                        onChange={onChangeTime}
+                        display="default"
+                      />
+                    )}
+                  </>
+                )
+              ) : (
+                <View style={[styles.input, { justifyContent: 'center' }]}>
+                  <Text style={{ color: '#888', fontFamily: FONTS.bodyRegular }}>Whenever (No unlock date)</Text>
+                </View>
               )}
 
               <View style={{ marginTop: 20 }}>
@@ -798,7 +815,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
