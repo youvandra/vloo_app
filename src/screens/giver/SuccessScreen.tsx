@@ -31,8 +31,7 @@ export default function GiverSuccessScreen({ route, navigation }: any) {
           title="Done" 
           onPress={() => navigation.navigate('GiverDashboard')} 
           variant="primary"
-          gradient={['#d199f9', '#9F60D1']}
-          style={styles.doneButton}
+          style={[styles.doneButton, { backgroundColor: COLORS.primary }]}
         />
       </SafeAreaView>
     </View>

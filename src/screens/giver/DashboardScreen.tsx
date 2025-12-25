@@ -286,7 +286,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
   const renderCard = (item: any) => {
     return (
-      <View style={[styles.mainCard, { backgroundColor: COLORS.primary }]}>
+      <View style={[styles.mainCard, { backgroundColor: COLORS.background }]}>
         <View style={styles.cardTop}>
           <Image 
             source={require('../../assets/logo-min.png')} 
@@ -294,27 +294,27 @@ export default function GiverDashboardScreen({ navigation }: any) {
             resizeMode="contain"
           />
           <View style={styles.nfcIdContainer}>
-             <Text style={styles.nfcIdLabel}>CARD ID</Text>
-             <Text style={styles.nfcIdValue}>{item.cards?.[0]?.id || '••••'}</Text>
+             <Text style={[styles.nfcIdLabel, { color: '#666' }]}>CARD ID</Text>
+             <Text style={[styles.nfcIdValue, { color: COLORS.foreground }]}>{item.cards?.[0]?.id || '••••'}</Text>
           </View>
         </View>
         
         <View style={styles.cardCenter}>
-          <Text style={styles.receiverNameLabel}>Sending to</Text>
-          <Text style={styles.receiverName} numberOfLines={1} adjustsFontSizeToFit>
+          <Text style={[styles.receiverNameLabel, { color: '#666' }]}>Sending to</Text>
+          <Text style={[styles.receiverName, { color: COLORS.foreground }]} numberOfLines={1} adjustsFontSizeToFit>
             {item.receiver_name || 'VLOO Gift'}
           </Text>
         </View>
         
         <View style={styles.cardBottom}>
           <View>
-            <Text style={styles.cardLabel}>Unlock Date</Text>
-            <Text style={styles.cardValue}>
+            <Text style={[styles.cardLabel, { color: '#666' }]}>Unlock Date</Text>
+            <Text style={[styles.cardValue, { color: COLORS.foreground }]}>
               {item.unlock_date ? new Date(item.unlock_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Whenever'}
             </Text>
           </View>
-          <TouchableOpacity style={styles.cardSettingsButton}>
-             <Settings size={20} color="#fff" />
+          <TouchableOpacity style={[styles.cardSettingsButton, { backgroundColor: 'rgba(0,0,0,0.05)' }]}>
+             <Settings size={20} color={COLORS.foreground} />
           </TouchableOpacity>
         </View>
       </View>
@@ -493,7 +493,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                 <Switch
                   value={isUnlockDateEnabled}
                   onValueChange={setIsUnlockDateEnabled}
-                  trackColor={{ false: '#333', true: COLORS.primary }}
+                  trackColor={{ false: '#333', true: COLORS.accent }}
                   thumbColor={'#fff'}
                   ios_backgroundColor="#333"
                 />
@@ -556,8 +556,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                   title="Next Step" 
                   onPress={handleNext} 
                   variant="primary" 
-                  gradient={['#d199f9', '#9F60D1']}
-                  style={styles.actionButton}
+                  style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
                 />
               </View>
             </View>
@@ -607,8 +606,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                     title="Tap to Simulate NFC (Dev)" 
                     onPress={() => handleBind(true)} 
                     variant="primary" 
-                    gradient={['#d199f9', '#9F60D1']}
-                    style={styles.actionButton}
+                    style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
                   />
                   <TouchableOpacity 
                     style={{ marginTop: 16, alignItems: 'center' }}
@@ -1043,7 +1041,7 @@ const styles = StyleSheet.create({
     borderColor: '#333' 
   },
   pillActive: { 
-    backgroundColor: 'rgba(209, 153, 249, 0.2)',
+    backgroundColor: COLORS.accent,
     borderColor: COLORS.accent,
   },
   pillText: { 
@@ -1051,7 +1049,7 @@ const styles = StyleSheet.create({
     color: '#666' 
   },
   pillTextActive: { 
-    color: COLORS.accent 
+    color: '#fff' 
   },
   hint: { 
     fontFamily: FONTS.bodyRegular, 

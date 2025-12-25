@@ -101,8 +101,7 @@ export default function ReceiverScanScreen({ navigation }: any) {
                 title="Tap to Simulate Scan (Dev)" 
                 onPress={() => handleScan(true)} 
                 variant="primary"
-                gradient={['#d199f9', '#9F60D1']}
-                style={styles.actionButton}
+                style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
               />
             </View>
           )}
