@@ -461,6 +461,35 @@ export default function GiverDashboardScreen({ navigation }: any) {
               snapToAlignment="center"
             />
           </View>
+
+          {/* Wallet Address Section */}
+          {currentCardIndex < vloos.length && vloos[currentCardIndex]?.wallet_address && (
+            <View style={styles.walletSection}>
+              <View style={styles.walletHeader}>
+                <Wallet size={16} color={COLORS.foreground} />
+                <Text style={styles.walletTitle}>Wallet Address</Text>
+              </View>
+              
+              <View style={styles.walletAddressContainer}>
+                <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">
+                  {vloos[currentCardIndex].wallet_address}
+                </Text>
+                <TouchableOpacity 
+                  style={styles.copyButton}
+                  onPress={() => {
+                    // In a real app, use Clipboard.setString()
+                    // Clipboard.setString(vloos[currentCardIndex].wallet_address);
+                    Alert.alert('Copied', 'Wallet address copied to clipboard');
+                  }}
+                >
+                  <Copy size={16} color={COLORS.primary} />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.walletHint}>
+                This is the unique address for this VLOO card.
+              </Text>
+            </View>
+          )}
           
           {/* Action Buttons (Removed) */}
           {/* 
@@ -954,8 +983,61 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
     marginTop: 10,
-    zIndex: 10, // Ensure stack is above other elements if needed
   },
+
+  // Wallet Section
+  walletSection: {
+    marginHorizontal: 24,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 100, // Space for bottom nav
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  walletHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  walletTitle: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 14,
+    color: '#fff',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  walletAddressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 12,
+    padding: 12,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  walletAddress: {
+    flex: 1,
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 13,
+    color: '#ccc',
+  },
+  copyButton: {
+    padding: 8,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderRadius: 8,
+  },
+  walletHint: {
+    marginTop: 12,
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 12,
+    color: '#666',
+    lineHeight: 18,
+  },
+
+  // Modal Styles
   mainCard: {
     width: CARD_WIDTH, // Explicit width for FlatList items
     height: 220,
