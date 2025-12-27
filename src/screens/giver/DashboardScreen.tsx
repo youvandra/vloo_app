@@ -11,7 +11,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { createRandomWallet, generateMockBitcoinData } from '../../lib/wallet';
 import { encryptData } from '../../lib/crypto';
 import { ActivityIndicator } from 'react-native';
-import { scanNfcTag } from '../../lib/nfc';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82; // Slightly wider for better peek
@@ -186,33 +185,11 @@ export default function GiverDashboardScreen({ navigation }: any) {
   };
 
   const handleBind = async (mock: boolean = false) => {
-    if (!mock) {
-       setBindStatus('Ready to Scan...');
-    } else {
-       setBindStatus('Generating secure wallet...');
-    }
     setBindLoading(true);
+    setBindStatus('Generating secure wallet...');
 
     try {
-      // 1. Get NFC ID (Mock or Real)
-      let cardId = '';
-      if (mock) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        cardId = 'mock-nfc-id-' + Math.floor(Math.random() * 10000);
-      } else {
-        setBindStatus('Please hold card near phone...');
-        const scannedId = await scanNfcTag();
-        if (!scannedId) {
-            setBindLoading(false);
-            setBindStatus('Scan cancelled');
-            return;
-        }
-        cardId = scannedId;
-      }
-
-      setBindStatus('Generating secure wallet...');
-
-      // 2. Generate Wallets (ETH + BTC)
+      // 1. Generate Wallets (ETH + BTC)
       const wallet = createRandomWallet(); // Ethereum
       const btcData = generateMockBitcoinData(); // Bitcoin
 
@@ -236,7 +213,13 @@ export default function GiverDashboardScreen({ navigation }: any) {
         { type: 'Bitcoin', address: btcAddress }
       ];
 
-      // 3. Get NFC ID (Already done above)
+      // 3. Get NFC ID (Mock or Real)
+      let cardId = '';
+      if (mock) {
+        cardId = 'mock-nfc-id-' + Math.floor(Math.random() * 10000);
+      } else {
+        cardId = 'simulated-real-id'; // Fallback for MVP
+      }
 
       // 4. Get User (Already have 'user' state, but refresh if needed)
       let currentUser = user;
@@ -764,16 +747,10 @@ export default function GiverDashboardScreen({ navigation }: any) {
               ) : (
                 <View style={{ marginTop: 20 }}>
                   <Button 
-                    title="Tap to Bind Card (NFC)" 
-                    onPress={() => handleBind(false)} 
+                    title="Tap to Simulate NFC (Dev)" 
+                    onPress={() => handleBind(true)} 
                     variant="primary" 
                     style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
-                  />
-                  <Button 
-                    title="Simulate NFC (Dev)" 
-                    onPress={() => handleBind(true)} 
-                    variant="secondary" 
-                    style={[styles.actionButton, { marginTop: 12, backgroundColor: 'rgba(255,255,255,0.1)' }]}
                   />
                   <TouchableOpacity 
                     style={{ marginTop: 16, alignItems: 'center' }}

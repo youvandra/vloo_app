@@ -14,22 +14,14 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.vloo.app",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.vloo.app",
-      "permissions": [
-        "android.permission.NFC"
-      ]
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./src/assets/favicon.png"
@@ -37,18 +29,7 @@
     "plugins": [
       "expo-font",
       "expo-web-browser",
-      "@react-native-community/datetimepicker",
-      [
-        "react-native-nfc-manager",
-        {
-          "nfcPermission": "Allow VLOO to interact with NFC tags."
-        }
-      ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "b2d50cb1-6e75-4456-8636-873d5bedb05f"
-      }
-    }
+      "@react-native-community/datetimepicker"
+    ]
   }
 }
