@@ -25,8 +25,72 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [bindModalVisible, setBindModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedVloo, setSelectedVloo] = useState<any>(null);
   
-  // Create Form State
+  // Edit Form State
+  const [editReceiverName, setEditReceiverName] = useState('');
+  const [editMessage, setEditMessage] = useState('');
+  const [editUnlockDate, setEditUnlockDate] = useState(new Date());
+  const [isEditUnlockDateEnabled, setIsEditUnlockDateEnabled] = useState(true);
+  const [editLoading, setEditLoading] = useState(false);
+
+  // ... (existing PanResponders)
+
+  const editPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 50) {
+          setEditModalVisible(false);
+        }
+      },
+    })
+  ).current;
+
+  const handleEditPress = (vloo: any) => {
+    setSelectedVloo(vloo);
+    setEditReceiverName(vloo.receiver_name || '');
+    setEditMessage(vloo.message || '');
+    if (vloo.unlock_date) {
+      setEditUnlockDate(new Date(vloo.unlock_date));
+      setIsEditUnlockDateEnabled(true);
+    } else {
+      setEditUnlockDate(new Date(Date.now() + 60000));
+      setIsEditUnlockDateEnabled(false);
+    }
+    setEditModalVisible(true);
+  };
+
+  const handleUpdateVloo = async () => {
+    if (!selectedVloo) return;
+    setEditLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('vloos')
+        .update({
+          receiver_name: editReceiverName,
+          message: editMessage,
+          unlock_date: isEditUnlockDateEnabled ? editUnlockDate.toISOString() : null,
+        })
+        .eq('id', selectedVloo.id);
+
+      if (error) throw error;
+
+      setEditModalVisible(false);
+      fetchVloos();
+      Alert.alert('Success', 'Card updated successfully');
+    } catch (error: any) {
+      console.error('Error updating vloo:', error);
+      Alert.alert('Error', 'Failed to update card');
+    } finally {
+      setEditLoading(false);
+    }
+  };
   const [purpose, setPurpose] = useState('Gift');
   const [receiverName, setReceiverName] = useState('');
   const [message, setMessage] = useState('');
@@ -313,7 +377,10 @@ export default function GiverDashboardScreen({ navigation }: any) {
               {item.unlock_date ? new Date(item.unlock_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Whenever'}
             </Text>
           </View>
-          <TouchableOpacity style={[styles.cardSettingsButton, { backgroundColor: 'rgba(0,0,0,0.05)' }]}>
+          <TouchableOpacity 
+            style={[styles.cardSettingsButton, { backgroundColor: 'rgba(0,0,0,0.05)' }]}
+            onPress={() => handleEditPress(item)}
+          >
              <Settings size={20} color={COLORS.foreground} />
           </TouchableOpacity>
         </View>
@@ -622,6 +689,113 @@ export default function GiverDashboardScreen({ navigation }: any) {
             </View>
           </ScrollView>
         </View>
+      </Modal>
+
+      {/* Edit Vloo Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={() => setEditModalVisible(false)}>
+            <View style={styles.modalOverlay} />
+          </TouchableWithoutFeedback>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader} {...editPanResponder.panHandlers}>
+              <View style={styles.modalIndicator} />
+            </View>
+            <ScrollView contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+              <Text style={styles.headline}>
+                Edit Vloo Card
+              </Text>
+
+              <View style={styles.formSection}>
+                <Text style={styles.inputLabel}>RECEIVER NAME</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter receiver's name"
+                  placeholderTextColor="#666"
+                  value={editReceiverName}
+                  onChangeText={setEditReceiverName}
+                />
+
+                <Text style={styles.inputLabel}>MESSAGE</Text>
+                <TextInput
+                  style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+                  placeholder="A short message for the receiver..."
+                  placeholderTextColor="#666"
+                  value={editMessage}
+                  onChangeText={setEditMessage}
+                  multiline
+                  numberOfLines={3}
+                />
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, marginBottom: 8 }}>
+                  <Text style={[styles.inputLabel, { marginTop: 0, marginBottom: 0 }]}>UNLOCK DATE</Text>
+                  <Switch
+                    value={isEditUnlockDateEnabled}
+                    onValueChange={setIsEditUnlockDateEnabled}
+                    trackColor={{ false: '#333', true: COLORS.accent }}
+                    thumbColor={'#fff'}
+                    ios_backgroundColor="#333"
+                  />
+                </View>
+
+                {isEditUnlockDateEnabled ? (
+                  Platform.OS === 'ios' ? (
+                    <View style={styles.datePickerContainerIOS}>
+                      <DateTimePicker
+                        value={editUnlockDate}
+                        mode="datetime"
+                        display="compact"
+                        themeVariant="dark"
+                        onChange={(event, selectedDate) => {
+                          if (selectedDate) setEditUnlockDate(selectedDate);
+                        }}
+                        minimumDate={new Date()}
+                        style={{ alignSelf: 'flex-start' }}
+                      />
+                    </View>
+                  ) : (
+                    <>
+                      {/* Android DatePicker Logic would go here if needed, reusing state or creating separate handlers */}
+                      <View style={[styles.input, { justifyContent: 'center' }]}>
+                        <Text style={{ color: '#fff', fontFamily: FONTS.bodyRegular }}>
+                          {editUnlockDate.toLocaleString()}
+                        </Text>
+                      </View>
+                    </>
+                  )
+                ) : (
+                  <View style={[styles.input, { justifyContent: 'center' }]}>
+                    <Text style={{ color: '#888', fontFamily: FONTS.bodyRegular }}>Whenever (No unlock date)</Text>
+                  </View>
+                )}
+
+                <View style={{ marginTop: 20 }}>
+                  <Button 
+                    title={editLoading ? "Updating..." : "Save Changes"}
+                    onPress={handleUpdateVloo} 
+                    variant="primary" 
+                    disabled={editLoading}
+                    style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
+                  />
+                  <TouchableOpacity 
+                    style={{ marginTop: 16, alignItems: 'center' }}
+                    onPress={() => setEditModalVisible(false)}
+                  >
+                    <Text style={{ color: '#666', fontFamily: FONTS.bodyRegular }}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Profile Modal */}
