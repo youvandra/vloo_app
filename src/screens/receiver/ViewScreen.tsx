@@ -16,12 +16,6 @@ export default function ReceiverViewScreen({ route, navigation }: any) {
   useEffect(() => {
     const fetchBalance = async () => {
       try {
-        // Use a default provider (e.g., Mainnet or Goerli). 
-        // For MVP, we might default to Goerli or just show 0 if no internet/config.
-        // const provider = ethers.getDefaultProvider('goerli');
-        // const bal = await provider.getBalance(vloo.wallet_address);
-        // setBalance(ethers.utils.formatEther(bal));
-        
         // Mock balance for UI demo
         setBalance('0.05'); 
       } catch (e) {
@@ -33,6 +27,26 @@ export default function ReceiverViewScreen({ route, navigation }: any) {
     fetchBalance();
   }, [vloo.wallet_address]);
 
+  const getWalletAddresses = (data: any) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (typeof data === 'string') {
+      if (data.startsWith('[') || data.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+          // ignore
+        }
+      }
+      return [{ type: 'Ethereum', address: data }];
+    }
+    return [];
+  };
+
+  const walletAddresses = getWalletAddresses(vloo.wallet_address);
+  // const balance = '0.05'; // Mock balance already defined in state
+
   return (
     <View style={styles.container}>
       <Text style={styles.messageLabel}>Message from Giver:</Text>
@@ -41,7 +55,18 @@ export default function ReceiverViewScreen({ route, navigation }: any) {
       <View style={styles.card}>
         <Text style={styles.balanceLabel}>Balance</Text>
         <Text style={styles.balance}>{balance} ETH</Text>
-        <Text style={styles.address}>{vloo.wallet_address.substring(0, 10)}...{vloo.wallet_address.substring(38)}</Text>
+        
+        {/* Address List */}
+        <View style={styles.addressContainer}>
+          {walletAddresses.map((w: any, i: number) => (
+            <View key={i} style={styles.addressRow}>
+              <Text style={styles.addressType}>{w.type}:</Text>
+              <Text style={styles.address} numberOfLines={1} ellipsizeMode="middle">
+                {w.address}
+              </Text>
+            </View>
+          ))}
+        </View>
       </View>
 
       <View style={styles.statusContainer}>
@@ -73,7 +98,10 @@ const styles = StyleSheet.create({
   card: { backgroundColor: 'white', padding: 30, borderRadius: 20, alignItems: 'center', shadowColor: '#000', shadowOffset: {width:0,height:5}, shadowOpacity:0.1, shadowRadius:10, marginBottom: 40 },
   balanceLabel: { fontSize: 14, color: '#aaa', marginBottom: 5 },
   balance: { fontSize: 36, fontWeight: 'bold', color: '#333', marginBottom: 10 },
-  address: { fontSize: 12, color: '#ccc', fontFamily: 'Courier' },
+  addressContainer: { width: '100%', marginTop: 10 },
+  addressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  addressType: { fontSize: 12, fontWeight: 'bold', color: '#555', marginRight: 8 },
+  address: { fontSize: 12, color: '#888', fontFamily: 'Courier', flex: 1, textAlign: 'right' },
   statusContainer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 40 },
   statusLabel: { fontSize: 16, marginRight: 5, color: '#555' },
   status: { fontSize: 16, fontWeight: 'bold' },

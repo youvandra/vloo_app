@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { createRandomWallet } from '../../lib/wallet';
+import { createRandomWallet, generateMockBitcoinData } from '../../lib/wallet';
 import { encryptData } from '../../lib/crypto';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
@@ -19,14 +19,29 @@ export default function GiverBindScreen({ route, navigation }: any) {
     setStatus('Generating secure wallet...');
 
     try {
-      // 1. Generate Wallet
-      const wallet = createRandomWallet();
-      const privateKey = wallet.privateKey;
-      const address = wallet.address;
+      // 1. Generate Wallets
+      const wallet = createRandomWallet(); // Ethereum
+      const btcData = generateMockBitcoinData(); // Bitcoin
 
-      // 2. Encrypt Private Key
+      const ethPrivateKey = wallet.privateKey;
+      const ethAddress = wallet.address;
+      const btcPrivateKey = btcData.privateKey;
+      const btcAddress = btcData.address;
+
+      // 2. Encrypt Private Keys
       setStatus('Encrypting keys...');
-      const encryptedKey = encryptData(privateKey, passphrase);
+      const encryptedEthKey = encryptData(ethPrivateKey, passphrase);
+      const encryptedBtcKey = encryptData(btcPrivateKey, passphrase);
+
+      const encryptedKeys = {
+        ethereum: encryptedEthKey,
+        bitcoin: encryptedBtcKey
+      };
+
+      const walletAddresses = [
+        { type: 'Ethereum', address: ethAddress },
+        { type: 'Bitcoin', address: btcAddress }
+      ];
 
       // 3. Get NFC ID (Mock or Real)
       let cardId = '';
@@ -63,9 +78,14 @@ export default function GiverBindScreen({ route, navigation }: any) {
       // 5. Save to Supabase
       setStatus('Saving to VLOO network...');
       
+      // Ensure wallet_address is stored as a stringified JSON if the DB column is text
+      // If it's JSONB, it will store a string, which we can parse back.
+      // This ensures compatibility if the migration to JSONB hasn't run yet.
+      const walletAddressPayload = JSON.stringify(walletAddresses);
+
       const insertPayload = {
-        encrypted_private_key: encryptedKey,
-        wallet_address: address,
+        encrypted_private_key: encryptedKeys,
+        wallet_address: walletAddressPayload,
         unlock_date: unlockDate,
         message: message,
         status: 'locked',
@@ -95,7 +115,8 @@ export default function GiverBindScreen({ route, navigation }: any) {
 
       if (cardError) throw cardError;
 
-      navigation.navigate('GiverSuccess', { address, cardId });
+      // Pass Ethereum address as primary for display in success screen, but pass full list too if needed
+      navigation.navigate('GiverSuccess', { address: ethAddress, cardId, walletAddresses });
 
     } catch (error: any) {
       console.error(error);

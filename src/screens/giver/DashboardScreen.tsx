@@ -8,7 +8,7 @@ import { COLORS, FONTS } from '../../lib/theme';
 import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, Gift, Radio, ArrowLeft } from 'lucide-react-native';
 import { Button } from '../../components/Button';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { createRandomWallet } from '../../lib/wallet';
+import { createRandomWallet, generateMockBitcoinData } from '../../lib/wallet';
 import { encryptData } from '../../lib/crypto';
 import { ActivityIndicator } from 'react-native';
 
@@ -189,14 +189,29 @@ export default function GiverDashboardScreen({ navigation }: any) {
     setBindStatus('Generating secure wallet...');
 
     try {
-      // 1. Generate Wallet
-      const wallet = createRandomWallet();
-      const privateKey = wallet.privateKey;
-      const address = wallet.address;
+      // 1. Generate Wallets (ETH + BTC)
+      const wallet = createRandomWallet(); // Ethereum
+      const btcData = generateMockBitcoinData(); // Bitcoin
 
-      // 2. Encrypt Private Key
+      const ethPrivateKey = wallet.privateKey;
+      const ethAddress = wallet.address;
+      const btcPrivateKey = btcData.privateKey;
+      const btcAddress = btcData.address;
+
+      // 2. Encrypt Private Keys (ETH + BTC)
       setBindStatus('Encrypting keys...');
-      const encryptedKey = encryptData(privateKey, passphrase);
+      const encryptedEthKey = encryptData(ethPrivateKey, passphrase);
+      const encryptedBtcKey = encryptData(btcPrivateKey, passphrase);
+
+      const encryptedKeys = {
+        ethereum: encryptedEthKey,
+        bitcoin: encryptedBtcKey
+      };
+
+      const walletAddresses = [
+        { type: 'Ethereum', address: ethAddress },
+        { type: 'Bitcoin', address: btcAddress }
+      ];
 
       // 3. Get NFC ID (Mock or Real)
       let cardId = '';
@@ -222,9 +237,12 @@ export default function GiverDashboardScreen({ navigation }: any) {
       // 5. Save to Supabase
       setBindStatus('Saving to VLOO network...');
       
+      // Ensure wallet_address is stored as a stringified JSON if the DB column is text
+      const walletAddressPayload = JSON.stringify(walletAddresses);
+      
       const insertPayload = {
-        encrypted_private_key: encryptedKey,
-        wallet_address: address,
+        encrypted_private_key: encryptedKeys,
+        wallet_address: walletAddressPayload,
         unlock_date: isUnlockDateEnabled ? unlockDate.toISOString() : null,
         message: message,
         status: 'locked',
@@ -256,7 +274,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
       setPassphrase('');
       setPurpose('Gift');
       
-      navigation.navigate('GiverSuccess', { address, cardId });
+      navigation.navigate('GiverSuccess', { address: ethAddress, cardId, walletAddresses });
       fetchVloos(); // Refresh list
 
     } catch (error: any) {
@@ -389,6 +407,28 @@ export default function GiverDashboardScreen({ navigation }: any) {
   };
 
 
+  // Helper to parse wallet addresses
+  const getWalletAddresses = (data: any) => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (typeof data === 'string') {
+      // Check if it's a JSON string
+      if (data.startsWith('[') || data.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+          // ignore
+        }
+      }
+      // Legacy simple string
+      return [{ type: 'Ethereum', address: data }];
+    }
+    return [];
+  };
+
+  const currentWalletAddresses = currentCardIndex < vloos.length ? getWalletAddresses(vloos[currentCardIndex]?.wallet_address) : [];
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -463,31 +503,39 @@ export default function GiverDashboardScreen({ navigation }: any) {
           </View>
 
           {/* Wallet Address Section */}
-          {currentCardIndex < vloos.length && vloos[currentCardIndex]?.wallet_address && (
+          {currentWalletAddresses.length > 0 && (
             <View style={styles.walletSection}>
               <View style={styles.walletHeader}>
-                <Wallet size={16} color={COLORS.foreground} />
-                <Text style={styles.walletTitle}>Wallet Address</Text>
+                <Text style={styles.walletTitle}>Linked Wallets</Text>
               </View>
               
-              <View style={styles.walletAddressContainer}>
-                <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">
-                  {vloos[currentCardIndex].wallet_address}
-                </Text>
-                <TouchableOpacity 
-                  style={styles.copyButton}
-                  onPress={() => {
-                    // In a real app, use Clipboard.setString()
-                    // Clipboard.setString(vloos[currentCardIndex].wallet_address);
-                    Alert.alert('Copied', 'Wallet address copied to clipboard');
-                  }}
-                >
-                  <Copy size={16} color={COLORS.primary} />
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.walletHint}>
-                This is the unique address for this VLOO card.
-              </Text>
+              {currentWalletAddresses.map((wallet: any, index: number) => (
+                <View key={index} style={styles.walletRow}>
+                  <View style={styles.walletIconContainer}>
+                    {/* Icon based on type */}
+                    {wallet.type === 'Bitcoin' ? (
+                      <Text style={{ fontSize: 20 }}>₿</Text>
+                    ) : (
+                      <Text style={{ fontSize: 20 }}>Ξ</Text>
+                    )}
+                  </View>
+                  <View style={styles.walletInfo}>
+                    <Text style={styles.walletTypeLabel}>{wallet.type}</Text>
+                    <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">
+                      {wallet.address}
+                    </Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.copyButton}
+                    onPress={() => {
+                      // Clipboard.setString(wallet.address);
+                      Alert.alert('Copied', `${wallet.type} address copied to clipboard`);
+                    }}
+                  >
+                    <Copy size={18} color={COLORS.primary} />
+                  </TouchableOpacity>
+                </View>
+              ))}
             </View>
           )}
           
@@ -987,54 +1035,58 @@ const styles = StyleSheet.create({
 
   // Wallet Section
   walletSection: {
-    marginHorizontal: 24,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 16,
-    padding: 20,
+    width: '100%',
+    paddingTop: 20,
     marginBottom: 100, // Space for bottom nav
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   walletHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: 24,
     marginBottom: 12,
   },
   walletTitle: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: 14,
-    color: '#fff',
-    letterSpacing: 1,
+    fontFamily: FONTS.bodyBold,
+    fontSize: 12,
+    color: '#666',
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
-  walletAddressContainer: {
+  walletRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 12,
-    padding: 12,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  walletIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  walletInfo: {
+    flex: 1,
+    marginRight: 12,
   },
   walletAddress: {
-    flex: 1,
     fontFamily: FONTS.bodyRegular,
-    fontSize: 13,
-    color: '#ccc',
+    fontSize: 14,
+    color: '#fff',
+  },
+  walletTypeLabel: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 10,
+    color: '#888',
+    marginBottom: 4,
+    textTransform: 'uppercase',
   },
   copyButton: {
     padding: 8,
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
     borderRadius: 8,
-  },
-  walletHint: {
-    marginTop: 12,
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 12,
-    color: '#666',
-    lineHeight: 18,
   },
 
   // Modal Styles

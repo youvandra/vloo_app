@@ -12,11 +12,12 @@ import * as Clipboard from 'expo-clipboard';
 export default function ReceiverClaimScreen({ route, navigation }: any) {
   const { vloo } = route.params;
   const [passphrase, setPassphrase] = useState('');
-  const [decryptedKey, setDecryptedKey] = useState('');
+  const [decryptedKeys, setDecryptedKeys] = useState<{ label: string, key: string }[]>([]);
   const [timeLeft, setTimeLeft] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(false);
 
   useEffect(() => {
+    // ... timer logic (unchanged)
     const timer = setInterval(() => {
       const now = new Date();
       const unlockDate = new Date(vloo.unlock_date);
@@ -43,13 +44,30 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
     }
 
     try {
-      const key = decryptData(vloo.encrypted_private_key, passphrase);
-      if (!key) {
+      const keysToShow: { label: string, key: string }[] = [];
+
+      // Handle both legacy string and new object format
+      if (typeof vloo.encrypted_private_key === 'string') {
+        const key = decryptData(vloo.encrypted_private_key, passphrase);
+        if (key) keysToShow.push({ label: 'Private Key', key });
+      } else if (typeof vloo.encrypted_private_key === 'object' && vloo.encrypted_private_key !== null) {
+        // Iterate through keys (ethereum, bitcoin, etc.)
+        if (vloo.encrypted_private_key.ethereum) {
+          const ethKey = decryptData(vloo.encrypted_private_key.ethereum, passphrase);
+          if (ethKey) keysToShow.push({ label: 'Ethereum Private Key', key: ethKey });
+        }
+        if (vloo.encrypted_private_key.bitcoin) {
+          const btcKey = decryptData(vloo.encrypted_private_key.bitcoin, passphrase);
+          if (btcKey) keysToShow.push({ label: 'Bitcoin Private Key', key: btcKey });
+        }
+      }
+
+      if (keysToShow.length === 0) {
         Alert.alert('Incorrect Passphrase', 'Decryption failed.');
         return;
       }
 
-      setDecryptedKey(key);
+      setDecryptedKeys(keysToShow);
       
       // Update status in DB (optional for MVP)
       if (vloo.id !== 'demo-id') {
@@ -65,8 +83,8 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
     }
   };
 
-  const copyToClipboard = async () => {
-    await Clipboard.setStringAsync(decryptedKey);
+  const copyToClipboard = async (key: string) => {
+    await Clipboard.setStringAsync(key);
     Alert.alert('Copied', 'Private key copied to clipboard');
   };
 
@@ -116,7 +134,7 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
           </View>
 
           {/* Unlock Section */}
-          {isUnlocked && !decryptedKey && (
+          {isUnlocked && decryptedKeys.length === 0 && (
             <View style={styles.formSection}>
               <Text style={styles.inputLabel}>ENTER PASSPHRASE</Text>
               <TextInput
@@ -138,22 +156,27 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
           )}
 
           {/* Success Section */}
-          {decryptedKey ? (
+          {decryptedKeys.length > 0 ? (
             <View style={styles.successSection}>
               <Text style={styles.successTitle}>Successfully Claimed!</Text>
               <Text style={styles.successSubtitle}>
-                Import this private key into your wallet immediately.
+                Import these private keys into your wallets immediately.
               </Text>
               
-              <View style={styles.keyContainer}>
-                <Text style={styles.keyText}>{decryptedKey}</Text>
-                <TouchableOpacity onPress={copyToClipboard} style={styles.copyButton}>
-                  <Copy color="#fff" size={20} />
-                </TouchableOpacity>
-              </View>
+              {decryptedKeys.map((item, index) => (
+                <View key={index} style={[styles.keyContainer, { marginBottom: 12 }]}>
+                  <Text style={styles.keyLabel}>{item.label}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={styles.keyText} numberOfLines={1} ellipsizeMode="middle">{item.key}</Text>
+                    <TouchableOpacity onPress={() => copyToClipboard(item.key)} style={styles.copyButton}>
+                      <Copy color="#fff" size={20} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
               
               <Text style={styles.warningText}>
-                Do not share this key with anyone else.
+                Do not share these keys with anyone else.
               </Text>
             </View>
           ) : null}
@@ -312,21 +335,26 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   keyContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#111',
+    padding: 16,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#333',
-    borderRadius: 16,
-    padding: 16,
     width: '100%',
-    marginBottom: 16,
+    marginBottom: 24,
+  },
+  keyLabel: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 8,
+    textTransform: 'uppercase',
   },
   keyText: {
-    flex: 1,
-    fontFamily: 'Courier',
+    fontFamily: FONTS.monoRegular,
     fontSize: 14,
-    color: '#fff',
+    color: COLORS.primary,
+    flex: 1,
     marginRight: 12,
   },
   copyButton: {

@@ -7,7 +7,7 @@ import { Button } from '../../components/Button';
 import { CheckCircle } from 'lucide-react-native';
 
 export default function GiverSuccessScreen({ route, navigation }: any) {
-  const { cardId } = route.params;
+  const { cardId, walletAddresses, address } = route.params;
 
   return (
     <View style={styles.container}>
@@ -25,6 +25,27 @@ export default function GiverSuccessScreen({ route, navigation }: any) {
         <View style={styles.idContainer}>
           <Text style={styles.idLabel}>CARD ID</Text>
           <Text style={styles.idValue}>{cardId}</Text>
+        </View>
+
+        {/* Display Wallets */}
+        <View style={styles.walletsContainer}>
+          {walletAddresses && Array.isArray(walletAddresses) ? (
+            walletAddresses.map((wallet: any, index: number) => (
+              <View key={index} style={styles.walletRow}>
+                <Text style={styles.walletType}>{wallet.type}</Text>
+                <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">
+                  {wallet.address}
+                </Text>
+              </View>
+            ))
+          ) : (
+             <View style={styles.walletRow}>
+                <Text style={styles.walletType}>Ethereum</Text>
+                <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">
+                  {address}
+                </Text>
+              </View>
+          )}
         </View>
 
         <Button 
@@ -69,7 +90,7 @@ const styles = StyleSheet.create({
     fontSize: 16, 
     color: '#999', 
     textAlign: 'center', 
-    marginBottom: 48,
+    marginBottom: 32,
     maxWidth: 280,
   },
   idContainer: {
@@ -80,7 +101,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 24,
+    width: '100%',
   },
   idLabel: {
     fontFamily: FONTS.bodyBold,
@@ -94,6 +116,32 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
     letterSpacing: 1,
+  },
+  walletsContainer: {
+    width: '100%',
+    marginBottom: 32,
+    gap: 12,
+  },
+  walletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#111',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#222',
+  },
+  walletType: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 14,
+    color: COLORS.primary,
+    width: 80,
+  },
+  walletAddress: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 14,
+    color: '#ccc',
+    flex: 1,
   },
   doneButton: { 
     width: '100%', 
