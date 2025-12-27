@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Button } from '../../components/Button';
 import { ArrowLeft, Radio } from 'lucide-react-native';
+import { scanNfcTag } from '../../lib/nfc';
 
 export default function GiverBindScreen({ route, navigation }: any) {
   const { purpose, receiverName, message, passphrase, unlockDate } = route.params;
@@ -15,11 +16,39 @@ export default function GiverBindScreen({ route, navigation }: any) {
   const [status, setStatus] = useState('Ready to bind card');
 
   const handleBind = async (mock: boolean = false) => {
+    // If real NFC scan, we don't show full loading overlay immediately if we want the user to see "Ready to Scan"
+    // But scanNfcTag is blocking/modal-like on iOS.
+    
+    if (!mock) {
+       setStatus('Ready to Scan...');
+    } else {
+       setStatus('Generating secure wallet...');
+    }
+    
+    // We start loading state to prevent double taps
     setLoading(true);
-    setStatus('Generating secure wallet...');
 
     try {
-      // 1. Generate Wallets
+      // 1. Get NFC ID (Mock or Real) - Do this FIRST before generating wallets
+      let cardId = '';
+      if (mock) {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Fake delay
+        cardId = 'mock-nfc-id-' + Math.floor(Math.random() * 10000);
+      } else {
+        setStatus('Please hold card near phone...');
+        const scannedId = await scanNfcTag();
+        if (!scannedId) {
+           // User cancelled or failed
+           setLoading(false);
+           setStatus('Scan cancelled');
+           return;
+        }
+        cardId = scannedId;
+      }
+
+      setStatus('Generating secure wallet...');
+
+      // 2. Generate Wallets
       const wallet = createRandomWallet(); // Ethereum
       const btcData = generateMockBitcoinData(); // Bitcoin
 
@@ -43,13 +72,7 @@ export default function GiverBindScreen({ route, navigation }: any) {
         { type: 'Bitcoin', address: btcAddress }
       ];
 
-      // 3. Get NFC ID (Mock or Real)
-      let cardId = '';
-      if (mock) {
-        cardId = 'mock-nfc-id-' + Math.floor(Math.random() * 10000);
-      } else {
-        cardId = 'simulated-real-id'; // Fallback for MVP
-      }
+      // 3. Get NFC ID (Already done above)
 
       // 4. Get User
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -163,11 +186,17 @@ export default function GiverBindScreen({ route, navigation }: any) {
           ) : (
             <View style={styles.actionContainer}>
               <Button 
-                title="Tap to Simulate NFC (Dev)" 
-                onPress={() => handleBind(true)} 
+                title="Tap to Bind Card (NFC)" 
+                onPress={() => handleBind(false)} 
                 variant="primary"
                 gradient={['#d199f9', '#9F60D1']}
                 style={styles.actionButton}
+              />
+              <Button 
+                title="Simulate NFC (Dev)" 
+                onPress={() => handleBind(true)} 
+                variant="secondary"
+                style={[styles.actionButton, { marginTop: 12, backgroundColor: 'rgba(255,255,255,0.1)' }]}
               />
             </View>
           )}
