@@ -1,8 +1,18 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { X, Calendar } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../../../lib/theme';
+import { COLORS, FONTS as THEME_FONTS } from '../../../../lib/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
+
+// Fallback in case import fails (fix for ReferenceError)
+const FONTS = THEME_FONTS || {
+  displayBlack: 'MuseoModerno_900Black',
+  displayBold: 'MuseoModerno_700Bold',
+  displaySemiBold: 'MuseoModerno_600SemiBold',
+  bodyRegular: 'BeVietnamPro_400Regular',
+  bodySemiBold: 'BeVietnamPro_600SemiBold',
+  bodyBold: 'BeVietnamPro_700Bold',
+};
 
 interface CreateVlooModalProps {
   visible: boolean;
@@ -10,6 +20,10 @@ interface CreateVlooModalProps {
   onNext: () => void;
   newVlooName: string;
   setNewVlooName: (name: string) => void;
+  message: string;
+  setMessage: (message: string) => void;
+  passphrase: string;
+  setPassphrase: (passphrase: string) => void;
   newVlooUnlockDate: Date | null;
   setNewVlooUnlockDate: (date: Date | null) => void;
 }
@@ -20,6 +34,10 @@ export const CreateVlooModal = ({
   onNext,
   newVlooName,
   setNewVlooName,
+  message,
+  setMessage,
+  passphrase,
+  setPassphrase,
   newVlooUnlockDate,
   setNewVlooUnlockDate
 }: CreateVlooModalProps) => {
@@ -46,78 +64,107 @@ export const CreateVlooModal = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.modalOverlay} />
-      </TouchableWithoutFeedback>
-      
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoidingView}
-      >
-        <View style={[styles.modalContent, { height: 'auto', minHeight: 500 }]}>
-          <View style={styles.modalHeader} {...panResponder.panHandlers}>
-            <View style={styles.modalIndicator} />
+      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={StyleSheet.absoluteFillObject}>
+             <View style={styles.modalOverlay} />
           </View>
-
-          <View style={styles.modalBody}>
-            <View style={styles.modalTitleRow}>
-              <Text style={styles.modalTitle}>Create New Vloo</Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color="#000" />
-              </TouchableOpacity>
+        </TouchableWithoutFeedback>
+        
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ width: '100%', height: '80%' }}
+        >
+          <View style={[styles.modalContent, { height: '100%' }]}>
+            <View style={styles.modalHeader} {...panResponder.panHandlers}>
+              <View style={styles.modalIndicator} />
             </View>
 
-            <Text style={styles.stepIndicator}>Step 1 of 2</Text>
+            <ScrollView contentContainerStyle={styles.modalBody}>
+              <View style={styles.modalTitleRow}>
+                <Text style={styles.modalTitle}>Create New Vloo</Text>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <X size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Who is this for?</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Alice's Birthday"
-                placeholderTextColor="#999"
-                value={newVlooName}
-                onChangeText={setNewVlooName}
-              />
-            </View>
+              <Text style={styles.stepIndicator}>Step 1 of 2</Text>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>When should it unlock? (Optional)</Text>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Who is this for?</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. Alice's Birthday"
+                  placeholderTextColor="#999"
+                  value={newVlooName}
+                  onChangeText={setNewVlooName}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Message</Text>
+                <TextInput
+                  style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+                  placeholder="Write a heartfelt message..."
+                  placeholderTextColor="#999"
+                  value={message}
+                  onChangeText={setMessage}
+                  multiline={true}
+                  numberOfLines={4}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Passphrase (Optional)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Secure your Vloo"
+                  placeholderTextColor="#999"
+                  value={passphrase}
+                  onChangeText={setPassphrase}
+                  secureTextEntry
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Unlock Date</Text>
+                <TouchableOpacity 
+                  style={styles.datePickerButton}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={[styles.dateText, !newVlooUnlockDate && { color: '#999' }]}>
+                    {newVlooUnlockDate ? newVlooUnlockDate.toLocaleDateString() : 'Set Date'}
+                  </Text>
+                  <Calendar size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={newVlooUnlockDate || new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowDatePicker(Platform.OS === 'ios');
+                    if (selectedDate) {
+                      setNewVlooUnlockDate(selectedDate);
+                    }
+                  }}
+                  minimumDate={new Date()}
+                />
+              )}
+
               <TouchableOpacity 
-                style={styles.datePickerButton}
-                onPress={() => setShowDatePicker(true)}
+                style={[styles.primaryButton, !newVlooName && { opacity: 0.5 }]}
+                onPress={onNext}
+                disabled={!newVlooName}
               >
-                <Text style={[styles.dateText, !newVlooUnlockDate && { color: '#999' }]}>
-                  {newVlooUnlockDate ? newVlooUnlockDate.toLocaleDateString() : 'Select Date'}
-                </Text>
-                <Calendar size={20} color="#666" />
+                <Text style={styles.primaryButtonText}>Next</Text>
               </TouchableOpacity>
-            </View>
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={newVlooUnlockDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(Platform.OS === 'ios');
-                  if (selectedDate) {
-                    setNewVlooUnlockDate(selectedDate);
-                  }
-                }}
-                minimumDate={new Date()}
-              />
-            )}
-
-            <TouchableOpacity 
-              style={[styles.primaryButton, !newVlooName && { opacity: 0.5 }]}
-              onPress={onNext}
-              disabled={!newVlooName}
-            >
-              <Text style={styles.primaryButtonText}>Next</Text>
-            </TouchableOpacity>
+            </ScrollView>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 };
@@ -127,14 +174,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  keyboardAvoidingView: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
   modalContent: {
     height: '80%',
     backgroundColor: '#fff',
-    marginTop: 'auto',
     borderWidth: 1,
     borderColor: '#eee',
     shadowColor: '#000',
@@ -142,8 +184,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 20,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    width: '100%',
   },
   modalHeader: {
     height: 40,
@@ -191,7 +232,6 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#eee',
-    borderRadius: 16,
     padding: 16,
     fontSize: 16,
     fontFamily: FONTS.bodyRegular,
@@ -204,7 +244,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#eee',
-    borderRadius: 16,
     padding: 16,
     backgroundColor: '#f9f9f9',
   },
@@ -216,7 +255,6 @@ const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 18,
-    borderRadius: 16,
     alignItems: 'center',
     marginTop: 24,
     shadowColor: COLORS.primary,

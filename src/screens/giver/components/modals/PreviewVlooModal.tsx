@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, Image, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, Image, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import { X } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../../lib/theme';
 
@@ -45,72 +45,76 @@ export const PreviewVlooModal = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.modalOverlay} />
-      </TouchableWithoutFeedback>
+      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={StyleSheet.absoluteFillObject}>
+             <View style={styles.modalOverlay} />
+          </View>
+        </TouchableWithoutFeedback>
 
-      <View style={[styles.modalContent, { height: 'auto', minHeight: 500 }]}>
-        <View style={styles.modalHeader} {...panResponder.panHandlers}>
-          <View style={styles.modalIndicator} />
-        </View>
-
-        <View style={styles.modalBody}>
-          <View style={styles.modalTitleRow}>
-            <Text style={styles.modalTitle}>Card Preview</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <X size={24} color="#000" />
-            </TouchableOpacity>
+        <View style={[styles.modalContent, { height: '80%' }]}>
+          <View style={styles.modalHeader} {...panResponder.panHandlers}>
+            <View style={styles.modalIndicator} />
           </View>
 
-          <View style={[styles.previewCard, { backgroundColor: cardColor }]}>
-            <View style={styles.cardTop}>
-              <Image 
-                source={require('../../../../assets/logo-min.png')} 
-                style={styles.cardLogo} 
-                resizeMode="contain"
-              />
-              <View style={styles.nfcIdContainer}>
-                 <Text style={[styles.nfcIdLabel, { color: '#666' }]}>CARD ID</Text>
-                 <Text style={[styles.nfcIdValue, { color: '#fff' }]}>{vloo.verified_cards?.[0]?.id || '••••'}</Text>
-              </View>
+          <ScrollView contentContainerStyle={styles.modalBody}>
+            <View style={styles.modalTitleRow}>
+              <Text style={styles.modalTitle}>Card Preview</Text>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <X size={24} color="#000" />
+              </TouchableOpacity>
             </View>
-            
-            <View style={styles.cardCenter}>
-              <Text style={[styles.receiverNameLabel, { color: '#666' }]}>Sending to</Text>
-              <Text style={[styles.receiverName, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>
-                {vloo.receiver_name || 'VLOO Gift'}
-              </Text>
-            </View>
-            
-            <View style={styles.cardBottom}>
-              <View>
-                <Text style={[styles.cardLabel, { color: '#666' }]}>Unlock Date</Text>
-                <Text style={[styles.cardValue, { color: '#fff' }]}>{formattedDate}</Text>
+
+            <View style={[styles.previewCard, { backgroundColor: cardColor }]}>
+              <View style={styles.cardTop}>
+                <Image 
+                  source={require('../../../../assets/logo-min.png')} 
+                  style={styles.cardLogo} 
+                  resizeMode="contain"
+                />
+                <View style={styles.nfcIdContainer}>
+                   <Text style={[styles.nfcIdLabel, { color: '#666' }]}>CARD ID</Text>
+                   <Text style={[styles.nfcIdValue, { color: '#fff' }]}>{vloo.verified_cards?.[0]?.id || '••••'}</Text>
+                </View>
               </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={[styles.cardLabel, { color: '#666' }]}>Status</Text>
-                <Text style={[styles.cardValue, { color: '#fff' }]}>
-                   {vloo.is_claimed ? 'Claimed' : 'Active'}
+              
+              <View style={styles.cardCenter}>
+                <Text style={[styles.receiverNameLabel, { color: '#666' }]}>Sending to</Text>
+                <Text style={[styles.receiverName, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>
+                  {vloo.receiver_name || 'VLOO Gift'}
                 </Text>
               </View>
+              
+              <View style={styles.cardBottom}>
+                <View>
+                  <Text style={[styles.cardLabel, { color: '#666' }]}>Unlock Date</Text>
+                  <Text style={[styles.cardValue, { color: '#fff' }]}>{formattedDate}</Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={[styles.cardLabel, { color: '#666' }]}>Status</Text>
+                  <Text style={[styles.cardValue, { color: '#fff' }]}>
+                     {vloo.is_claimed ? 'Claimed' : 'Active'}
+                  </Text>
+                </View>
+              </View>
             </View>
-          </View>
 
-          <View style={styles.detailsContainer}>
-             <View style={styles.detailRow}>
-               <Text style={styles.detailLabel}>Assets Bound</Text>
-               <Text style={styles.detailValue}>
-                 {vloo.amount} {vloo.currency}
-               </Text>
-             </View>
-             <View style={styles.detailRow}>
-               <Text style={styles.detailLabel}>Chain</Text>
-               <Text style={styles.detailValue}>
-                 {vloo.chain || 'Ethereum'}
-               </Text>
-             </View>
-          </View>
+            <View style={styles.detailsContainer}>
+               <View style={styles.detailRow}>
+                 <Text style={styles.detailLabel}>Assets Bound</Text>
+                 <Text style={styles.detailValue}>
+                   {vloo.amount} {vloo.currency}
+                 </Text>
+               </View>
+               <View style={styles.detailRow}>
+                 <Text style={styles.detailLabel}>Chain</Text>
+                 <Text style={styles.detailValue}>
+                   {vloo.chain || 'Ethereum'}
+                 </Text>
+               </View>
+            </View>
 
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -124,7 +128,6 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#fff',
-    marginTop: 'auto',
     borderWidth: 1,
     borderColor: '#eee',
     shadowColor: '#000',
@@ -132,8 +135,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 20,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    width: '100%',
   },
   modalHeader: {
     height: 40,
@@ -167,7 +169,6 @@ const styles = StyleSheet.create({
   previewCard: {
     width: '100%',
     height: 220,
-    borderRadius: 24,
     padding: 24,
     justifyContent: 'space-between',
     shadowColor: '#000',
@@ -227,8 +228,6 @@ const styles = StyleSheet.create({
     marginHorizontal: -24,
     marginBottom: -24,
     padding: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
   },
   cardLabel: {
     fontFamily: FONTS.bodyRegular,

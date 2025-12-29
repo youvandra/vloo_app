@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, BackHandler, SafeAreaView, Platform, Alert, Dimensions, StatusBar, RefreshControl } from 'react-native';
+import { StyleSheet, ScrollView, BackHandler, SafeAreaView, Alert, StatusBar, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchBalance } from '../../lib/blockcypher';
 import { supabase } from '../../lib/supabase';
-import { COLORS } from '../../lib/theme';
 import { createRandomWallet, generateMockBitcoinData, generateMockSolanaData } from '../../lib/wallet';
 import { encryptData } from '../../lib/crypto';
 
@@ -18,8 +17,6 @@ import { BindVlooModal } from './components/modals/BindVlooModal';
 import { EditVlooModal } from './components/modals/EditVlooModal';
 import { PreviewVlooModal } from './components/modals/PreviewVlooModal';
 import { EditProfileModal } from './components/modals/EditProfileModal';
-
-const { width } = Dimensions.get('window');
 
 export default function GiverDashboardScreen({ navigation }: any) {
   const [vloos, setVloos] = useState<any[]>([]);
@@ -55,20 +52,15 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
   // Create Vloo State
   const [receiverName, setReceiverName] = useState('');
-  const [message, setMessage] = useState(''); // Kept for logic, but maybe unused in first step
-  const [passphrase, setPassphrase] = useState(''); // Kept for logic
+  const [message, setMessage] = useState('');
+  const [passphrase, setPassphrase] = useState('');
   const [unlockDate, setUnlockDate] = useState<Date | null>(new Date(Date.now() + 60000));
   
   // Bind State
   const [bindLoading, setBindLoading] = useState(false);
-  const [bindStatus, setBindStatus] = useState('Ready to bind card');
-  const [manualCardId, setManualCardId] = useState(''); // Currently unused in UI but needed for logic if we add input
-  const [idError, setIdError] = useState('');
-  const [selectedBindWallet, setSelectedBindWallet] = useState<any>(null);
-  const [bindAmount, setBindAmount] = useState('');
+  const [selectedBindWallets, setSelectedBindWallets] = useState<any[]>([]);
 
   // Other State
-  const [walletLoading, setWalletLoading] = useState(false);
   const [isTestnet, setIsTestnet] = useState(false);
 
   // --- Handlers ---
@@ -171,10 +163,9 @@ export default function GiverDashboardScreen({ navigation }: any) {
     
     // For now, we simulate a Card ID since we don't have NFC scanning in this MVP refactor step yet
     // Or we use a random ID for testing
-    const simulatedCardId = manualCardId || 'TEST-' + Math.floor(Math.random() * 10000);
+    const simulatedCardId = 'TEST-' + Math.floor(Math.random() * 10000);
 
     setBindLoading(true);
-    setBindStatus('Generating secure wallet...');
 
     try {
         // 1. Generate Wallets
@@ -190,9 +181,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
         const solAddress = solData.address;
 
         // 2. Encrypt Private Keys
-        // We use a default passphrase or user input. In original code user input 'passphrase'.
-        // Let's assume 'default-secure-pass' if empty for MVP, or prompt user.
-        // The modal doesn't have passphrase input in the extracted version yet.
+        // Use user provided passphrase or fallback
         const securePass = passphrase || 'vloo-default-pass'; 
 
         const encryptedEthKey = encryptData(ethPrivateKey, securePass);
@@ -254,12 +243,11 @@ export default function GiverDashboardScreen({ navigation }: any) {
         */
        
         // Fallback for UI demo
-        console.log('Would bind Vloo:', { receiverName, bindAmount, selectedBindWallet });
+        console.log('Would bind Vloo:', { receiverName, selectedBindWallets });
         setBindModalVisible(false);
         // Reset
         setReceiverName('');
-        setBindAmount('');
-        setSelectedBindWallet(null);
+        setSelectedBindWallets([]);
         
         // Refresh
         fetchVloos(); 
@@ -485,6 +473,10 @@ export default function GiverDashboardScreen({ navigation }: any) {
         }}
         newVlooName={receiverName}
         setNewVlooName={setReceiverName}
+        message={message}
+        setMessage={setMessage}
+        passphrase={passphrase}
+        setPassphrase={setPassphrase}
         newVlooUnlockDate={unlockDate}
         setNewVlooUnlockDate={setUnlockDate}
       />
@@ -497,10 +489,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
            setTimeout(() => setCreateModalVisible(true), 500);
         }}
         onCreate={handleCreateVloo}
-        selectedBindWallet={selectedBindWallet}
-        setSelectedBindWallet={setSelectedBindWallet}
-        bindAmount={bindAmount}
-        setBindAmount={setBindAmount}
+        selectedBindWallets={selectedBindWallets}
+        setSelectedBindWallets={setSelectedBindWallets}
         wallets={currentWalletAddresses}
         balances={balances}
         isCreating={bindLoading}

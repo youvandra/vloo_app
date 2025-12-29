@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { X, LogOut, Camera } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../../lib/theme';
 
@@ -50,93 +50,97 @@ export const EditProfileModal = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.modalOverlay} />
-      </TouchableWithoutFeedback>
-
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoidingView}
-      >
-        <View style={[styles.modalContent, { height: 'auto', minHeight: 500 }]}>
-          <View style={styles.modalHeader} {...panResponder.panHandlers}>
-            <View style={styles.modalIndicator} />
+      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={StyleSheet.absoluteFillObject}>
+             <View style={styles.modalOverlay} />
           </View>
+        </TouchableWithoutFeedback>
 
-          <View style={styles.modalBody}>
-            <View style={styles.modalTitleRow}>
-              <Text style={styles.modalTitle}>Edit Profile</Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color="#000" />
-              </TouchableOpacity>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ width: '100%', height: '80%' }}
+        >
+          <View style={[styles.modalContent, { height: '100%' }]}>
+            <View style={styles.modalHeader} {...panResponder.panHandlers}>
+              <View style={styles.modalIndicator} />
             </View>
 
-            <View style={{ alignItems: 'center', marginBottom: 32 }}>
-              <View style={{ position: 'relative' }}>
-                <Image 
-                  source={{ uri: editAvatarUrl || 'https://i.pravatar.cc/150?u=giver' }} 
-                  style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: '#f0f0f0' }} 
-                />
-                <TouchableOpacity style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: '#000', padding: 8, borderRadius: 20 }}>
-                  <Camera size={16} color="#fff" />
+            <ScrollView contentContainerStyle={styles.modalBody}>
+              <View style={styles.modalTitleRow}>
+                <Text style={styles.modalTitle}>Edit Profile</Text>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <X size={24} color="#000" />
                 </TouchableOpacity>
               </View>
-            </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Full Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Name"
-                placeholderTextColor="#999"
-                value={editName}
-                onChangeText={setEditName}
-              />
-            </View>
+              <View style={{ alignItems: 'center', marginBottom: 32 }}>
+                <View style={{ position: 'relative' }}>
+                  <Image 
+                    source={{ uri: editAvatarUrl || 'https://i.pravatar.cc/150?u=giver' }} 
+                    style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: '#f0f0f0' }} 
+                  />
+                  <TouchableOpacity style={{ position: 'absolute', bottom: 0, right: 0, backgroundColor: '#000', padding: 8, borderRadius: 20 }}>
+                    <Camera size={16} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Avatar URL</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="https://..."
-                placeholderTextColor="#999"
-                value={editAvatarUrl}
-                onChangeText={setEditAvatarUrl}
-                autoCapitalize="none"
-              />
-            </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Full Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Name"
+                  placeholderTextColor="#999"
+                  value={editName}
+                  onChangeText={setEditName}
+                />
+              </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: '#eee', color: '#666' }]}
-                value={user?.email}
-                editable={false}
-              />
-            </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Avatar URL</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://..."
+                  placeholderTextColor="#999"
+                  value={editAvatarUrl}
+                  onChangeText={setEditAvatarUrl}
+                  autoCapitalize="none"
+                />
+              </View>
 
-            <TouchableOpacity 
-              style={[styles.primaryButton, !editName && { opacity: 0.5 }]}
-              onPress={onSave}
-              disabled={!editName || isSaving}
-            >
-              {isSaving ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.primaryButtonText}>Save Changes</Text>
-              )}
-            </TouchableOpacity>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: '#eee', color: '#666' }]}
+                  value={user?.email}
+                  editable={false}
+                />
+              </View>
 
-            <TouchableOpacity 
-              style={styles.signOutButton}
-              onPress={onSignOut}
-            >
-               <LogOut size={20} color="#FF3B30" />
-               <Text style={styles.signOutButtonText}>Sign Out</Text>
-            </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.primaryButton, !editName && { opacity: 0.5 }]}
+                onPress={onSave}
+                disabled={!editName || isSaving}
+              >
+                {isSaving ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.signOutButton}
+                onPress={onSignOut}
+              >
+                 <LogOut size={20} color="#FF3B30" />
+                 <Text style={styles.signOutButtonText}>Sign Out</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 };
@@ -146,13 +150,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  keyboardAvoidingView: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
   modalContent: {
     backgroundColor: '#fff',
-    marginTop: 'auto',
     borderWidth: 1,
     borderColor: '#eee',
     shadowColor: '#000',
@@ -160,8 +159,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 20,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    width: '100%',
   },
   modalHeader: {
     height: 40,
@@ -204,7 +202,6 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#eee',
-    borderRadius: 16,
     padding: 16,
     fontSize: 16,
     fontFamily: FONTS.bodyRegular,
@@ -214,7 +211,6 @@ const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 18,
-    borderRadius: 16,
     alignItems: 'center',
     marginTop: 8,
     shadowColor: COLORS.primary,

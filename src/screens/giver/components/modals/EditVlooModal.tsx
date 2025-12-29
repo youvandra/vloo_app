@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ActivityIndicator, ScrollView } from 'react-native';
 import { X, Calendar, Trash2 } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../../lib/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -52,88 +52,92 @@ export const EditVlooModal = ({
       visible={visible}
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.modalOverlay} />
-      </TouchableWithoutFeedback>
-
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoidingView}
-      >
-        <View style={[styles.modalContent, { height: 'auto', minHeight: 500 }]}>
-          <View style={styles.modalHeader} {...panResponder.panHandlers}>
-            <View style={styles.modalIndicator} />
+      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={StyleSheet.absoluteFillObject}>
+             <View style={styles.modalOverlay} />
           </View>
+        </TouchableWithoutFeedback>
 
-          <View style={styles.modalBody}>
-            <View style={styles.modalTitleRow}>
-              <Text style={styles.modalTitle}>Edit Vloo</Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color="#000" />
-              </TouchableOpacity>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ width: '100%', height: '80%' }}
+        >
+          <View style={[styles.modalContent, { height: '100%' }]}>
+            <View style={styles.modalHeader} {...panResponder.panHandlers}>
+              <View style={styles.modalIndicator} />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Recipient Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Name"
-                placeholderTextColor="#999"
-                value={editVlooName}
-                onChangeText={setEditVlooName}
-              />
-            </View>
+            <ScrollView contentContainerStyle={styles.modalBody}>
+              <View style={styles.modalTitleRow}>
+                <Text style={styles.modalTitle}>Edit Vloo</Text>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <X size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Unlock Date</Text>
-              <TouchableOpacity 
-                style={styles.datePickerButton}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Text style={[styles.dateText, !editVlooDate && { color: '#999' }]}>
-                  {editVlooDate ? editVlooDate.toLocaleDateString() : 'Set Date'}
-                </Text>
-                <Calendar size={20} color="#666" />
-              </TouchableOpacity>
-            </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Recipient Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Name"
+                  placeholderTextColor="#999"
+                  value={editVlooName}
+                  onChangeText={setEditVlooName}
+                />
+              </View>
 
-            {showDatePicker && (
-              <DateTimePicker
-                value={editVlooDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(Platform.OS === 'ios');
-                  if (selectedDate) {
-                    setEditVlooDate(selectedDate);
-                  }
-                }}
-                minimumDate={new Date()}
-              />
-            )}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Unlock Date</Text>
+                <TouchableOpacity 
+                  style={styles.datePickerButton}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={[styles.dateText, !editVlooDate && { color: '#999' }]}>
+                    {editVlooDate ? editVlooDate.toLocaleDateString() : 'Set Date'}
+                  </Text>
+                  <Calendar size={20} color="#666" />
+                </TouchableOpacity>
+              </View>
 
-            <TouchableOpacity 
-              style={[styles.primaryButton, !editVlooName && { opacity: 0.5 }]}
-              onPress={onSave}
-              disabled={!editVlooName || isSaving}
-            >
-              {isSaving ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.primaryButtonText}>Save Changes</Text>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={editVlooDate || new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowDatePicker(Platform.OS === 'ios');
+                    if (selectedDate) {
+                      setEditVlooDate(selectedDate);
+                    }
+                  }}
+                  minimumDate={new Date()}
+                />
               )}
-            </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.deleteButton}
-              onPress={onDelete}
-            >
-               <Trash2 size={20} color="#FF3B30" />
-               <Text style={styles.deleteButtonText}>Delete Vloo</Text>
-            </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.primaryButton, !editVlooName && { opacity: 0.5 }]}
+                onPress={onSave}
+                disabled={!editVlooName || isSaving}
+              >
+                {isSaving ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.deleteButton}
+                onPress={onDelete}
+              >
+                 <Trash2 size={20} color="#FF3B30" />
+                 <Text style={styles.deleteButtonText}>Delete Vloo</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 };
@@ -143,13 +147,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  keyboardAvoidingView: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
   modalContent: {
     backgroundColor: '#fff',
-    marginTop: 'auto',
     borderWidth: 1,
     borderColor: '#eee',
     shadowColor: '#000',
@@ -157,8 +156,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 20,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    width: '100%',
   },
   modalHeader: {
     height: 40,
@@ -201,7 +199,6 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#eee',
-    borderRadius: 16,
     padding: 16,
     fontSize: 16,
     fontFamily: FONTS.bodyRegular,
@@ -214,7 +211,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#eee',
-    borderRadius: 16,
     padding: 16,
     backgroundColor: '#f9f9f9',
   },
@@ -226,7 +222,6 @@ const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 18,
-    borderRadius: 16,
     alignItems: 'center',
     marginTop: 8,
     shadowColor: COLORS.primary,
