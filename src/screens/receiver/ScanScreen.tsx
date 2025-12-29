@@ -1,20 +1,22 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Button } from '../../components/Button';
-import { ArrowLeft, Scan } from 'lucide-react-native';
+import { ArrowLeft, Scan, XCircle } from 'lucide-react-native';
 
 export default function ReceiverScanScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('Waiting for card...');
   const [manualCardId, setManualCardId] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleScan = async (mock: boolean = false) => {
+    setError(null);
     if (!mock && !manualCardId.trim()) {
-       Alert.alert('Error', 'Please enter a Card ID or tap simulate.');
+       setError('Please enter a Card ID or tap simulate.');
        return;
     }
 
@@ -56,7 +58,7 @@ export default function ReceiverScanScreen({ navigation }: any) {
 
     } catch (error: any) {
       console.error(error);
-      Alert.alert('Error', error.message || 'Failed to scan card');
+      setError(error.message || 'Failed to scan card');
       setStatus('Scan failed');
     } finally {
       setLoading(false);
@@ -67,66 +69,86 @@ export default function ReceiverScanScreen({ navigation }: any) {
     <View style={styles.mainContainer}>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <ArrowLeft color="#000" size={24} />
-          </TouchableOpacity>
-          <View style={styles.brandBadge}>
-            <Text style={styles.brandBadgeText}>SCAN VLOO</Text>
-          </View>
-        </View>
-        
-        <View style={styles.content}>
-          <View style={styles.iconContainer}>
-            <Scan color={COLORS.accent} size={80} />
-          </View>
-          
-          <View style={styles.textWrapper}>
-            <Text style={styles.headline}>
-              Tap to <Text style={styles.headlineHighlight}>Receive</Text>
-            </Text>
-            <Text style={styles.subheadline}>
-              Hold your VLOO card near the phone to check its status and claim your gift.
-            </Text>
-          </View>
-          
-          {loading ? (
-            <View style={styles.loader}>
-              <ActivityIndicator size="large" color={COLORS.accent} />
-              <Text style={styles.statusText}>{status}</Text>
-            </View>
-          ) : (
-            <View style={styles.actionContainer}>
-              <View style={styles.inputContainer}>
-                 <Text style={styles.inputLabel}>MANUAL CARD ID</Text>
-                 <TextInput
-                    style={styles.input}
-                    placeholder="Enter Card ID"
-                    placeholderTextColor="#999"
-                    value={manualCardId}
-                    onChangeText={setManualCardId}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                 />
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={{ flex: 1 }}>
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <ArrowLeft color="#000" size={24} />
+              </TouchableOpacity>
+              <View style={styles.brandBadge}>
+                <Text style={styles.brandBadgeText}>SCAN VLOO</Text>
               </View>
-
-              <Button 
-                title="Check Card" 
-                onPress={() => handleScan(false)} 
-                variant="primary"
-                style={[styles.actionButton, { backgroundColor: '#000', marginBottom: 12 }]}
-              />
-
-              <Button 
-                title="Tap to Simulate Scan (Dev)" 
-                onPress={() => handleScan(true)} 
-                variant="primary"
-                style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
-              />
             </View>
-          )}
-        </View>
+            
+            <View style={styles.content}>
+              {error ? (
+                 <View style={styles.errorContainer}>
+                   <XCircle color={COLORS.error} size={64} />
+                   <Text style={styles.errorTitle}>Scan Failed</Text>
+                   <Text style={styles.errorMessage}>{error}</Text>
+                   <Button 
+                     title="Try Again" 
+                     onPress={() => setError(null)} 
+                     variant="primary"
+                     style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
+                   />
+                 </View>
+              ) : (
+                <>
+                  <View style={styles.iconContainer}>
+                    <Scan color={COLORS.accent} size={80} />
+                  </View>
+                  
+                  <View style={styles.textWrapper}>
+                    <Text style={styles.headline}>
+                      Tap to <Text style={styles.headlineHighlight}>Receive</Text>
+                    </Text>
+                    <Text style={styles.subheadline}>
+                      Hold your VLOO card near the phone to check its status and claim your gift.
+                    </Text>
+                  </View>
+                  
+                  {loading ? (
+                    <View style={styles.loader}>
+                      <ActivityIndicator size="large" color={COLORS.accent} />
+                      <Text style={styles.statusText}>{status}</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.actionContainer}>
+                      <View style={styles.inputContainer}>
+                         <Text style={styles.inputLabel}>MANUAL CARD ID</Text>
+                         <TextInput
+                            style={styles.input}
+                            placeholder="Enter Card ID"
+                            placeholderTextColor="#999"
+                            value={manualCardId}
+                            onChangeText={setManualCardId}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                         />
+                      </View>
+    
+                      <Button 
+                        title="Check Card" 
+                        onPress={() => handleScan(false)} 
+                        variant="primary"
+                        style={[styles.actionButton, { backgroundColor: '#000', marginBottom: 12 }]}
+                      />
+    
+                      <Button 
+                        title="Tap to Simulate Scan (Dev)" 
+                        onPress={() => handleScan(true)} 
+                        variant="primary"
+                        style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
+                      />
+                    </View>
+                  )}
+                </>
+              )}
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
       </SafeAreaView>
     </View>
   );
@@ -245,5 +267,27 @@ const styles = StyleSheet.create({
   actionButton: {
     width: '100%',
     height: 56,
+  },
+  errorContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    width: '100%',
+  },
+  errorTitle: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 24,
+    color: COLORS.error,
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
   },
 });

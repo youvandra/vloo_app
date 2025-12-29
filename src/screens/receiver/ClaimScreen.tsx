@@ -6,8 +6,7 @@ import { decryptData } from '../../lib/crypto';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Button } from '../../components/Button';
-import { ArrowLeft, Lock, Unlock, MessageSquare, Copy } from 'lucide-react-native';
-import * as Clipboard from 'expo-clipboard';
+import { ArrowLeft, Lock, Unlock, MessageSquare } from 'lucide-react-native';
 
 export default function ReceiverClaimScreen({ route, navigation }: any) {
   const { vloo } = route.params;
@@ -15,10 +14,12 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
   const [decryptedKeys, setDecryptedKeys] = useState<{ label: string, key: string }[]>([]);
   const [timeLeft, setTimeLeft] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ... timer logic (unchanged)
-    const timer = setInterval(() => {
+    let timer: NodeJS.Timeout;
+
+    const calculateTime = () => {
       const now = new Date();
       const unlockDate = new Date(vloo.unlock_date);
       const diff = unlockDate.getTime() - now.getTime();
@@ -26,13 +27,17 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
       if (diff <= 0) {
         setTimeLeft('Unlocked!');
         setIsUnlocked(true);
-        clearInterval(timer);
+        if (timer) clearInterval(timer);
       } else {
         const minutes = Math.floor(diff / 60000);
         const seconds = Math.floor((diff % 60000) / 1000);
         setTimeLeft(`${minutes}m ${seconds}s`);
       }
-    }, 1000);
+      setLoading(false);
+    };
+
+    calculateTime();
+    timer = setInterval(calculateTime, 1000);
 
     return () => clearInterval(timer);
   }, [vloo.unlock_date]);
@@ -102,15 +107,12 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
           .eq('id', vloo.id);
       }
 
+      navigation.navigate('ClaimSuccess', { decryptedKeys: keysToShow });
+
     } catch (e) {
       console.error(e);
       Alert.alert('Error', 'Something went wrong.');
     }
-  };
-
-  const copyToClipboard = async (key: string) => {
-    await Clipboard.setStringAsync(key);
-    Alert.alert('Copied', 'Private key copied to clipboard');
   };
 
   return (
@@ -138,25 +140,38 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
           </View>
 
           {/* Status Section */}
-          <View style={[styles.section, styles.statusSection]}>
-            <View style={styles.statusRow}>
-              {isUnlocked ? (
-                <Unlock color={COLORS.accent} size={24} />
-              ) : (
-                <Lock color="#666" size={24} />
-              )}
-              <Text style={[styles.statusTitle, isUnlocked && styles.activeStatus]}>
-                {isUnlocked ? 'READY TO CLAIM' : 'LOCKED'}
-              </Text>
-            </View>
-            
-            {!isUnlocked && (
-              <View style={styles.timerContainer}>
-                <Text style={styles.timerLabel}>UNLOCKS IN</Text>
-                <Text style={styles.timerValue}>{timeLeft}</Text>
+          {loading ? (
+            <View style={[styles.section, styles.statusSection]}>
+              <View style={styles.skeletonRow}>
+                <View style={styles.skeletonIcon} />
+                <View style={styles.skeletonTitle} />
               </View>
-            )}
-          </View>
+              <View style={styles.skeletonTimerContainer}>
+                <View style={styles.skeletonLabel} />
+                <View style={styles.skeletonValue} />
+              </View>
+            </View>
+          ) : (
+            <View style={[styles.section, styles.statusSection]}>
+              <View style={styles.statusRow}>
+                {isUnlocked ? (
+                  <Unlock color={COLORS.accent} size={24} />
+                ) : (
+                  <Lock color="#666" size={24} />
+                )}
+                <Text style={[styles.statusTitle, isUnlocked && styles.activeStatus]}>
+                  {isUnlocked ? 'READY TO CLAIM' : 'LOCKED'}
+                </Text>
+              </View>
+              
+              {!isUnlocked && (
+                <View style={styles.timerContainer}>
+                  <Text style={styles.timerLabel}>UNLOCKS IN</Text>
+                  <Text style={styles.timerValue}>{timeLeft}</Text>
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Unlock Section */}
           {isUnlocked && decryptedKeys.length === 0 && (
@@ -179,32 +194,6 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
               />
             </View>
           )}
-
-          {/* Success Section */}
-          {decryptedKeys.length > 0 ? (
-            <View style={styles.successSection}>
-              <Text style={styles.successTitle}>Successfully Claimed!</Text>
-              <Text style={styles.successSubtitle}>
-                Import these private keys into your wallets immediately.
-              </Text>
-              
-              {decryptedKeys.map((item, index) => (
-                <View key={index} style={[styles.keyContainer, { marginBottom: 12 }]}>
-                  <Text style={styles.keyLabel}>{item.label}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={styles.keyText} numberOfLines={1} ellipsizeMode="middle">{item.key}</Text>
-                    <TouchableOpacity onPress={() => copyToClipboard(item.key)} style={styles.copyButton}>
-                      <Copy color="#000" size={20} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))}
-              
-              <Text style={styles.warningText}>
-                Do not share these keys with anyone else.
-              </Text>
-            </View>
-          ) : null}
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -341,56 +330,39 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 56,
   },
-  successSection: {
-    marginTop: 40,
-    width: '100%',
+  skeletonRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  successTitle: {
-    fontFamily: FONTS.displayBold,
-    fontSize: 24,
-    color: '#4ADE80', // Green
-    marginBottom: 8,
-  },
-  successSubtitle: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    gap: 12,
     marginBottom: 24,
   },
-  keyContainer: {
-    backgroundColor: '#F5F5F5',
-    padding: 16,
+  skeletonIcon: {
+    width: 24,
+    height: 24,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#EEE',
+    backgroundColor: '#E0E0E0',
+  },
+  skeletonTitle: {
+    width: 150,
+    height: 24,
+    borderRadius: 4,
+    backgroundColor: '#E0E0E0',
+  },
+  skeletonTimerContainer: {
+    alignItems: 'center',
     width: '100%',
-    marginBottom: 24,
   },
-  keyLabel: {
-    fontFamily: FONTS.bodyBold,
-    fontSize: 12,
-    color: '#888',
+  skeletonLabel: {
+    width: 80,
+    height: 12,
+    borderRadius: 4,
+    backgroundColor: '#E0E0E0',
     marginBottom: 8,
-    textTransform: 'uppercase',
   },
-  keyText: {
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    fontSize: 14,
-    color: COLORS.primary,
-    flex: 1,
-    marginRight: 12,
-  },
-  copyButton: {
-    padding: 8,
-    backgroundColor: '#EEE',
-    borderRadius: 8,
-  },
-  warningText: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 14,
-    color: '#FF4444',
-    textAlign: 'center',
+  skeletonValue: {
+    width: 120,
+    height: 32,
+    borderRadius: 4,
+    backgroundColor: '#E0E0E0',
   },
 });

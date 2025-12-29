@@ -12,6 +12,7 @@ import GiverSuccessScreen from '../screens/giver/SuccessScreen';
 import ReceiverScanScreen from '../screens/receiver/ScanScreen';
 import ReceiverViewScreen from '../screens/receiver/ViewScreen';
 import ReceiverClaimScreen from '../screens/receiver/ClaimScreen';
+import ClaimSuccessScreen from '../screens/receiver/ClaimSuccessScreen';
 
 const Stack = createStackNavigator();
 
@@ -32,6 +33,7 @@ export default function AppNavigator() {
         <Stack.Screen name="ReceiverScan" component={ReceiverScanScreen} />
         <Stack.Screen name="ReceiverView" component={ReceiverViewScreen} />
         <Stack.Screen name="ReceiverClaim" component={ReceiverClaimScreen} />
+        <Stack.Screen name="ClaimSuccess" component={ClaimSuccessScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
