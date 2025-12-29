@@ -128,6 +128,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
   // Bind State
   const [bindLoading, setBindLoading] = useState(false);
   const [bindStatus, setBindStatus] = useState('Ready to bind card');
+  const [manualCardId, setManualCardId] = useState('');
+  const [idError, setIdError] = useState('');
 
   const panResponder = useRef(
     PanResponder.create({
@@ -205,16 +207,39 @@ export default function GiverDashboardScreen({ navigation }: any) {
       Alert.alert('Missing fields', 'Please fill in all fields.');
       return;
     }
+    setIdError(''); // Clear any previous ID errors
     setCreateModalVisible(false);
     setBindModalVisible(true);
   };
 
-  const handleBind = async (mock: boolean = false) => {
+  const handleBind = async () => {
+    setIdError(''); // Clear previous errors
+    if (!manualCardId.trim()) {
+        setIdError('Please input the right id');
+        return;
+    }
+
     setBindLoading(true);
-    setBindStatus('Generating secure wallet...');
+    setBindStatus('Verifying Card...');
 
     try {
+        // 0. Verify Card ID
+        const { data: cardData, error: cardCheckError } = await supabase
+            .from('verified_cards')
+            .select('*')
+            .eq('id', manualCardId.trim())
+            .single();
+
+        if (cardCheckError || !cardData) {
+            throw new Error('ID is not registered');
+        }
+
+        if (cardData.vloo_id !== null) {
+            throw new Error('Card is already in use');
+        }
+
         // 1. Generate Wallets (ETH + BTC + SOL + Polygon + BNB)
+        setBindStatus('Generating secure wallet...');
         const wallet = createRandomWallet(); // Ethereum (EVM compatible)
         const btcData = generateMockBitcoinData(); // Bitcoin
         const solData = generateMockSolanaData(); // Solana
@@ -248,73 +273,53 @@ export default function GiverDashboardScreen({ navigation }: any) {
           { type: 'BNB Chain', address: ethAddress }
         ];
 
-        // 3. Get NFC ID (Mock or Real)
-      let cardId = '';
-      if (mock) {
-        cardId = 'mock-nfc-id-' + Math.floor(Math.random() * 10000);
-      } else {
-        cardId = 'simulated-real-id'; // Fallback for MVP
-      }
+        // 3. Get User (Already have 'user' state, but refresh if needed)
+        let currentUser = user;
+        if (!currentUser) {
+           const { data: { session } } = await supabase.auth.getSession();
+           currentUser = session?.user;
+        }
+        
+        if (!currentUser) {
+           Alert.alert('Session Expired', 'Please log in again.');
+           setBindLoading(false);
+           return;
+        }
 
-      // 4. Get User (Already have 'user' state, but refresh if needed)
-      let currentUser = user;
-      if (!currentUser) {
-         const { data: { session } } = await supabase.auth.getSession();
-         currentUser = session?.user;
-      }
-      
-      if (!currentUser) {
-         Alert.alert('Session Expired', 'Please log in again.');
-         setBindLoading(false);
-         return;
-      }
+        // 4. Save to Supabase
+        setBindStatus('Saving to VLOO network...');
+        
+        const { data: vlooId, error: rpcError } = await supabase.rpc('bind_vloo_card', {
+            p_card_id: manualCardId.trim(),
+            p_giver_id: currentUser.id,
+            p_receiver_name: receiverName,
+            p_message: message,
+            p_unlock_date: isUnlockDateEnabled ? unlockDate.toISOString() : null,
+            p_encrypted_private_key: encryptedKeys,
+            p_wallet_address: walletAddresses
+        });
 
-      // 5. Save to Supabase
-      setBindStatus('Saving to VLOO network...');
-      
-      // Ensure wallet_address is stored as a stringified JSON if the DB column is text
-      const walletAddressPayload = JSON.stringify(walletAddresses);
-      
-      const insertPayload = {
-        encrypted_private_key: encryptedKeys,
-        wallet_address: walletAddressPayload,
-        unlock_date: isUnlockDateEnabled ? unlockDate.toISOString() : null,
-        message: message,
-        status: 'locked',
-        giver_id: currentUser.id,
-        receiver_name: receiverName
-      };
-      
-      const { data: vlooData, error: vlooError } = await supabase
-        .from('vloos')
-        .insert([insertPayload])
-        .select()
-        .single();
+        if (rpcError) throw new Error(rpcError.message);
 
-      if (vlooError) throw new Error(vlooError.message);
-
-      const { error: cardError } = await supabase
-        .from('cards')
-        .insert([{
-          id: cardId,
-          vloo_id: vlooData.id
-        }]);
-
-      if (cardError) throw cardError;
-
-      setBindModalVisible(false);
-      // Reset Form
-      setReceiverName('');
-      setMessage('');
-      setPassphrase('');
-      setPurpose('Gift');
-      
-      navigation.navigate('GiverSuccess', { address: ethAddress, cardId, walletAddresses });
-      fetchVloos(); // Refresh list
+        setBindModalVisible(false);
+        // Reset Form
+        setReceiverName('');
+        setMessage('');
+        setPassphrase('');
+        setPurpose('Gift');
+        setManualCardId('');
+        setIdError('');
+        
+        navigation.navigate('GiverSuccess', { address: ethAddress, cardId: manualCardId.trim(), walletAddresses });
+        fetchVloos(); // Refresh list
 
     } catch (error: any) {
       console.error(error);
-      Alert.alert('Error', error.message || 'Failed to bind VLOO');
+      if (error.message === 'ID is not registered' || error.message === 'Card is already in use') {
+          setIdError(error.message);
+      } else {
+          Alert.alert('Error', error.message || 'Failed to bind VLOO');
+      }
       setBindStatus('Failed');
     } finally {
       setBindLoading(false);
@@ -334,7 +339,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
       const { data, error } = await supabase
         .from('vloos')
-        .select('*, cards(id)')
+        .select('*, verified_cards(id)')
         .eq('giver_id', session.user.id)
         .order('created_at', { ascending: false });
 
@@ -412,7 +417,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
           />
           <View style={styles.nfcIdContainer}>
              <Text style={[styles.nfcIdLabel, { color: '#666' }]}>CARD ID</Text>
-             <Text style={[styles.nfcIdValue, { color: '#fff' }]}>{item.cards?.[0]?.id || '••••'}</Text>
+             <Text style={[styles.nfcIdValue, { color: '#fff' }]}>{item.verified_cards?.[0]?.id || '••••'}</Text>
           </View>
         </View>
         
@@ -797,11 +802,28 @@ export default function GiverDashboardScreen({ navigation }: any) {
                 </View>
               ) : (
                 <View style={{ marginTop: 20 }}>
+                  <Text style={styles.inputLabel}>CARD ID (DEV MODE)</Text>
+                <TextInput
+                    style={[styles.input, idError ? { borderColor: '#FF4D4D', marginBottom: 8 } : null]}
+                    placeholder="Enter Card ID"
+                    placeholderTextColor="#666"
+                    value={manualCardId}
+                    onChangeText={(text) => {
+                        setManualCardId(text);
+                        if (idError) setIdError('');
+                    }}
+                    autoCapitalize="none"
+                  />
+                  {idError ? (
+                    <Text style={{ color: '#FF4D4D', fontFamily: FONTS.bodyRegular, fontSize: 12, marginBottom: 24 }}>
+                      {idError}
+                    </Text>
+                  ) : null}
                   <Button 
-                    title="Tap to Simulate NFC (Dev)" 
-                    onPress={() => handleBind(true)} 
+                    title="Verify & Bind Vloo" 
+                    onPress={handleBind} 
                     variant="primary" 
-                    style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
+                    style={[styles.actionButton, { backgroundColor: COLORS.primary, marginTop: 16 }]}
                   />
                   <TouchableOpacity 
                     style={{ marginTop: 16, alignItems: 'center' }}
