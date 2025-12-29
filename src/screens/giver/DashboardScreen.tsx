@@ -569,8 +569,15 @@ export default function GiverDashboardScreen({ navigation }: any) {
           {/* Wallet Address Section - Scrollable */}
           <View style={{ flex: 1, marginTop: 24 }}>
             {currentWalletAddresses.length > 0 && (
-              <View style={[styles.walletHeader, { paddingHorizontal: 24 }]}>
+              <View style={[styles.walletHeader, { paddingHorizontal: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
                 <Text style={styles.walletTitle}>Linked Wallets</Text>
+                <TouchableOpacity 
+                  onPress={() => Alert.alert('Coming Soon', 'This feature will be available soon!')}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                >
+                    <Plus size={16} color={COLORS.primary} />
+                    <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: COLORS.primary }}>Add More</Text>
+                </TouchableOpacity>
               </View>
             )}
 
