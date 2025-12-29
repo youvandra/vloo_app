@@ -435,6 +435,18 @@ export default function GiverDashboardScreen({ navigation }: any) {
       });
   }, [allWalletAddresses, isTestnet]);
 
+  // Supported Chains for New Vloo
+  const supportedChains = useMemo(() => {
+      return [
+          { type: 'Bitcoin', address: 'pending-btc' },
+          { type: 'Ethereum', address: 'pending-eth' },
+          { type: 'Solana', address: 'pending-sol' },
+          { type: 'Polygon', address: 'pending-poly' },
+          { type: 'BNB Chain', address: 'pending-bnb' },
+          { type: 'Lisk', address: 'pending-lisk' }
+      ];
+  }, []);
+
   // Fetch Balances
   useEffect(() => {
     let isMounted = true;
@@ -544,7 +556,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
         }}
         selectedBindWallets={selectedBindWallets}
         setSelectedBindWallets={setSelectedBindWallets}
-        wallets={currentWalletAddresses}
+        wallets={supportedChains}
         balances={balances}
         isCreating={false}
         newVlooName={receiverName}

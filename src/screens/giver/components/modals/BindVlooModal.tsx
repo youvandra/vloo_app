@@ -103,11 +103,7 @@ export const BindVlooModal = ({
 
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionLabel}>Select Wallet to Bind</Text>
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false} 
-                  contentContainerStyle={{ paddingVertical: 8 }}
-                >
+                <View style={styles.walletListContainer}>
                   {wallets.map((wallet: any, index: number) => {
                     const isSelected = selectedBindWallets.some((w: any) => w.address === wallet.address && w.type === wallet.type);
                     return (
@@ -147,7 +143,7 @@ export const BindVlooModal = ({
                       </TouchableOpacity>
                     );
                   })}
-                </ScrollView>
+                </View>
               </View>
 
               <View style={{ flex: 1 }} />
@@ -178,6 +174,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     borderWidth: 1,
     borderColor: '#eee',
     shadowColor: '#000',
@@ -240,16 +238,23 @@ const styles = StyleSheet.create({
     color: '#000',
     marginBottom: 12,
   },
+  walletListContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12, // For modern React Native
+  },
   walletOption: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     paddingRight: 16,
     backgroundColor: '#f9f9f9',
-    marginRight: 12,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#eee',
-    minWidth: 140,
+    width: '48%', // Show 2 per row
+    borderRadius: 16,
   },
   walletOptionSelected: {
     borderColor: COLORS.primary,
@@ -286,6 +291,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 24,
+    borderRadius: 999,
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

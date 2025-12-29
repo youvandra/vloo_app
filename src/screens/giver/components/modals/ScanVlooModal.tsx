@@ -176,6 +176,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     borderWidth: 1,
     borderColor: '#eee',
     shadowColor: '#000',
@@ -225,7 +227,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 32,
     backgroundColor: '#f5f5f5',
-    borderRadius: 12,
+    borderRadius: 32,
     padding: 4,
   },
   tab: {
@@ -234,7 +236,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 24,
   },
   activeTab: {
     backgroundColor: '#fff',
@@ -285,7 +287,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingVertical: 16,
     paddingHorizontal: 32,
-    borderRadius: 30,
+    borderRadius: 999,
     width: '100%',
     alignItems: 'center',
   },
@@ -306,7 +308,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyRegular,
     color: '#000',
     backgroundColor: '#f9f9f9',
-    borderRadius: 8,
+    borderRadius: 16,
   },
   helperText: {
     fontFamily: FONTS.bodyRegular,
@@ -320,7 +322,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     alignItems: 'center',
     marginTop: 'auto',
-    borderRadius: 8,
+    borderRadius: 999,
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

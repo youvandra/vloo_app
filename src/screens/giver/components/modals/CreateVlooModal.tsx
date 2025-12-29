@@ -177,6 +177,8 @@ const styles = StyleSheet.create({
   modalContent: {
     height: '80%',
     backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     borderWidth: 1,
     borderColor: '#eee',
     shadowColor: '#000',
@@ -237,6 +239,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyRegular,
     color: '#000',
     backgroundColor: '#f9f9f9',
+    borderRadius: 16,
   },
   datePickerButton: {
     flexDirection: 'row',
@@ -246,6 +249,7 @@ const styles = StyleSheet.create({
     borderColor: '#eee',
     padding: 16,
     backgroundColor: '#f9f9f9',
+    borderRadius: 16,
   },
   dateText: {
     fontSize: 16,
@@ -257,6 +261,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     alignItems: 'center',
     marginTop: 24,
+    borderRadius: 999,
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
