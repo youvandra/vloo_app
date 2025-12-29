@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, StatusBar,
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Stop, Circle as SvgCircle } from 'react-native-svg';
+import * as Clipboard from 'expo-clipboard';
+import { fetchBalance } from '../../lib/blockcypher';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, MessageSquare, Radio, ArrowLeft, Edit2, Eye, Calendar } from 'lucide-react-native';
@@ -28,11 +30,17 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [user, setUser] = useState<any>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [balances, setBalances] = useState<Record<string, string>>({});
+  const [lastBalanceRefresh, setLastBalanceRefresh] = useState(0); // To trigger re-fetch
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [bindModalVisible, setBindModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [selectedVloo, setSelectedVloo] = useState<any>(null);
+  
+  // Wallet Detail State
+  const [walletDetailModalVisible, setWalletDetailModalVisible] = useState(false);
+  const [selectedWallet, setSelectedWallet] = useState<any>(null);
   
   // Profile Edit State
   const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
@@ -77,6 +85,30 @@ export default function GiverDashboardScreen({ navigation }: any) {
       },
     })
   ).current;
+
+  const walletDetailPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 50) {
+          setWalletDetailModalVisible(false);
+        }
+      },
+    })
+  ).current;
+
+  const handleWalletPress = (wallet: any) => {
+    setSelectedWallet(wallet);
+    setWalletDetailModalVisible(true);
+  };
+
+  const copyToClipboard = async (text: string) => {
+    await Clipboard.setStringAsync(text);
+    Alert.alert('Copied', 'Address copied to clipboard');
+  };
 
   const handleOpenEditProfile = () => {
     setProfileName(user?.user_metadata?.full_name || '');
@@ -319,6 +351,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
         const walletAddresses = [
           { type: 'Bitcoin', address: btcAddress },
           { type: 'Ethereum', address: ethAddress },
+          { type: 'Sepolia', address: ethAddress },
           { type: 'Solana', address: solAddress },
           { type: 'Polygon', address: ethAddress },
           { type: 'BNB Chain', address: ethAddress }
@@ -509,25 +542,110 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
   // Helper to parse wallet addresses
   const getWalletAddresses = (data: any) => {
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    if (typeof data === 'string') {
+    let addresses: any[] = [];
+    
+    if (Array.isArray(data)) {
+        addresses = [...data];
+    } else if (typeof data === 'string' && data) {
       // Check if it's a JSON string
       if (data.startsWith('[') || data.startsWith('{')) {
         try {
           const parsed = JSON.parse(data);
-          if (Array.isArray(parsed)) return parsed;
+          if (Array.isArray(parsed)) addresses = parsed;
         } catch (e) {
           // ignore
         }
+      } else {
+         // Legacy simple string
+         addresses = [{ type: 'Ethereum', address: data }];
       }
-      // Legacy simple string
-      return [{ type: 'Ethereum', address: data }];
     }
-    return [];
+    
+    if (addresses.length === 0 && !data) return [];
+    
+    // Inject Sepolia if Ethereum exists but Sepolia doesn't
+    const ethWallet = addresses.find((w: any) => w.type === 'Ethereum');
+    const hasSepolia = addresses.some((w: any) => w.type === 'Sepolia');
+    
+    if (ethWallet && !hasSepolia) {
+        // Insert Sepolia after Ethereum
+        const ethIndex = addresses.indexOf(ethWallet);
+        addresses.splice(ethIndex + 1, 0, { type: 'Sepolia', address: ethWallet.address });
+    }
+    
+    return addresses;
+  };
+
+  const formatAddress = (addr: string) => {
+    if (!addr) return '';
+    if (addr.length < 10) return addr;
+    return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
   };
 
   const currentWalletAddresses = currentCardIndex < vloos.length ? getWalletAddresses(vloos[currentCardIndex]?.wallet_address) : [];
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadBalances = async () => {
+      if (currentWalletAddresses.length === 0) return;
+
+      const newBalances: Record<string, string> = {};
+      
+      // Sequential fetching to respect rate limits (3 req/sec)
+      for (const wallet of currentWalletAddresses) {
+        if (!isMounted) break;
+        
+        const key = `${wallet.type}-${wallet.address}`;
+        
+        // If not forcing refresh (lastBalanceRefresh > 0) and cached, skip
+        // But if lastBalanceRefresh changed, we should re-fetch even if cached?
+        // Actually, we can just check if we have it. 
+        // If we want to support refresh, we should ignore cache if triggered by refresh.
+        // But the simplest logic: 
+        // If key exists AND we are not "refreshing" (based on some logic), skip.
+        // But here we want to fetch if key is missing OR if we want to update.
+        // Let's assume onRefresh clears balances or we just fetch regardless?
+        // Fetching regardless is safer for "Update" button, but expensive for navigation.
+        // Let's rely on the fact that we won't call loadBalances too often.
+        
+        // Check cache ONLY if not recently refreshed (we can use a flag or just fetch always on mount if small list)
+        // Optimization: Check cache if lastBalanceRefresh is 0 (initial load)
+        // But we added lastBalanceRefresh to dependency, so it runs when it changes.
+        // If it runs due to lastBalanceRefresh change, we should fetch.
+        // If it runs due to scroll (currentCardIndex), we should fetch if missing.
+        
+        // Let's use a local variable/check.
+        // Actually, let's just fetch. The rate limit protection below handles safety.
+        // But to avoid re-fetching on every render/scroll if data is fresh:
+        // We can check `balances[key]` but we need to know if we *should* refresh.
+        // Since we don't have a "isRefreshing" passed here easily without more state...
+        // Let's just fetch. It's 5 addresses max per card. 
+        // BlockCypher 3/sec. 5 addresses = 2 seconds.
+        // If user scrolls fast, we might pile up requests.
+        
+        if (balances[key] && lastBalanceRefresh === 0) continue; // Skip if cached and not forced refresh
+
+        const bal = await fetchBalance(wallet.address, wallet.type);
+        if (isMounted) {
+            newBalances[key] = bal;
+            // Update state progressively or batch? 
+            // Batching at end is better for renders, but progressive shows progress.
+            // Let's batch per loop or just at end.
+        }
+        
+        // Add delay to respect rate limit (334ms = 3 req/sec)
+        await new Promise(resolve => setTimeout(resolve, 340));
+      }
+
+      if (isMounted && Object.keys(newBalances).length > 0) {
+        setBalances(prev => ({ ...prev, ...newBalances }));
+      }
+    };
+
+    loadBalances();
+
+    return () => { isMounted = false; };
+  }, [currentCardIndex, vloos, lastBalanceRefresh]);
 
   return (
     <View style={styles.container}>
@@ -670,12 +788,12 @@ export default function GiverDashboardScreen({ navigation }: any) {
                 </View>
               ) : (
                 currentWalletAddresses.length > 0 && currentWalletAddresses.map((wallet: any, index: number) => (
-                  <View key={index} style={styles.walletRow}>
+                  <TouchableOpacity key={index} style={styles.walletRow} onPress={() => handleWalletPress(wallet)}>
                     <View style={styles.walletIconContainer}>
                       {/* Icon based on type */}
                       {wallet.type === 'Bitcoin' ? (
                         <BitcoinIcon width={24} height={24} />
-                      ) : wallet.type === 'Ethereum' ? (
+                      ) : wallet.type === 'Ethereum' || wallet.type === 'Sepolia' ? (
                         <EthIcon width={24} height={24} />
                       ) : wallet.type === 'Solana' ? (
                         <SolanaIcon width={24} height={24} />
@@ -689,20 +807,12 @@ export default function GiverDashboardScreen({ navigation }: any) {
                     </View>
                     <View style={styles.walletInfo}>
                       <Text style={styles.walletTypeLabel}>{wallet.type}</Text>
-                      <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">
-                        {wallet.address}
+                      <Text style={styles.walletAddress}>
+                        {formatAddress(wallet.address)}
                       </Text>
                     </View>
-                    <TouchableOpacity 
-                      style={styles.copyButton}
-                      onPress={() => {
-                        // Clipboard.setString(wallet.address);
-                        Alert.alert('Copied', `${wallet.type} address copied to clipboard`);
-                      }}
-                    >
-                      <Copy size={18} color={COLORS.primary} />
-                    </TouchableOpacity>
-                  </View>
+                    <Text style={styles.balanceText}>{balances[`${wallet.type}-${wallet.address}`] || '0.00'}</Text>
+                  </TouchableOpacity>
                 ))
               )}
             </ScrollView>
@@ -1210,6 +1320,73 @@ export default function GiverDashboardScreen({ navigation }: any) {
         </KeyboardAvoidingView>
       </Modal>
 
+      {/* Wallet Detail Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={walletDetailModalVisible}
+        onRequestClose={() => setWalletDetailModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setWalletDetailModalVisible(false)}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+        <View style={[styles.modalContent, { height: 'auto', minHeight: 400 }]}>
+          <View style={styles.modalHeader} {...walletDetailPanResponder.panHandlers}>
+            <View style={styles.modalIndicator} />
+          </View>
+          
+          <View style={{ alignItems: 'center', paddingVertical: 24, paddingHorizontal: 24 }}>
+             {/* Logo */}
+             <View style={{ marginBottom: 16 }}>
+               {selectedWallet?.type === 'Bitcoin' ? (
+                 <BitcoinIcon width={64} height={64} />
+               ) : selectedWallet?.type === 'Ethereum' || selectedWallet?.type === 'Sepolia' ? (
+                 <EthIcon width={64} height={64} />
+               ) : selectedWallet?.type === 'Solana' ? (
+                 <SolanaIcon width={64} height={64} />
+               ) : selectedWallet?.type === 'Polygon' ? (
+                 <PolygonIcon width={64} height={64} />
+               ) : selectedWallet?.type === 'BNB Chain' ? (
+                 <BnbIcon width={64} height={64} />
+               ) : (
+                 <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 32 }}>?</Text>
+                 </View>
+               )}
+             </View>
+
+             {/* Chain Name */}
+             <Text style={{ fontFamily: FONTS.displayBold, fontSize: 24, color: '#000', marginBottom: 8 }}>
+               {selectedWallet?.type}
+             </Text>
+
+             {/* Balance */}
+             <Text style={{ fontFamily: FONTS.displayBold, fontSize: 36, color: COLORS.primary, marginBottom: 32, textAlign: 'center' }}>
+                {balances[`${selectedWallet?.type}-${selectedWallet?.address}`] || '0.00'}
+             </Text>
+
+             {/* Address Section */}
+             <View style={{ width: '100%', backgroundColor: '#f5f5f5', borderRadius: 16, padding: 16 }}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#666', marginBottom: 8, textTransform: 'uppercase' }}>
+                  Wallet Address
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={{ fontFamily: FONTS.bodyRegular, fontSize: 14, color: '#000', flex: 1, marginRight: 12 }}>
+                    {selectedWallet?.address}
+                  </Text>
+                  <TouchableOpacity 
+                    style={{ padding: 8, backgroundColor: '#fff', borderRadius: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 }}
+                    onPress={() => copyToClipboard(selectedWallet?.address)}
+                  >
+                    <Copy size={20} color={COLORS.primary} />
+                  </TouchableOpacity>
+                </View>
+             </View>
+
+          </View>
+        </View>
+      </Modal>
+
       {/* Floating Bottom Navigation */}
       {vloos.length > 0 && (
         <View style={styles.bottomNavContainer}>
@@ -1382,6 +1559,11 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
     borderRadius: 8,
+  },
+  balanceText: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 16,
+    color: '#000',
   },
 
   // Modal Styles
