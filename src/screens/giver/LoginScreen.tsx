@@ -6,6 +6,7 @@ import { makeRedirectUri } from 'expo-auth-session';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Button } from '../../components/Button';
+import Svg, { Path } from 'react-native-svg';
 import { ArrowLeft } from 'lucide-react-native';
 
 // Needs to be manually called for web, but is automatic for native
@@ -119,6 +120,14 @@ export default function GiverLoginScreen({ navigation }: any) {
               onPress={handleGoogleLogin}
               variant="primary"
               disabled={loading}
+              leftIcon={
+                <Svg width={20} height={20} viewBox="0 0 24 24">
+                  <Path d="M23.49 12.27c0-.79-.07-1.56-.2-2.31H12v4.37h6.44c-.28 1.48-1.12 2.74-2.38 3.58v2.98h3.85c2.25-2.07 3.58-5.12 3.58-8.62z" fill="#4285F4" />
+                  <Path d="M12 24c3.24 0 5.96-1.07 7.95-2.88l-3.85-2.98c-1.07.72-2.44 1.15-4.1 1.15-3.15 0-5.82-2.13-6.78-5.01H1.28v3.12C3.25 21.54 7.32 24 12 24z" fill="#34A853" />
+                  <Path d="M5.22 14.28c-.25-.74-.39-1.53-.39-2.34s.14-1.6.39-2.34V6.48H1.28A11.99 11.99 0 0 0 0 12c0 1.94.46 3.78 1.28 5.52l3.94-3.24z" fill="#FBBC05" />
+                  <Path d="M12 4.74c1.76 0 3.34.6 4.58 1.78l3.43-3.43C17.94 1.24 15.22 0 12 0 7.32 0 3.25 2.46 1.28 6.48l3.94 3.12C6.18 6.87 8.85 4.74 12 4.74z" fill="#EA4335" />
+                </Svg>
+              }
               style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
             />
             <Text style={styles.disclaimer}>

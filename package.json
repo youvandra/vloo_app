@@ -48,6 +48,7 @@
     "@types/crypto-js": "^4.2.2",
     "@types/react": "~19.1.10",
     "babel-preset-expo": "^54.0.9",
+    "react-native-svg-transformer": "^1.5.2",
     "typescript": "^5.9.3"
   }
 }

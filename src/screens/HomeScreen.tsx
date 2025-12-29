@@ -22,7 +22,7 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <ScrollView 
@@ -87,7 +87,7 @@ export default function HomeScreen({ navigation }: any) {
             <Button
               title="Scan to Receive"
               onPress={() => navigation.navigate('ReceiverScan')}
-              variant="secondary"
+              variant="outline"
               style={styles.actionButton}
             />
           </View>
@@ -100,7 +100,7 @@ export default function HomeScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: COLORS.inverse,
   },
   background: {
     ...StyleSheet.absoluteFillObject,
@@ -122,15 +122,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   brandBadge: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(0,0,0,0.1)',
   },
   brandBadgeText: {
-    color: 'rgba(255,255,255,0.8)',
+    color: COLORS.foreground,
     fontFamily: FONTS.bodySemiBold,
     fontSize: 12,
     letterSpacing: 1,
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.displayBold,
     fontSize: 42,
     lineHeight: 48,
-    color: '#fff',
+    color: COLORS.foreground,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyRegular,
     fontSize: 16,
     lineHeight: 24,
-    color: 'rgba(255,255,255,0.6)',
+    color: '#666',
     textAlign: 'center',
     maxWidth: 300,
   },

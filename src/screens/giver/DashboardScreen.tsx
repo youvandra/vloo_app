@@ -11,6 +11,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { createRandomWallet, generateMockBitcoinData } from '../../lib/wallet';
 import { encryptData } from '../../lib/crypto';
 import { ActivityIndicator } from 'react-native';
+import BitcoinIcon from '../../assets/icons/chains/bitcoin.svg';
+import EthIcon from '../../assets/icons/chains/eth.svg';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82; // Slightly wider for better peek
@@ -514,9 +516,9 @@ export default function GiverDashboardScreen({ navigation }: any) {
                   <View style={styles.walletIconContainer}>
                     {/* Icon based on type */}
                     {wallet.type === 'Bitcoin' ? (
-                      <Text style={{ fontSize: 20 }}>₿</Text>
+                      <BitcoinIcon width={24} height={24} />
                     ) : (
-                      <Text style={{ fontSize: 20 }}>Ξ</Text>
+                      <EthIcon width={24} height={24} />
                     )}
                   </View>
                   <View style={styles.walletInfo}>
