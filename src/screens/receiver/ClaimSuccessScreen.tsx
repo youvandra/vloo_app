@@ -21,19 +21,14 @@ export default function ClaimSuccessScreen({ route, navigation }: any) {
         
         {/* Header */}
         <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
-                <ArrowLeft color="#000" size={24} />
-            </TouchableOpacity>
-            <View style={styles.brandBadge}>
-                <Text style={styles.brandBadgeText}>SUCCESS</Text>
-            </View>
+            <View style={{ width: 40 }} /> 
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           
           <View style={styles.successIconContainer}>
             <View style={styles.iconCircle}>
-              <ShieldCheck size={48} color={COLORS.primary} />
+              <ShieldCheck size={48} color={COLORS.accent} />
             </View>
           </View>
 
@@ -68,7 +63,7 @@ export default function ClaimSuccessScreen({ route, navigation }: any) {
                    onPress={() => copyToClipboard(item.key, item.label)}
                 >
                    <Copy size={16} color="#333" />
-                   <Text style={styles.copyButtonText}>Copy Private Key</Text>
+                   <Text style={styles.copyButtonText}>Copy</Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -108,20 +103,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-start',
   },
-  brandBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#E6F4EA', // Light green
-    borderWidth: 1,
-    borderColor: '#CEEAD6',
-  },
-  brandBadgeText: {
-    fontFamily: FONTS.bodyBold,
-    fontSize: 12,
-    color: '#1E8E3E', // Green text
-    letterSpacing: 1,
-  },
   content: {
     paddingHorizontal: 24,
     paddingBottom: 40,
@@ -135,7 +116,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: 'rgba(52, 199, 89, 0.1)', // Light primary color
     justifyContent: 'center',
     alignItems: 'center',
   },
