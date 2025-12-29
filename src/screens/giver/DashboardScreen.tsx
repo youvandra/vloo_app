@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Stop, Circle as SvgCircle } from 'react-native-svg';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
-import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, Gift, Radio, ArrowLeft } from 'lucide-react-native';
+import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, Gift, Radio, ArrowLeft, Edit2, Eye } from 'lucide-react-native';
 import { Button } from '../../components/Button';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { createRandomWallet, generateMockBitcoinData } from '../../lib/wallet';
@@ -28,6 +28,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [bindModalVisible, setBindModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [selectedVloo, setSelectedVloo] = useState<any>(null);
   
   // Edit Form State
@@ -53,6 +54,20 @@ export default function GiverDashboardScreen({ navigation }: any) {
     })
   ).current;
 
+  const previewPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 50) {
+          setPreviewModalVisible(false);
+        }
+      },
+    })
+  ).current;
+
   const handleEditPress = (vloo: any) => {
     setSelectedVloo(vloo);
     setEditReceiverName(vloo.receiver_name || '');
@@ -65,6 +80,11 @@ export default function GiverDashboardScreen({ navigation }: any) {
       setIsEditUnlockDateEnabled(false);
     }
     setEditModalVisible(true);
+  };
+
+  const handlePreviewPress = (vloo: any) => {
+    setSelectedVloo(vloo);
+    setPreviewModalVisible(true);
   };
 
   const handleUpdateVloo = async () => {
@@ -397,12 +417,20 @@ export default function GiverDashboardScreen({ navigation }: any) {
               {item.unlock_date ? new Date(item.unlock_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Whenever'}
             </Text>
           </View>
-          <TouchableOpacity 
-            style={[styles.cardSettingsButton, { backgroundColor: 'rgba(0,0,0,0.05)' }]}
-            onPress={() => handleEditPress(item)}
-          >
-             <Settings size={20} color={COLORS.foreground} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity 
+              style={[styles.cardSettingsButton, { backgroundColor: 'rgba(0,0,0,0.05)' }]}
+              onPress={() => handlePreviewPress(item)}
+            >
+               <Eye size={20} color={COLORS.foreground} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.cardSettingsButton, { backgroundColor: 'rgba(0,0,0,0.05)' }]}
+              onPress={() => handleEditPress(item)}
+            >
+               <Edit2 size={20} color={COLORS.foreground} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     );
@@ -765,6 +793,70 @@ export default function GiverDashboardScreen({ navigation }: any) {
                   </TouchableOpacity>
                 </View>
               )}
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Preview Message Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={previewModalVisible}
+        onRequestClose={() => setPreviewModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setPreviewModalVisible(false)}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader} {...previewPanResponder.panHandlers}>
+            <View style={styles.modalIndicator} />
+          </View>
+          <ScrollView contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+            <View style={{ alignItems: 'center', marginBottom: 24 }}>
+               <View style={{ 
+                 width: 60, 
+                 height: 60, 
+                 borderRadius: 30, 
+                 backgroundColor: 'rgba(209, 153, 249, 0.1)', 
+                 justifyContent: 'center', 
+                 alignItems: 'center',
+                 marginBottom: 16
+               }}>
+                 <Gift size={32} color={COLORS.accent} />
+               </View>
+               <Text style={[styles.headline, { textAlign: 'center', fontSize: 24 }]}>
+                 Message for {selectedVloo?.receiver_name}
+               </Text>
+            </View>
+
+            <View style={{ 
+              backgroundColor: '#111', 
+              padding: 24, 
+              borderRadius: 20, 
+              borderWidth: 1, 
+              borderColor: '#333',
+              minHeight: 200
+            }}>
+              <Text style={{ 
+                fontFamily: FONTS.displaySemiBold, 
+                fontSize: 20, 
+                color: '#fff', 
+                lineHeight: 32,
+                fontStyle: 'italic',
+                textAlign: 'center'
+              }}>
+                "{selectedVloo?.message || 'No message provided'}"
+              </Text>
+            </View>
+
+            <View style={{ marginTop: 32 }}>
+              <Button 
+                title="Close Preview" 
+                onPress={() => setPreviewModalVisible(false)} 
+                variant="outline"
+                style={styles.actionButton}
+              />
             </View>
           </ScrollView>
         </View>
