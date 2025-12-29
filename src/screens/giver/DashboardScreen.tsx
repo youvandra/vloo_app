@@ -615,15 +615,35 @@ export default function GiverDashboardScreen({ navigation }: any) {
             />
             {/* Pagination Dots */}
             <View style={styles.paginationContainer}>
-              {displayData.map((_, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.paginationDot,
-                    index === currentCardIndex ? styles.paginationDotActive : null
-                  ]}
-                />
-              ))}
+              {(() => {
+                const MAX_VISIBLE_DOTS = 5;
+                let start = 0;
+                let end = displayData.length;
+
+                if (displayData.length > MAX_VISIBLE_DOTS) {
+                  const half = Math.floor(MAX_VISIBLE_DOTS / 2);
+                  start = Math.max(0, currentCardIndex - half);
+                  if (start + MAX_VISIBLE_DOTS > displayData.length) {
+                    start = displayData.length - MAX_VISIBLE_DOTS;
+                  }
+                  end = start + MAX_VISIBLE_DOTS;
+                }
+
+                return displayData.map((_, index) => {
+                  if (index >= start && index < end) {
+                    return (
+                      <View
+                        key={index}
+                        style={[
+                          styles.paginationDot,
+                          index === currentCardIndex ? styles.paginationDotActive : null
+                        ]}
+                      />
+                    );
+                  }
+                  return null;
+                });
+              })()}
             </View>
           </View>
 
