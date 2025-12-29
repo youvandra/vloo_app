@@ -604,6 +604,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                 if (index !== currentCardIndex) {
                   setWalletLoading(true);
                   setCurrentCardIndex(index);
+
                   // Simulate loading delay for better UX (optional, but requested)
                   setTimeout(() => setWalletLoading(false), 500);
                 }
@@ -616,32 +617,28 @@ export default function GiverDashboardScreen({ navigation }: any) {
             {/* Pagination Dots */}
             <View style={styles.paginationContainer}>
               {(() => {
-                const MAX_VISIBLE_DOTS = 5;
-                let start = 0;
-                let end = displayData.length;
-
-                if (displayData.length > MAX_VISIBLE_DOTS) {
-                  const half = Math.floor(MAX_VISIBLE_DOTS / 2);
-                  start = Math.max(0, currentCardIndex - half);
-                  if (start + MAX_VISIBLE_DOTS > displayData.length) {
-                    start = displayData.length - MAX_VISIBLE_DOTS;
-                  }
-                  end = start + MAX_VISIBLE_DOTS;
-                }
+                const MAX_DOTS = 5;
+                const total = displayData.length;
+                
+                // Calculate window based on current index to keep active dot at the end when possible
+                // This ensures "swiping back" keeps the dot at the right edge of the visible set
+                let end = Math.max(MAX_DOTS - 1, currentCardIndex);
+                end = Math.min(total - 1, end);
+                let start = end - MAX_DOTS + 1;
+                start = Math.max(0, start);
 
                 return displayData.map((_, index) => {
-                  if (index >= start && index < end) {
-                    return (
-                      <View
-                        key={index}
-                        style={[
-                          styles.paginationDot,
-                          index === currentCardIndex ? styles.paginationDotActive : null
-                        ]}
-                      />
-                    );
-                  }
-                  return null;
+                  if (index < start || index > end) return null;
+                  
+                  return (
+                    <View
+                      key={index}
+                      style={[
+                        styles.paginationDot,
+                        index === currentCardIndex ? styles.paginationDotActive : null
+                      ]}
+                    />
+                  );
                 });
               })()}
             </View>
