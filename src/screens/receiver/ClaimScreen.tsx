@@ -178,33 +178,35 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
           )}
 
           {/* Unlock Section */}
-          <View style={styles.formSection}>
-            <Text style={styles.inputLabel}>ENTER PASSPHRASE</Text>
-            <TextInput
-              style={[styles.input, error && styles.inputError]}
-              placeholder="Passphrase"
-              placeholderTextColor="#999"
-              value={passphrase}
-              onChangeText={(text) => {
-                setPassphrase(text);
-                if (error) setError(null);
-              }}
-              secureTextEntry
-              autoCapitalize="none"
-            />
-            {error && (
-              <View style={styles.errorContainer}>
-                <AlertCircle size={16} color={COLORS.error} />
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            )}
-            <Button 
-              title="Unlock & Claim" 
-              onPress={handleClaim} 
-              variant="primary"
-              style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
-            />
-          </View>
+          {isUnlocked && (
+            <View style={styles.formSection}>
+              <Text style={styles.inputLabel}>ENTER PASSPHRASE</Text>
+              <TextInput
+                style={[styles.input, error && styles.inputError]}
+                placeholder="Passphrase"
+                placeholderTextColor="#999"
+                value={passphrase}
+                onChangeText={(text) => {
+                  setPassphrase(text);
+                  if (error) setError(null);
+                }}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+              {error && (
+                <View style={styles.errorContainer}>
+                  <AlertCircle size={16} color={COLORS.error} />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              )}
+              <Button 
+                title="Unlock & Claim" 
+                onPress={handleClaim} 
+                variant="primary"
+                style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
+              />
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     </View>

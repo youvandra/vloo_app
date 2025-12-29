@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Stop, Circle as SvgCircle } from 'react-native-svg';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
-import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, MessageSquare, Radio, ArrowLeft, Edit2, Eye } from 'lucide-react-native';
+import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, MessageSquare, Radio, ArrowLeft, Edit2, Eye, Calendar } from 'lucide-react-native';
 import { Button } from '../../components/Button';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { createRandomWallet, generateMockBitcoinData, generateMockSolanaData } from '../../lib/wallet';
@@ -154,7 +154,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
       setEditLoading(false);
     }
   };
-  const [purpose, setPurpose] = useState('Gift');
   const [receiverName, setReceiverName] = useState('');
   const [message, setMessage] = useState('');
   const [passphrase, setPassphrase] = useState('');
@@ -358,7 +357,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
         setReceiverName('');
         setMessage('');
         setPassphrase('');
-        setPurpose('Gift');
         setManualCardId('');
         setIdError('');
         
@@ -579,8 +577,17 @@ export default function GiverDashboardScreen({ navigation }: any) {
           </View>
 
           {/* Cards Header */}
-          <View style={[styles.walletHeader, { paddingHorizontal: 24 }]}>
+          <View style={[styles.walletHeader, { paddingHorizontal: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
              <Text style={styles.walletTitle}>Cards ({vloos.length})</Text>
+             {vloos.length > 5 && (
+               <TouchableOpacity 
+                 onPress={() => setCreateModalVisible(true)}
+                 style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+               >
+                 <Plus size={16} color={COLORS.primary} />
+                 <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: COLORS.primary }}>Add Card</Text>
+               </TouchableOpacity>
+             )}
           </View>
 
           {/* Cards Stack (Always visible now, even if empty, to show placeholder) */}
@@ -732,19 +739,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
                   </Text>
 
              <View style={styles.formSection}>
-              <Text style={styles.inputLabel}>PURPOSE</Text>
-              <View style={styles.pillContainer}>
-                {['Gift', 'Salary', 'Inheritance'].map(p => (
-                  <TouchableOpacity 
-                    key={p} 
-                    style={[styles.pill, purpose === p && styles.pillActive]} 
-                    onPress={() => setPurpose(p)}
-                  >
-                    <Text style={[styles.pillText, purpose === p && styles.pillTextActive]}>{p}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
               <Text style={styles.inputLabel}>RECEIVER NAME</Text>
               <TextInput
                 style={styles.input}
@@ -795,7 +789,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                       value={unlockDate}
                       mode="datetime"
                       display="compact"
-                      themeVariant="dark"
+                      themeVariant="light"
                       onChange={(event, selectedDate) => {
                         if (selectedDate) setUnlockDate(selectedDate);
                       }}
@@ -805,10 +799,11 @@ export default function GiverDashboardScreen({ navigation }: any) {
                   </View>
                 ) : (
                   <>
-                    <TouchableOpacity onPress={showDatepicker} style={styles.dateButton}>
+                    <TouchableOpacity onPress={showDatepicker} style={[styles.dateButton, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderColor: COLORS.primary, borderWidth: 1.5 }]}>
                       <Text style={styles.dateButtonText}>
                         {unlockDate.toLocaleString()}
                       </Text>
+                      <Calendar size={20} color={COLORS.primary} />
                     </TouchableOpacity>
                     {showDatePicker && (
                       <DateTimePicker

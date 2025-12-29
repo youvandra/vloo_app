@@ -14,7 +14,7 @@ export default function GiverSuccessScreen({ route, navigation }: any) {
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.content}>
         <View style={styles.iconContainer}>
-          <CheckCircle color={COLORS.primary} size={80} />
+          <CheckCircle color={COLORS.accent} size={80} />
         </View>
 
         <Text style={styles.title}>VLOO Created!</Text>
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   },
   iconContainer: { 
     marginBottom: 32,
-    shadowColor: COLORS.primary,
+    shadowColor: COLORS.accent,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 20,
