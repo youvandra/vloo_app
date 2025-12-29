@@ -3,6 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ethers } from 'ethers';
 import { Vloo } from '../../lib/types';
+import BitcoinIcon from '../../assets/icons/chains/bitcoin.svg';
+import EthIcon from '../../assets/icons/chains/eth.svg';
+import SolanaIcon from '../../assets/icons/chains/solana.svg';
+import PolygonIcon from '../../assets/icons/chains/polygon.svg';
+import BnbIcon from '../../assets/icons/chains/bnb.svg';
 
 export default function ReceiverViewScreen({ route, navigation }: any) {
   const { vloo } = route.params as { vloo: Vloo };
@@ -60,6 +65,14 @@ export default function ReceiverViewScreen({ route, navigation }: any) {
         <View style={styles.addressContainer}>
           {walletAddresses.map((w: any, i: number) => (
             <View key={i} style={styles.addressRow}>
+              <View style={{ marginRight: 8 }}>
+                {w.type === 'Bitcoin' ? <BitcoinIcon width={20} height={20} /> :
+                 w.type === 'Ethereum' ? <EthIcon width={20} height={20} /> :
+                 w.type === 'Solana' ? <SolanaIcon width={20} height={20} /> :
+                 w.type === 'Polygon' ? <PolygonIcon width={20} height={20} /> :
+                 w.type === 'BNB Chain' ? <BnbIcon width={20} height={20} /> :
+                 <Text style={{ fontSize: 16 }}>?</Text>}
+              </View>
               <Text style={styles.addressType}>{w.type}:</Text>
               <Text style={styles.address} numberOfLines={1} ellipsizeMode="middle">
                 {w.address}

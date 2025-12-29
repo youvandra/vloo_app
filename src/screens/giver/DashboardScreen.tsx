@@ -8,11 +8,14 @@ import { COLORS, FONTS } from '../../lib/theme';
 import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, Gift, Radio, ArrowLeft, Edit2, Eye } from 'lucide-react-native';
 import { Button } from '../../components/Button';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { createRandomWallet, generateMockBitcoinData } from '../../lib/wallet';
+import { createRandomWallet, generateMockBitcoinData, generateMockSolanaData } from '../../lib/wallet';
 import { encryptData } from '../../lib/crypto';
 import { ActivityIndicator } from 'react-native';
 import BitcoinIcon from '../../assets/icons/chains/bitcoin.svg';
 import EthIcon from '../../assets/icons/chains/eth.svg';
+import SolanaIcon from '../../assets/icons/chains/solana.svg';
+import PolygonIcon from '../../assets/icons/chains/polygon.svg';
+import BnbIcon from '../../assets/icons/chains/bnb.svg';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82; // Slightly wider for better peek
@@ -211,31 +214,41 @@ export default function GiverDashboardScreen({ navigation }: any) {
     setBindStatus('Generating secure wallet...');
 
     try {
-      // 1. Generate Wallets (ETH + BTC)
-      const wallet = createRandomWallet(); // Ethereum
-      const btcData = generateMockBitcoinData(); // Bitcoin
+        // 1. Generate Wallets (ETH + BTC + SOL + Polygon + BNB)
+        const wallet = createRandomWallet(); // Ethereum (EVM compatible)
+        const btcData = generateMockBitcoinData(); // Bitcoin
+        const solData = generateMockSolanaData(); // Solana
 
-      const ethPrivateKey = wallet.privateKey;
-      const ethAddress = wallet.address;
-      const btcPrivateKey = btcData.privateKey;
-      const btcAddress = btcData.address;
+        const ethPrivateKey = wallet.privateKey;
+        const ethAddress = wallet.address;
+        const btcPrivateKey = btcData.privateKey;
+        const btcAddress = btcData.address;
+        const solPrivateKey = solData.privateKey;
+        const solAddress = solData.address;
 
-      // 2. Encrypt Private Keys (ETH + BTC)
-      setBindStatus('Encrypting keys...');
-      const encryptedEthKey = encryptData(ethPrivateKey, passphrase);
-      const encryptedBtcKey = encryptData(btcPrivateKey, passphrase);
+        // 2. Encrypt Private Keys (All chains)
+        setBindStatus('Encrypting keys...');
+        const encryptedEthKey = encryptData(ethPrivateKey, passphrase);
+        const encryptedBtcKey = encryptData(btcPrivateKey, passphrase);
+        const encryptedSolKey = encryptData(solPrivateKey, passphrase);
 
-      const encryptedKeys = {
-        ethereum: encryptedEthKey,
-        bitcoin: encryptedBtcKey
-      };
+        const encryptedKeys = {
+          ethereum: encryptedEthKey,
+          bitcoin: encryptedBtcKey,
+          solana: encryptedSolKey,
+          polygon: encryptedEthKey, // Reusing EVM key
+          bnb: encryptedEthKey // Reusing EVM key
+        };
 
-      const walletAddresses = [
-        { type: 'Ethereum', address: ethAddress },
-        { type: 'Bitcoin', address: btcAddress }
-      ];
+        const walletAddresses = [
+          { type: 'Bitcoin', address: btcAddress },
+          { type: 'Ethereum', address: ethAddress },
+          { type: 'Solana', address: solAddress },
+          { type: 'Polygon', address: ethAddress },
+          { type: 'BNB Chain', address: ethAddress }
+        ];
 
-      // 3. Get NFC ID (Mock or Real)
+        // 3. Get NFC ID (Mock or Real)
       let cardId = '';
       if (mock) {
         cardId = 'mock-nfc-id-' + Math.floor(Math.random() * 10000);
@@ -545,8 +558,16 @@ export default function GiverDashboardScreen({ navigation }: any) {
                     {/* Icon based on type */}
                     {wallet.type === 'Bitcoin' ? (
                       <BitcoinIcon width={24} height={24} />
-                    ) : (
+                    ) : wallet.type === 'Ethereum' ? (
                       <EthIcon width={24} height={24} />
+                    ) : wallet.type === 'Solana' ? (
+                      <SolanaIcon width={24} height={24} />
+                    ) : wallet.type === 'Polygon' ? (
+                      <PolygonIcon width={24} height={24} />
+                    ) : wallet.type === 'BNB Chain' ? (
+                      <BnbIcon width={24} height={24} />
+                    ) : (
+                      <Text style={{ fontSize: 20 }}>?</Text>
                     )}
                   </View>
                   <View style={styles.walletInfo}>

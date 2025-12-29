@@ -31,3 +31,20 @@ export const generateMockBitcoinData = () => {
 
   return { address, privateKey };
 };
+
+// Mock Solana Address Generator
+export const generateMockSolanaData = () => {
+  const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  let address = '';
+  for (let i = 0; i < 44; i++) {
+    address += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  // Mock private key (Base58 style)
+  let privateKey = '';
+  for (let i = 0; i < 88; i++) {
+    privateKey += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return { address, privateKey };
+};
