@@ -64,12 +64,12 @@ export default function ReceiverScanScreen({ navigation }: any) {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <ArrowLeft color="#fff" size={24} />
+            <ArrowLeft color="#000" size={24} />
           </TouchableOpacity>
           <View style={styles.brandBadge}>
             <Text style={styles.brandBadgeText}>SCAN VLOO</Text>
@@ -114,7 +114,7 @@ export default function ReceiverScanScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
   },
   safeArea: {
     flex: 1,
@@ -136,14 +136,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
   brandBadgeText: {
     fontFamily: FONTS.bodyBold,
     fontSize: 12,
-    color: '#fff',
+    color: '#000',
     letterSpacing: 1,
   },
   content: {
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   headline: {
     fontFamily: FONTS.displayBold,
     fontSize: 32,
-    color: '#fff',
+    color: '#000',
     lineHeight: 40,
     marginBottom: 16,
     textAlign: 'center',
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   subheadline: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 16,
-    color: '#999',
+    color: '#666',
     lineHeight: 24,
     textAlign: 'center',
     maxWidth: 280,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontFamily: FONTS.bodySemiBold,
     fontSize: 16,
-    color: '#fff',
+    color: '#000',
   },
   actionContainer: {
     width: '100%',

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity, ScrollView, TextInput, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, ScrollView, TextInput, StatusBar, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { decryptData } from '../../lib/crypto';
 import { supabase } from '../../lib/supabase';
@@ -90,12 +90,12 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <ArrowLeft color="#fff" size={24} />
+            <ArrowLeft color="#000" size={24} />
           </TouchableOpacity>
           <View style={styles.brandBadge}>
             <Text style={styles.brandBadgeText}>CLAIM VLOO</Text>
@@ -140,7 +140,7 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
               <TextInput
                 style={styles.input}
                 placeholder="Passphrase"
-                placeholderTextColor="#666"
+                placeholderTextColor="#999"
                 value={passphrase}
                 onChangeText={setPassphrase}
                 secureTextEntry
@@ -169,7 +169,7 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={styles.keyText} numberOfLines={1} ellipsizeMode="middle">{item.key}</Text>
                     <TouchableOpacity onPress={() => copyToClipboard(item.key)} style={styles.copyButton}>
-                      <Copy color="#fff" size={20} />
+                      <Copy color="#000" size={20} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -189,7 +189,7 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
   },
   safeArea: {
     flex: 1,
@@ -211,14 +211,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
   brandBadgeText: {
     fontFamily: FONTS.bodyBold,
     fontSize: 12,
-    color: '#fff',
+    color: '#000',
     letterSpacing: 1,
   },
   scrollContent: {
@@ -248,17 +248,17 @@ const styles = StyleSheet.create({
   messageText: {
     fontFamily: FONTS.displaySemiBold,
     fontSize: 20,
-    color: '#fff',
+    color: '#000',
     textAlign: 'center',
     lineHeight: 28,
   },
   statusSection: {
     marginTop: 48,
     padding: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(0, 0, 0, 0.05)',
   },
   statusRow: {
     flexDirection: 'row',
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   activeStatus: {
-    color: '#fff',
+    color: '#000',
   },
   timerContainer: {
     marginTop: 24,
@@ -302,13 +302,13 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   input: {
-    backgroundColor: '#111',
+    backgroundColor: '#F5F5F5',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#EEE',
     borderRadius: 16,
     padding: 16,
     fontSize: 16,
-    color: '#fff',
+    color: '#000',
     fontFamily: FONTS.bodyRegular,
     marginBottom: 24,
   },
@@ -330,16 +330,16 @@ const styles = StyleSheet.create({
   successSubtitle: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 16,
-    color: '#ccc',
+    color: '#666',
     textAlign: 'center',
     marginBottom: 24,
   },
   keyContainer: {
-    backgroundColor: '#111',
+    backgroundColor: '#F5F5F5',
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#EEE',
     width: '100%',
     marginBottom: 24,
   },
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   keyText: {
-    fontFamily: FONTS.monoRegular,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     fontSize: 14,
     color: COLORS.primary,
     flex: 1,
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   },
   copyButton: {
     padding: 8,
-    backgroundColor: '#333',
+    backgroundColor: '#EEE',
     borderRadius: 8,
   },
   warningText: {
