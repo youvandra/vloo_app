@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Stop, Circle as SvgCircle } from 'react-native-svg';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
-import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, Gift, Radio, ArrowLeft, Edit2, Eye } from 'lucide-react-native';
+import { Bell, Plus, Send, Wallet, Copy, Home, BarChart2, CreditCard, Grid, LogOut, User, ArrowDown, Settings, MessageSquare, Radio, ArrowLeft, Edit2, Eye } from 'lucide-react-native';
 import { Button } from '../../components/Button';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { createRandomWallet, generateMockBitcoinData, generateMockSolanaData } from '../../lib/wallet';
@@ -844,7 +844,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                  alignItems: 'center',
                  marginBottom: 16
                }}>
-                 <Gift size={32} color={COLORS.accent} />
+                 <MessageSquare size={32} color={COLORS.accent} />
                </View>
                <Text style={[styles.headline, { textAlign: 'center', fontSize: 24 }]}>
                  Message for {selectedVloo?.receiver_name}

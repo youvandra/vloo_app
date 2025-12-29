@@ -6,7 +6,7 @@ import { decryptData } from '../../lib/crypto';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Button } from '../../components/Button';
-import { ArrowLeft, Lock, Unlock, Gift, Copy } from 'lucide-react-native';
+import { ArrowLeft, Lock, Unlock, MessageSquare, Copy } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 
 export default function ReceiverClaimScreen({ route, navigation }: any) {
@@ -106,7 +106,7 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
           {/* Message Section */}
           <View style={styles.section}>
             <View style={styles.iconWrapper}>
-              <Gift color={COLORS.accent} size={32} />
+              <MessageSquare color={COLORS.accent} size={32} />
             </View>
             <Text style={styles.label}>MESSAGE FROM GIVER</Text>
             <Text style={styles.messageText}>"{vloo.message}"</Text>
