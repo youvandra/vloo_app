@@ -403,7 +403,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
   const renderCard = (item: any) => {
     return (
-      <View style={[styles.mainCard, { backgroundColor: COLORS.background }]}>
+      <View style={[styles.mainCard, { backgroundColor: '#000' }]}>
         <View style={styles.cardTop}>
           <Image 
             source={require('../../assets/logo-min.png')} 
@@ -412,13 +412,13 @@ export default function GiverDashboardScreen({ navigation }: any) {
           />
           <View style={styles.nfcIdContainer}>
              <Text style={[styles.nfcIdLabel, { color: '#666' }]}>CARD ID</Text>
-             <Text style={[styles.nfcIdValue, { color: COLORS.foreground }]}>{item.cards?.[0]?.id || '••••'}</Text>
+             <Text style={[styles.nfcIdValue, { color: '#fff' }]}>{item.cards?.[0]?.id || '••••'}</Text>
           </View>
         </View>
         
         <View style={styles.cardCenter}>
           <Text style={[styles.receiverNameLabel, { color: '#666' }]}>Sending to</Text>
-          <Text style={[styles.receiverName, { color: COLORS.foreground }]} numberOfLines={1} adjustsFontSizeToFit>
+          <Text style={[styles.receiverName, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>
             {item.receiver_name || 'VLOO Gift'}
           </Text>
         </View>
@@ -426,22 +426,22 @@ export default function GiverDashboardScreen({ navigation }: any) {
         <View style={styles.cardBottom}>
           <View>
             <Text style={[styles.cardLabel, { color: '#666' }]}>Unlock Date</Text>
-            <Text style={[styles.cardValue, { color: COLORS.foreground }]}>
+            <Text style={[styles.cardValue, { color: '#fff' }]}>
               {item.unlock_date ? new Date(item.unlock_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Whenever'}
             </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TouchableOpacity 
-              style={[styles.cardSettingsButton, { backgroundColor: 'rgba(0,0,0,0.05)' }]}
+              style={[styles.cardSettingsButton, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
               onPress={() => handlePreviewPress(item)}
             >
-               <Eye size={20} color={COLORS.foreground} />
+               <Eye size={20} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.cardSettingsButton, { backgroundColor: 'rgba(0,0,0,0.05)' }]}
+              style={[styles.cardSettingsButton, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
               onPress={() => handleEditPress(item)}
             >
-               <Edit2 size={20} color={COLORS.foreground} />
+               <Edit2 size={20} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -474,7 +474,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       
       {/* Background Glow */}
       <View style={styles.glowContainer}>
@@ -490,7 +490,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
               fy={width / 2}
               gradientUnits="userSpaceOnUse"
             >
-              <Stop offset="0" stopColor={COLORS.primary} stopOpacity="0.4" />
+              <Stop offset="0" stopColor={COLORS.primary} stopOpacity="0.1" />
               <Stop offset="1" stopColor={COLORS.primary} stopOpacity="0" />
             </RadialGradient>
           </Defs>
@@ -500,7 +500,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000" />}
         showsVerticalScrollIndicator={false}
       >
         <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -520,7 +520,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
             </View>
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.headerButton}>
-                <Bell color="#fff" size={20} />
+                <Bell color="#000" size={20} />
               </TouchableOpacity>
             </View>
           </View>
@@ -1013,7 +1013,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
               setShowProfileMenu(false);
               // Navigate to edit profile
             }}>
-              <User size={24} color="#fff" />
+              <User size={24} color="#000" />
               <Text style={styles.profileMenuText}>Edit Profile</Text>
             </TouchableOpacity>
             
@@ -1035,21 +1035,21 @@ export default function GiverDashboardScreen({ navigation }: any) {
         <View style={styles.bottomNavContainer}>
           <View style={styles.bottomNav}>
             <TouchableOpacity style={styles.navItemActive}>
-              <View style={[styles.navIconActive, { backgroundColor: '#000' }]}>
-                <Home size={20} color="#fff" />
+              <View style={[styles.navIconActive, { backgroundColor: '#fff' }]}>
+                <Home size={20} color="#000" />
               </View>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.navItem}>
-              <BarChart2 size={20} color="#000" />
+              <BarChart2 size={20} color="#fff" />
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.navItem}>
-              <CreditCard size={20} color="#000" />
+              <CreditCard size={20} color="#fff" />
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.navItem}>
-              <Grid size={20} color="#000" />
+              <Grid size={20} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -1062,7 +1062,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
   },
   glowContainer: {
     position: 'absolute',
@@ -1098,12 +1098,12 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#333',
+    borderColor: '#eee',
   },
   greeting: {
     fontFamily: FONTS.displayBold,
     fontSize: 18,
-    color: '#fff',
+    color: '#000',
   },
   accountType: {
     fontFamily: FONTS.bodyRegular,
@@ -1118,7 +1118,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1133,11 +1133,11 @@ const styles = StyleSheet.create({
   profileMenuText: {
     fontFamily: FONTS.bodySemiBold,
     fontSize: 16,
-    color: '#fff',
+    color: '#000',
   },
   profileMenuDivider: {
     height: 1,
-    backgroundColor: '#222',
+    backgroundColor: '#eee',
     marginVertical: 4,
   },
 
@@ -1171,13 +1171,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   walletIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -1189,7 +1189,7 @@ const styles = StyleSheet.create({
   walletAddress: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 14,
-    color: '#fff',
+    color: '#000',
   },
   walletTypeLabel: {
     fontFamily: FONTS.bodySemiBold,
@@ -1213,15 +1213,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 20,
     elevation: 10,
     marginRight: CARD_SPACING,
   },
   placeholderCard: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     borderWidth: 2,
-    borderColor: '#333',
+    borderColor: '#eee',
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1244,7 +1244,7 @@ const styles = StyleSheet.create({
   placeholderText: {
     fontFamily: FONTS.displayBold,
     fontSize: 18,
-    color: '#fff',
+    color: '#000',
     textAlign: 'center',
   },
   placeholderSubtext: {
@@ -1375,16 +1375,21 @@ const styles = StyleSheet.create({
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   modalContent: {
     height: '80%',
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     marginTop: 'auto',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 20,
   },
   modalHeader: {
     height: 40,
@@ -1394,7 +1399,7 @@ const styles = StyleSheet.create({
   modalIndicator: {
     width: 40,
     height: 4,
-    backgroundColor: '#333',
+    backgroundColor: '#ccc',
     borderRadius: 2,
   },
   modalScrollContent: {
@@ -1409,18 +1414,18 @@ const styles = StyleSheet.create({
   headline: {
     fontFamily: FONTS.displayBold,
     fontSize: 32,
-    color: '#fff',
+    color: '#000',
     lineHeight: 40,
     marginBottom: 8,
     textAlign: 'left',
   },
   headlineHighlight: {
-    color: COLORS.accent,
+    color: COLORS.primary,
   },
   subheadline: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 16,
-    color: '#999',
+    color: '#666',
     lineHeight: 24,
     textAlign: 'center',
     maxWidth: 280,
@@ -1433,19 +1438,19 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontFamily: FONTS.bodyBold,
     fontSize: 12,
-    color: '#999',
+    color: '#666',
     marginBottom: 12,
     marginLeft: 4,
     letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: '#111',
+    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#eee',
     borderRadius: 16,
     padding: 16,
     fontSize: 16,
-    color: '#fff',
+    color: '#000',
     fontFamily: FONTS.bodyRegular,
     marginBottom: 24,
   },
@@ -1459,13 +1464,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10, 
     paddingHorizontal: 20, 
     borderRadius: 999, 
-    backgroundColor: '#111', 
+    backgroundColor: '#fff', 
     borderWidth: 1, 
-    borderColor: '#333' 
+    borderColor: '#eee' 
   },
   pillActive: { 
-    backgroundColor: COLORS.accent,
-    borderColor: COLORS.accent,
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   pillText: { 
     fontFamily: FONTS.bodySemiBold, 
@@ -1483,24 +1488,24 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   dateButton: {
-    backgroundColor: '#111',
+    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#eee',
     marginBottom: 24,
   },
   dateButtonText: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 16,
-    color: '#fff',
+    color: '#000',
   },
   datePickerContainerIOS: {
-    backgroundColor: '#111',
+    backgroundColor: '#fff',
     padding: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#eee',
     alignItems: 'flex-start',
     marginBottom: 24,
   },
@@ -1520,7 +1525,7 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontFamily: FONTS.displayBold,
     fontSize: 20,
-    color: '#fff',
+    color: '#000',
     textAlign: 'center',
   },
   emptyStateSubtext: {
@@ -1549,7 +1554,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between', // Spread items out
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 32,

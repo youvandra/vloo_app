@@ -88,13 +88,13 @@ export default function GiverLoginScreen({ navigation }: any) {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.navigate('Home')} style={styles.backButton}>
-            <ArrowLeft color="#fff" size={24} />
+            <ArrowLeft color="#000" size={24} />
           </TouchableOpacity>
           
           <View style={styles.brandBadge}>
@@ -143,7 +143,7 @@ export default function GiverLoginScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
   },
   safeArea: {
     flex: 1,
@@ -162,15 +162,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   brandBadge: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(0,0,0,0.1)',
   },
   brandBadgeText: {
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(0,0,0,0.6)',
     fontFamily: FONTS.bodySemiBold,
     fontSize: 12,
     letterSpacing: 1,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.displayBold,
     fontSize: 42,
     lineHeight: 48,
-    color: '#fff',
+    color: '#000',
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyRegular,
     fontSize: 16,
     lineHeight: 24,
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(0,0,0,0.6)',
     textAlign: 'center',
     maxWidth: 300,
   },
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   disclaimer: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 12,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(0,0,0,0.4)',
     textAlign: 'center',
     marginTop: 16,
   }

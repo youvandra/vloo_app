@@ -26,28 +26,6 @@ export default function GiverSuccessScreen({ route, navigation }: any) {
           <Text style={styles.idLabel}>CARD ID</Text>
           <Text style={styles.idValue}>{cardId}</Text>
         </View>
-
-        {/* Display Wallets */}
-        <View style={styles.walletsContainer}>
-          {walletAddresses && Array.isArray(walletAddresses) ? (
-            walletAddresses.map((wallet: any, index: number) => (
-              <View key={index} style={styles.walletRow}>
-                <Text style={styles.walletType}>{wallet.type}</Text>
-                <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">
-                  {wallet.address}
-                </Text>
-              </View>
-            ))
-          ) : (
-             <View style={styles.walletRow}>
-                <Text style={styles.walletType}>Ethereum</Text>
-                <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">
-                  {address}
-                </Text>
-              </View>
-          )}
-        </View>
-
         <Button 
           title="Done" 
           onPress={() => navigation.navigate('GiverDashboard')} 
