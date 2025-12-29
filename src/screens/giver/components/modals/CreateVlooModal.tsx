@@ -88,7 +88,7 @@ export const CreateVlooModal = ({
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.stepIndicator}>Step 1 of 2</Text>
+              <Text style={styles.stepIndicator}>Step 1 of 3</Text>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Who is this for?</Text>

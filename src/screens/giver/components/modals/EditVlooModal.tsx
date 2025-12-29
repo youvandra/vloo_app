@@ -12,6 +12,8 @@ interface EditVlooModalProps {
   vloo: any;
   editVlooName: string;
   setEditVlooName: (name: string) => void;
+  editVlooMessage: string;
+  setEditVlooMessage: (message: string) => void;
   editVlooDate: Date | null;
   setEditVlooDate: (date: Date | null) => void;
   isSaving: boolean;
@@ -25,6 +27,8 @@ export const EditVlooModal = ({
   vloo,
   editVlooName,
   setEditVlooName,
+  editVlooMessage,
+  setEditVlooMessage,
   editVlooDate,
   setEditVlooDate,
   isSaving
@@ -84,6 +88,19 @@ export const EditVlooModal = ({
                   placeholderTextColor="#999"
                   value={editVlooName}
                   onChangeText={setEditVlooName}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Message</Text>
+                <TextInput
+                  style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+                  placeholder="Message"
+                  placeholderTextColor="#999"
+                  value={editVlooMessage}
+                  onChangeText={setEditVlooMessage}
+                  multiline={true}
+                  numberOfLines={4}
                 />
               </View>
 

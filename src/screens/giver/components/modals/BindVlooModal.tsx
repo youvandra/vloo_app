@@ -13,7 +13,7 @@ interface BindVlooModalProps {
   visible: boolean;
   onClose: () => void;
   onBack: () => void;
-  onCreate: () => void;
+  onNext: () => void;
   selectedBindWallets: any[];
   setSelectedBindWallets: (wallets: any[]) => void;
   wallets: any[];
@@ -27,7 +27,7 @@ export const BindVlooModal = ({
   visible,
   onClose,
   onBack,
-  onCreate,
+  onNext,
   selectedBindWallets,
   setSelectedBindWallets,
   wallets,
@@ -94,7 +94,7 @@ export const BindVlooModal = ({
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.stepIndicator}>Step 2 of 2</Text>
+              <Text style={styles.stepIndicator}>Step 2 of 3</Text>
 
               <Text style={styles.summaryText}>
                 Creating <Text style={{ fontFamily: FONTS.bodyBold }}>{newVlooName}</Text>
@@ -154,13 +154,13 @@ export const BindVlooModal = ({
 
               <TouchableOpacity 
                 style={[styles.primaryButton, selectedBindWallets.length === 0 && { opacity: 0.5 }]}
-                onPress={onCreate}
+                onPress={onNext}
                 disabled={selectedBindWallets.length === 0 || isCreating}
               >
                 {isCreating ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Create & Bind Vloo</Text>
+                  <Text style={styles.primaryButtonText}>Next</Text>
                 )}
               </TouchableOpacity>
             </ScrollView>
