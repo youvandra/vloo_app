@@ -44,20 +44,45 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
     }
 
     try {
+      let encryptedKey = vloo.encrypted_private_key;
+
+      // Fetch encrypted key securely via RPC if not present in initial load
+      if (!encryptedKey && vloo.id !== 'demo-id') {
+         const { data, error } = await supabase.rpc('get_vloo_private_key', {
+             p_vloo_id: vloo.id
+         });
+
+         if (error) {
+             console.error('RPC Error:', error);
+             throw new Error('Failed to retrieve secure data.');
+         }
+         encryptedKey = data;
+      }
+
+      // Fallback for demo
+      if (!encryptedKey && vloo.id === 'demo-id') {
+          encryptedKey = 'demo-key';
+      }
+
+      if (!encryptedKey) {
+          Alert.alert('Error', 'Could not retrieve key data.');
+          return;
+      }
+
       const keysToShow: { label: string, key: string }[] = [];
 
       // Handle both legacy string and new object format
-      if (typeof vloo.encrypted_private_key === 'string') {
-        const key = decryptData(vloo.encrypted_private_key, passphrase);
+      if (typeof encryptedKey === 'string') {
+        const key = decryptData(encryptedKey, passphrase);
         if (key) keysToShow.push({ label: 'Private Key', key });
-      } else if (typeof vloo.encrypted_private_key === 'object' && vloo.encrypted_private_key !== null) {
+      } else if (typeof encryptedKey === 'object' && encryptedKey !== null) {
         // Iterate through keys (ethereum, bitcoin, etc.)
-        if (vloo.encrypted_private_key.ethereum) {
-          const ethKey = decryptData(vloo.encrypted_private_key.ethereum, passphrase);
+        if (encryptedKey.ethereum) {
+          const ethKey = decryptData(encryptedKey.ethereum, passphrase);
           if (ethKey) keysToShow.push({ label: 'Ethereum Private Key', key: ethKey });
         }
-        if (vloo.encrypted_private_key.bitcoin) {
-          const btcKey = decryptData(vloo.encrypted_private_key.bitcoin, passphrase);
+        if (encryptedKey.bitcoin) {
+          const btcKey = decryptData(encryptedKey.bitcoin, passphrase);
           if (btcKey) keysToShow.push({ label: 'Bitcoin Private Key', key: btcKey });
         }
       }

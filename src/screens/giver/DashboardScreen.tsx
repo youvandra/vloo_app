@@ -41,6 +41,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [isEditUnlockDateEnabled, setIsEditUnlockDateEnabled] = useState(true);
   const [editLoading, setEditLoading] = useState(false);
 
+  const [walletLoading, setWalletLoading] = useState(false);
+
   // ... (existing PanResponders)
 
   const editPanResponder = useRef(
@@ -339,7 +341,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
       const { data, error } = await supabase
         .from('vloos')
-        .select('*, verified_cards(id)')
+        .select('id, giver_id, created_at, status, wallet_address, unlock_date, message, receiver_name, verified_cards(id, color)')
         .eq('giver_id', session.user.id)
         .order('created_at', { ascending: false });
 
@@ -407,8 +409,10 @@ export default function GiverDashboardScreen({ navigation }: any) {
   };
 
   const renderCard = (item: any) => {
+    const cardColor = item.verified_cards?.[0]?.color === 'blue' ? COLORS.primary : '#000';
+    
     return (
-      <View style={[styles.mainCard, { backgroundColor: '#000' }]}>
+      <View style={[styles.mainCard, { backgroundColor: cardColor }]}>
         <View style={styles.cardTop}>
           <Image 
             source={require('../../assets/logo-min.png')} 
@@ -536,13 +540,30 @@ export default function GiverDashboardScreen({ navigation }: any) {
               keyExtractor={(item, index) => item.id || index.toString()}
               onMomentumScrollEnd={(ev) => {
                 const index = Math.round(ev.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_SPACING));
-                setCurrentCardIndex(index);
+                if (index !== currentCardIndex) {
+                  setWalletLoading(true);
+                  setCurrentCardIndex(index);
+                  // Simulate loading delay for better UX (optional, but requested)
+                  setTimeout(() => setWalletLoading(false), 500);
+                }
               }}
               snapToInterval={CARD_WIDTH + CARD_SPACING}
               decelerationRate="fast"
               contentContainerStyle={{ paddingHorizontal: (width - CARD_WIDTH) / 2 }}
               snapToAlignment="center"
             />
+            {/* Pagination Dots */}
+            <View style={styles.paginationContainer}>
+              {displayData.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.paginationDot,
+                    index === currentCardIndex ? styles.paginationDotActive : null
+                  ]}
+                />
+              ))}
+            </View>
           </View>
 
           {/* Wallet Address Section - Scrollable */}
@@ -558,7 +579,12 @@ export default function GiverDashboardScreen({ navigation }: any) {
               showsVerticalScrollIndicator={false}
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000" />}
             >
-              {currentWalletAddresses.length > 0 && currentWalletAddresses.map((wallet: any, index: number) => (
+              {walletLoading ? (
+                <View style={{ padding: 24, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={COLORS.primary} />
+                </View>
+              ) : (
+                currentWalletAddresses.length > 0 && currentWalletAddresses.map((wallet: any, index: number) => (
                   <View key={index} style={styles.walletRow}>
                     <View style={styles.walletIconContainer}>
                       {/* Icon based on type */}
@@ -592,7 +618,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
                       <Copy size={18} color={COLORS.primary} />
                     </TouchableOpacity>
                   </View>
-                ))}
+                ))
+              )}
             </ScrollView>
           </View>
           
@@ -1631,5 +1658,26 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -10,
     marginHorizontal: 0,
+  },
+  
+  // Pagination
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 8,
+  },
+  paginationDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  paginationDotActive: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#000',
   },
 });

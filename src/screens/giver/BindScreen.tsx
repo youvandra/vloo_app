@@ -98,7 +98,7 @@ export default function GiverBindScreen({ route, navigation }: any) {
       const { data: vlooData, error: vlooError } = await supabase
         .from('vloos')
         .insert([insertPayload])
-        .select()
+        .select('id')
         .single();
 
       if (vlooError) {

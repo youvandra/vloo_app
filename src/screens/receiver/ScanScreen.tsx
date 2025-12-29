@@ -29,7 +29,7 @@ export default function ReceiverScanScreen({ navigation }: any) {
       
       const { data: cardData, error: cardError } = await supabase
         .from('cards')
-        .select('vloo_id, vloos(*)')
+        .select('vloo_id, vloos(id, status, message, unlock_date, receiver_name, wallet_address)')
         .eq('id', cardId)
         .single();
 
