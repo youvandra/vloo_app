@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, StatusBar, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
@@ -10,25 +10,26 @@ import { ArrowLeft, Scan } from 'lucide-react-native';
 export default function ReceiverScanScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('Waiting for card...');
+  const [manualCardId, setManualCardId] = useState('');
 
   const handleScan = async (mock: boolean = false) => {
+    if (!mock && !manualCardId.trim()) {
+       Alert.alert('Error', 'Please enter a Card ID or tap simulate.');
+       return;
+    }
+
     setLoading(true);
     setStatus('Reading card...');
 
     try {
       // 1. Get NFC ID (Mock or Real)
-      let cardId = '';
-      if (mock) {
-        // In a real scenario, this would come from the NFC tag
-        // For MVP, we'll try to fetch a known card or just simulate one
-        cardId = 'simulated-real-id'; 
-      }
+      let cardId = mock ? 'simulated-real-id' : manualCardId.trim();
 
       // 2. Fetch VLOO Data
       setStatus('Fetching VLOO status...');
       
       const { data: cardData, error: cardError } = await supabase
-        .from('cards')
+        .from('verified_cards')
         .select('vloo_id, vloos(id, status, message, unlock_date, receiver_name, wallet_address)')
         .eq('id', cardId)
         .single();
@@ -97,6 +98,26 @@ export default function ReceiverScanScreen({ navigation }: any) {
             </View>
           ) : (
             <View style={styles.actionContainer}>
+              <View style={styles.inputContainer}>
+                 <Text style={styles.inputLabel}>MANUAL CARD ID</Text>
+                 <TextInput
+                    style={styles.input}
+                    placeholder="Enter Card ID"
+                    placeholderTextColor="#999"
+                    value={manualCardId}
+                    onChangeText={setManualCardId}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                 />
+              </View>
+
+              <Button 
+                title="Check Card" 
+                onPress={() => handleScan(false)} 
+                variant="primary"
+                style={[styles.actionButton, { backgroundColor: '#000', marginBottom: 12 }]}
+              />
+
               <Button 
                 title="Tap to Simulate Scan (Dev)" 
                 onPress={() => handleScan(true)} 
@@ -196,6 +217,30 @@ const styles = StyleSheet.create({
   actionContainer: {
     width: '100%',
     paddingHorizontal: 20,
+  },
+  inputContainer: {
+    marginBottom: 20,
+    width: '100%',
+  },
+  inputLabel: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 12,
+    color: '#666',
+    letterSpacing: 1,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  input: {
+    width: '100%',
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    fontFamily: FONTS.bodyRegular,
+    color: '#000',
+    backgroundColor: '#f9f9f9',
   },
   actionButton: {
     width: '100%',
