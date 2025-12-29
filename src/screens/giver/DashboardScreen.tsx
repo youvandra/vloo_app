@@ -18,6 +18,7 @@ import EthIcon from '../../assets/icons/chains/eth.svg';
 import SolanaIcon from '../../assets/icons/chains/solana.svg';
 import PolygonIcon from '../../assets/icons/chains/polygon.svg';
 import BnbIcon from '../../assets/icons/chains/bnb.svg';
+import LiskIcon from '../../assets/icons/chains/lisk.svg';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82; // Slightly wider for better peek
@@ -55,6 +56,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [editLoading, setEditLoading] = useState(false);
 
   const [walletLoading, setWalletLoading] = useState(false);
+  const [isTestnet, setIsTestnet] = useState(false);
 
   // ... (existing PanResponders)
 
@@ -352,6 +354,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
           { type: 'Bitcoin', address: btcAddress },
           { type: 'Ethereum', address: ethAddress },
           { type: 'Sepolia', address: ethAddress },
+          { type: 'Lisk', address: ethAddress },
           { type: 'Solana', address: solAddress },
           { type: 'Polygon', address: ethAddress },
           { type: 'BNB Chain', address: ethAddress }
@@ -572,7 +575,23 @@ export default function GiverDashboardScreen({ navigation }: any) {
         const ethIndex = addresses.indexOf(ethWallet);
         addresses.splice(ethIndex + 1, 0, { type: 'Sepolia', address: ethWallet.address });
     }
+
+    // Inject Lisk if Ethereum exists but Lisk doesn't
+    const hasLisk = addresses.some((w: any) => w.type === 'Lisk');
+    if (ethWallet && !hasLisk) {
+        // Insert Lisk after Sepolia (or after Ethereum if Sepolia wasn't just added/found, but we know where it is)
+        // Let's just find the index of Sepolia or Ethereum
+        const sepoliaIndex = addresses.findIndex((w: any) => w.type === 'Sepolia');
+        const insertIndex = sepoliaIndex !== -1 ? sepoliaIndex + 1 : addresses.indexOf(ethWallet) + 1;
+        addresses.splice(insertIndex, 0, { type: 'Lisk', address: ethWallet.address });
+    }
     
+    // Inject Lisk Sepolia if Ethereum exists but Lisk Sepolia doesn't
+    const hasLiskSepolia = addresses.some((w: any) => w.type === 'Lisk Sepolia');
+    if (ethWallet && !hasLiskSepolia) {
+        addresses.push({ type: 'Lisk Sepolia', address: ethWallet.address });
+    }
+
     return addresses;
   };
 
@@ -582,7 +601,15 @@ export default function GiverDashboardScreen({ navigation }: any) {
     return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
   };
 
-  const currentWalletAddresses = currentCardIndex < vloos.length ? getWalletAddresses(vloos[currentCardIndex]?.wallet_address) : [];
+  const allWalletAddresses = currentCardIndex < vloos.length ? getWalletAddresses(vloos[currentCardIndex]?.wallet_address) : [];
+  
+  const currentWalletAddresses = allWalletAddresses.filter((wallet: any) => {
+    if (isTestnet) {
+      return ['Sepolia', 'Lisk Sepolia'].includes(wallet.type);
+    } else {
+      return !['Sepolia', 'Lisk Sepolia'].includes(wallet.type);
+    }
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -768,11 +795,13 @@ export default function GiverDashboardScreen({ navigation }: any) {
               <View style={[styles.walletHeader, { paddingHorizontal: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
                 <Text style={styles.walletTitle}>Linked Wallets</Text>
                 <TouchableOpacity 
-                  onPress={() => Alert.alert('Coming Soon', 'This feature will be available soon!')}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                  onPress={() => setIsTestnet(!isTestnet)}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0f0f0', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}
                 >
-                    <Plus size={16} color={COLORS.primary} />
-                    <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: COLORS.primary }}>Add More</Text>
+                    <View style={{ width: 24, height: 14, borderRadius: 7, backgroundColor: isTestnet ? COLORS.primary : '#ccc', justifyContent: 'center', alignItems: isTestnet ? 'flex-end' : 'flex-start', paddingHorizontal: 2 }}>
+                        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff' }} />
+                    </View>
+                    <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#666' }}>Testnet</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -795,6 +824,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
                         <BitcoinIcon width={24} height={24} />
                       ) : wallet.type === 'Ethereum' || wallet.type === 'Sepolia' ? (
                         <EthIcon width={24} height={24} />
+                      ) : wallet.type === 'Lisk' || wallet.type === 'Lisk Sepolia' ? (
+                        <LiskIcon width={24} height={24} />
                       ) : wallet.type === 'Solana' ? (
                         <SolanaIcon width={24} height={24} />
                       ) : wallet.type === 'Polygon' ? (
@@ -1342,6 +1373,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
                  <BitcoinIcon width={64} height={64} />
                ) : selectedWallet?.type === 'Ethereum' || selectedWallet?.type === 'Sepolia' ? (
                  <EthIcon width={64} height={64} />
+               ) : selectedWallet?.type === 'Lisk' || selectedWallet?.type === 'Lisk Sepolia' ? (
+                 <LiskIcon width={64} height={64} />
                ) : selectedWallet?.type === 'Solana' ? (
                  <SolanaIcon width={64} height={64} />
                ) : selectedWallet?.type === 'Polygon' ? (

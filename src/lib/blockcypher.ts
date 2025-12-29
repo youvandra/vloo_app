@@ -57,6 +57,56 @@ export const fetchBalance = async (address: string, chainType: string): Promise<
         console.error('Error fetching Sepolia balance:', e);
         return '0.00 SepoliaETH';
     }
+  } else if (normalizedType === 'lisk') {
+    // Lisk (Optimism Stack L2) Mainnet RPC
+    try {
+        const response = await fetch('https://rpc.api.lisk.com', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                jsonrpc: '2.0',
+                id: 1,
+                method: 'eth_getBalance',
+                params: [address, 'latest']
+            })
+        });
+        
+        const data = await response.json();
+        if (data.result) {
+            const balanceWei = parseInt(data.result, 16);
+            const balanceEth = balanceWei / 1000000000000000000;
+            return `${balanceEth.toFixed(4)} ETH`; // Lisk uses ETH as gas
+        }
+        return '0.00 ETH';
+    } catch (e) {
+        console.error('Error fetching Lisk balance:', e);
+        return '0.00 ETH';
+    }
+  } else if (normalizedType === 'lisk sepolia') {
+    // Lisk Sepolia Testnet RPC
+    try {
+        const response = await fetch('https://rpc.sepolia-api.lisk.com', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                jsonrpc: '2.0',
+                id: 1,
+                method: 'eth_getBalance',
+                params: [address, 'latest']
+            })
+        });
+        
+        const data = await response.json();
+        if (data.result) {
+            const balanceWei = parseInt(data.result, 16);
+            const balanceEth = balanceWei / 1000000000000000000;
+            return `${balanceEth.toFixed(4)} ETH`;
+        }
+        return '0.00 ETH';
+    } catch (e) {
+        console.error('Error fetching Lisk Sepolia balance:', e);
+        return '0.00 ETH';
+    }
   } else {
     // Unsupported by BlockCypher or this integration
     symbol = getSymbol(chainType);
