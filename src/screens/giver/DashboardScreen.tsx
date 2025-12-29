@@ -34,6 +34,11 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [selectedVloo, setSelectedVloo] = useState<any>(null);
   
+  // Profile Edit State
+  const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
+  
   // Edit Form State
   const [editReceiverName, setEditReceiverName] = useState('');
   const [editMessage, setEditMessage] = useState('');
@@ -72,6 +77,37 @@ export default function GiverDashboardScreen({ navigation }: any) {
       },
     })
   ).current;
+
+  const handleOpenEditProfile = () => {
+    setProfileName(user?.user_metadata?.full_name || '');
+    setEditProfileModalVisible(true);
+    setShowProfileMenu(false);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!profileName.trim()) {
+      Alert.alert('Error', 'Name cannot be empty');
+      return;
+    }
+
+    setProfileLoading(true);
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: { full_name: profileName }
+      });
+
+      if (error) throw error;
+
+      setUser(data.user);
+      setEditProfileModalVisible(false);
+      Alert.alert('Success', 'Profile updated successfully');
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', 'Failed to update profile');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   const handleEditPress = (vloo: any) => {
     setSelectedVloo(vloo);
@@ -170,6 +206,20 @@ export default function GiverDashboardScreen({ navigation }: any) {
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dy > 50) {
           setShowProfileMenu(false);
+        }
+      },
+    })
+  ).current;
+
+  const profileEditPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 50) {
+          setEditProfileModalVisible(false);
         }
       },
     })
@@ -518,8 +568,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                 />
               </TouchableOpacity>
               <View>
-                <Text style={styles.greeting}>Morning {user?.user_metadata?.full_name?.split(' ')[0] || 'Giver'},</Text>
-                <Text style={styles.accountType}>Free Account</Text>
+                <Text style={styles.greeting}>Hello <Text style={{ color: COLORS.accent }}>{user?.user_metadata?.full_name?.split(' ')[0] || 'Giver'}</Text>,</Text>
               </View>
             </View>
             <View style={styles.headerActions}>
@@ -527,6 +576,11 @@ export default function GiverDashboardScreen({ navigation }: any) {
                 <Bell color="#000" size={20} />
               </TouchableOpacity>
             </View>
+          </View>
+
+          {/* Cards Header */}
+          <View style={[styles.walletHeader, { paddingHorizontal: 24 }]}>
+             <Text style={styles.walletTitle}>Cards ({vloos.length})</Text>
           </View>
 
           {/* Cards Stack (Always visible now, even if empty, to show placeholder) */}
@@ -567,7 +621,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
           </View>
 
           {/* Wallet Address Section - Scrollable */}
-          <View style={{ flex: 1, marginTop: 24 }}>
+          <View style={{ flex: 1, marginTop: 4 }}>
             {currentWalletAddresses.length > 0 && (
               <View style={[styles.walletHeader, { paddingHorizontal: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
                 <Text style={styles.walletTitle}>Linked Wallets</Text>
@@ -1065,10 +1119,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
               Account
             </Text>
             
-            <TouchableOpacity style={styles.profileMenuItem} onPress={() => {
-              setShowProfileMenu(false);
-              // Navigate to edit profile
-            }}>
+            <TouchableOpacity style={styles.profileMenuItem} onPress={handleOpenEditProfile}>
               <User size={24} color="#000" />
               <Text style={styles.profileMenuText}>Edit Profile</Text>
             </TouchableOpacity>
@@ -1084,6 +1135,67 @@ export default function GiverDashboardScreen({ navigation }: any) {
             </TouchableOpacity>
           </ScrollView>
         </View>
+      </Modal>
+
+      {/* Edit Profile Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editProfileModalVisible}
+        onRequestClose={() => setEditProfileModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={() => setEditProfileModalVisible(false)}>
+            <View style={styles.modalOverlay} />
+          </TouchableWithoutFeedback>
+          <View style={[styles.modalContent, { height: '50%' }]}>
+            <View style={styles.modalHeader} {...profileEditPanResponder.panHandlers}>
+              <View style={styles.modalIndicator} />
+            </View>
+            <ScrollView contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+              <Text style={[styles.headline, { textAlign: 'left', fontSize: 24, marginBottom: 24 }]}>
+                Edit Profile
+              </Text>
+              
+              <View style={styles.formSection}>
+                <Text style={styles.inputLabel}>FULL NAME</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your full name"
+                  placeholderTextColor="#666"
+                  value={profileName}
+                  onChangeText={setProfileName}
+                />
+                
+                <Text style={styles.inputLabel}>EMAIL</Text>
+                <View style={[styles.input, { backgroundColor: '#f5f5f5', borderColor: '#eee' }]}>
+                  <Text style={{ color: '#888', fontFamily: FONTS.bodyRegular }}>
+                    {user?.email}
+                  </Text>
+                </View>
+
+                <View style={{ marginTop: 20 }}>
+                  <Button 
+                    title={profileLoading ? "Saving..." : "Save Changes"}
+                    onPress={handleSaveProfile} 
+                    variant="primary" 
+                    disabled={profileLoading}
+                    style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
+                  />
+                  <TouchableOpacity 
+                    style={{ marginTop: 16, alignItems: 'center' }}
+                    onPress={() => setEditProfileModalVisible(false)}
+                  >
+                    <Text style={{ color: '#666', fontFamily: FONTS.bodyRegular }}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Floating Bottom Navigation */}
