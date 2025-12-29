@@ -498,12 +498,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
         </Svg>
       </View>
 
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000" />}
-        showsVerticalScrollIndicator={false}
-      >
-        <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.userInfo}>
@@ -545,50 +540,56 @@ export default function GiverDashboardScreen({ navigation }: any) {
             />
           </View>
 
-          {/* Wallet Address Section */}
-          {currentWalletAddresses.length > 0 && (
-            <View style={styles.walletSection}>
-              <View style={styles.walletHeader}>
+          {/* Wallet Address Section - Scrollable */}
+          <View style={{ flex: 1, marginTop: 24 }}>
+            {currentWalletAddresses.length > 0 && (
+              <View style={[styles.walletHeader, { paddingHorizontal: 24 }]}>
                 <Text style={styles.walletTitle}>Linked Wallets</Text>
               </View>
-              
-              {currentWalletAddresses.map((wallet: any, index: number) => (
-                <View key={index} style={styles.walletRow}>
-                  <View style={styles.walletIconContainer}>
-                    {/* Icon based on type */}
-                    {wallet.type === 'Bitcoin' ? (
-                      <BitcoinIcon width={24} height={24} />
-                    ) : wallet.type === 'Ethereum' ? (
-                      <EthIcon width={24} height={24} />
-                    ) : wallet.type === 'Solana' ? (
-                      <SolanaIcon width={24} height={24} />
-                    ) : wallet.type === 'Polygon' ? (
-                      <PolygonIcon width={24} height={24} />
-                    ) : wallet.type === 'BNB Chain' ? (
-                      <BnbIcon width={24} height={24} />
-                    ) : (
-                      <Text style={{ fontSize: 20 }}>?</Text>
-                    )}
+            )}
+
+            <ScrollView 
+              contentContainerStyle={{ paddingBottom: 100 }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000" />}
+            >
+              {currentWalletAddresses.length > 0 && currentWalletAddresses.map((wallet: any, index: number) => (
+                  <View key={index} style={styles.walletRow}>
+                    <View style={styles.walletIconContainer}>
+                      {/* Icon based on type */}
+                      {wallet.type === 'Bitcoin' ? (
+                        <BitcoinIcon width={24} height={24} />
+                      ) : wallet.type === 'Ethereum' ? (
+                        <EthIcon width={24} height={24} />
+                      ) : wallet.type === 'Solana' ? (
+                        <SolanaIcon width={24} height={24} />
+                      ) : wallet.type === 'Polygon' ? (
+                        <PolygonIcon width={24} height={24} />
+                      ) : wallet.type === 'BNB Chain' ? (
+                        <BnbIcon width={24} height={24} />
+                      ) : (
+                        <Text style={{ fontSize: 20 }}>?</Text>
+                      )}
+                    </View>
+                    <View style={styles.walletInfo}>
+                      <Text style={styles.walletTypeLabel}>{wallet.type}</Text>
+                      <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">
+                        {wallet.address}
+                      </Text>
+                    </View>
+                    <TouchableOpacity 
+                      style={styles.copyButton}
+                      onPress={() => {
+                        // Clipboard.setString(wallet.address);
+                        Alert.alert('Copied', `${wallet.type} address copied to clipboard`);
+                      }}
+                    >
+                      <Copy size={18} color={COLORS.primary} />
+                    </TouchableOpacity>
                   </View>
-                  <View style={styles.walletInfo}>
-                    <Text style={styles.walletTypeLabel}>{wallet.type}</Text>
-                    <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">
-                      {wallet.address}
-                    </Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={styles.copyButton}
-                    onPress={() => {
-                      // Clipboard.setString(wallet.address);
-                      Alert.alert('Copied', `${wallet.type} address copied to clipboard`);
-                    }}
-                  >
-                    <Copy size={18} color={COLORS.primary} />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
+                ))}
+            </ScrollView>
+          </View>
           
           {/* Action Buttons (Removed) */}
           {/* 
@@ -613,7 +614,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
           */}
 
         </SafeAreaView>
-      </ScrollView>
 
       {/* Create Vloo Modal */}
       <Modal
@@ -1380,8 +1380,6 @@ const styles = StyleSheet.create({
   modalContent: {
     height: '80%',
     backgroundColor: '#fff',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
     marginTop: 'auto',
     borderWidth: 1,
     borderColor: '#eee',

@@ -11,10 +11,10 @@ export default function GiverSuccessScreen({ route, navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.content}>
         <View style={styles.iconContainer}>
-          <CheckCircle color={COLORS.accent} size={80} />
+          <CheckCircle color={COLORS.primary} size={80} />
         </View>
 
         <Text style={styles.title}>VLOO Created!</Text>
@@ -40,7 +40,7 @@ export default function GiverSuccessScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
   },
   content: { 
     flex: 1, 
@@ -50,49 +50,54 @@ const styles = StyleSheet.create({
   },
   iconContainer: { 
     marginBottom: 32,
-    shadowColor: COLORS.accent,
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 10,
   },
   title: { 
     fontFamily: FONTS.displayBold, 
     fontSize: 32, 
-    color: '#fff', 
+    color: '#000', 
     marginBottom: 12,
     textAlign: 'center',
   },
   subtitle: { 
     fontFamily: FONTS.bodyRegular, 
     fontSize: 16, 
-    color: '#999', 
+    color: '#666', 
     textAlign: 'center', 
     marginBottom: 32,
     maxWidth: 280,
   },
   idContainer: {
-    backgroundColor: '#111',
+    backgroundColor: '#fff',
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#eee',
     alignItems: 'center',
     marginBottom: 24,
     width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   idLabel: {
     fontFamily: FONTS.bodyBold,
     fontSize: 12,
-    color: '#666',
+    color: '#888',
     marginBottom: 4,
     letterSpacing: 1,
   },
   idValue: {
     fontFamily: FONTS.displayBold,
     fontSize: 18,
-    color: '#fff',
+    color: '#000',
     letterSpacing: 1,
   },
   walletsContainer: {
@@ -103,11 +108,11 @@ const styles = StyleSheet.create({
   walletRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111',
+    backgroundColor: '#fff',
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: '#eee',
   },
   walletType: {
     fontFamily: FONTS.bodyBold,
@@ -118,7 +123,7 @@ const styles = StyleSheet.create({
   walletAddress: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 14,
-    color: '#ccc',
+    color: '#000',
     flex: 1,
   },
   doneButton: { 
