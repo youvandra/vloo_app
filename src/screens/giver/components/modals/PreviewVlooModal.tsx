@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, Image, StyleSheet, Dimensions } from 'react-native';
 import { X } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../../../../lib/theme';
+import { COLORS, FONTS } from '../../../../lib/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -65,7 +65,7 @@ export const PreviewVlooModal = ({
           <View style={[styles.previewCard, { backgroundColor: cardColor }]}>
             <View style={styles.cardTop}>
               <Image 
-                source={require('../../../../../assets/logo-min.png')} 
+                source={require('../../../../assets/logo-min.png')} 
                 style={styles.cardLogo} 
                 resizeMode="contain"
               />

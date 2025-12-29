@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ActivityIndicator, Image } from 'react-native';
 import { X, LogOut, Camera } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../../../../lib/theme';
+import { COLORS, FONTS } from '../../../../lib/theme';
 
 interface EditProfileModalProps {
   visible: boolean;

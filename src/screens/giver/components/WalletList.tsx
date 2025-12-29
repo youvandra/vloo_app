@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator, StyleSheet } from 'react-native';
-import { COLORS, FONTS } from '../../../../lib/theme';
-import BitcoinIcon from '../../../../assets/icons/chains/bitcoin.svg';
-import EthIcon from '../../../../assets/icons/chains/eth.svg';
-import SolanaIcon from '../../../../assets/icons/chains/solana.svg';
-import PolygonIcon from '../../../../assets/icons/chains/polygon.svg';
-import BnbIcon from '../../../../assets/icons/chains/bnb.svg';
-import LiskIcon from '../../../../assets/icons/chains/lisk.svg';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator, StyleSheet, Animated } from 'react-native';
+import { COLORS, FONTS } from '../../../lib/theme';
+import BitcoinIcon from '../../../assets/icons/chains/bitcoin.svg';
+import EthIcon from '../../../assets/icons/chains/eth.svg';
+import SolanaIcon from '../../../assets/icons/chains/solana.svg';
+import PolygonIcon from '../../../assets/icons/chains/polygon.svg';
+import BnbIcon from '../../../assets/icons/chains/bnb.svg';
+import LiskIcon from '../../../assets/icons/chains/lisk.svg';
 
 interface WalletListProps {
   wallets: any[];
@@ -18,6 +18,42 @@ interface WalletListProps {
   isTestnet: boolean;
   setIsTestnet: (val: boolean) => void;
 }
+
+const Skeleton = ({ width, height, style }: { width: number | string, height: number, style?: any }) => {
+  const opacity = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.7,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <Animated.View
+      style={[
+        {
+          width: width,
+          height: height,
+          backgroundColor: '#E1E9EE',
+          borderRadius: 4,
+          opacity: opacity,
+        },
+        style,
+      ]}
+    />
+  );
+};
 
 export const WalletList = ({ 
   wallets, 
@@ -53,47 +89,52 @@ export const WalletList = ({
         </View>
       )}
 
-      <ScrollView 
-        contentContainerStyle={{ paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000" />}
-      >
+      <View style={{ flex: 1 }}>
         {loading ? (
           <View style={{ padding: 24, alignItems: 'center' }}>
             <ActivityIndicator size="small" color={COLORS.primary} />
           </View>
         ) : (
-          wallets.length > 0 && wallets.map((wallet: any, index: number) => (
-            <TouchableOpacity key={index} style={styles.walletRow} onPress={() => onWalletPress(wallet)}>
-              <View style={styles.walletIconContainer}>
-                {/* Icon based on type */}
-                {wallet.type === 'Bitcoin' ? (
-                  <BitcoinIcon width={24} height={24} />
-                ) : wallet.type === 'Ethereum' || wallet.type === 'Sepolia' ? (
-                  <EthIcon width={24} height={24} />
-                ) : wallet.type === 'Lisk' || wallet.type === 'Lisk Sepolia' ? (
-                  <LiskIcon width={24} height={24} />
-                ) : wallet.type === 'Solana' ? (
-                  <SolanaIcon width={24} height={24} />
-                ) : wallet.type === 'Polygon' ? (
-                  <PolygonIcon width={24} height={24} />
-                ) : wallet.type === 'BNB Chain' ? (
-                  <BnbIcon width={24} height={24} />
+          wallets.length > 0 && wallets.map((wallet: any, index: number) => {
+            const balance = balances[`${wallet.type}-${wallet.address}`];
+            const isLoadingBalance = balance === undefined;
+
+            return (
+              <TouchableOpacity key={index} style={styles.walletRow} onPress={() => onWalletPress(wallet)}>
+                <View style={styles.walletIconContainer}>
+                  {/* Icon based on type */}
+                  {wallet.type === 'Bitcoin' ? (
+                    <BitcoinIcon width={24} height={24} />
+                  ) : wallet.type === 'Ethereum' || wallet.type === 'Sepolia' ? (
+                    <EthIcon width={24} height={24} />
+                  ) : wallet.type === 'Lisk' || wallet.type === 'Lisk Sepolia' ? (
+                    <LiskIcon width={24} height={24} />
+                  ) : wallet.type === 'Solana' ? (
+                    <SolanaIcon width={24} height={24} />
+                  ) : wallet.type === 'Polygon' ? (
+                    <PolygonIcon width={24} height={24} />
+                  ) : wallet.type === 'BNB Chain' ? (
+                    <BnbIcon width={24} height={24} />
+                  ) : (
+                    <Text style={{ fontSize: 20 }}>?</Text>
+                  )}
+                </View>
+                <View style={styles.walletInfo}>
+                  <Text style={styles.walletTypeLabel}>{wallet.type}</Text>
+                  <Text style={styles.walletAddress}>
+                    {formatAddress(wallet.address)}
+                  </Text>
+                </View>
+                {isLoadingBalance ? (
+                   <Skeleton width={80} height={20} />
                 ) : (
-                  <Text style={{ fontSize: 20 }}>?</Text>
+                   <Text style={styles.balanceText}>{balance}</Text>
                 )}
-              </View>
-              <View style={styles.walletInfo}>
-                <Text style={styles.walletTypeLabel}>{wallet.type}</Text>
-                <Text style={styles.walletAddress}>
-                  {formatAddress(wallet.address)}
-                </Text>
-              </View>
-              <Text style={styles.balanceText}>{balances[`${wallet.type}-${wallet.address}`] || '0.00'}</Text>
-            </TouchableOpacity>
-          ))
+              </TouchableOpacity>
+            );
+          })
         )}
-      </ScrollView>
+      </View>
     </View>
   );
 };

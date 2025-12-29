@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList, Dimensions } from 'react-native';
 import { Plus, Eye, Edit2 } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../../../lib/theme';
+import { COLORS, FONTS } from '../../../lib/theme';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.82;
@@ -36,7 +36,7 @@ export const CardStack = ({
       <View style={[styles.mainCard, { backgroundColor: cardColor }]}>
         <View style={styles.cardTop}>
           <Image 
-            source={require('../../../../assets/logo-min.png')} 
+            source={require('../../../assets/logo-min.png')} 
             style={styles.cardLogo} 
             resizeMode="contain"
           />

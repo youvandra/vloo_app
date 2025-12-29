@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { Bell } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../../../lib/theme';
+import { COLORS, FONTS } from '../../../lib/theme';
 
 interface DashboardHeaderProps {
   user: any;

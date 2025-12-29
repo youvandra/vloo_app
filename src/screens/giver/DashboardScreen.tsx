@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, BackHandler, SafeAreaView, Platform, Alert, Dimensions, StatusBar, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import * as Clipboard from 'expo-clipboard';
 import { fetchBalance } from '../../lib/blockcypher';
 import { supabase } from '../../lib/supabase';
 import { COLORS } from '../../lib/theme';
@@ -312,6 +311,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
   const onRefresh = () => {
     setRefreshing(true);
+    setLastBalanceRefresh(Date.now());
     fetchVloos();
   };
 

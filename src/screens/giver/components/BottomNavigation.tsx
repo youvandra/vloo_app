@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Home, BarChart2, CreditCard, Grid } from 'lucide-react-native';
-import { COLORS } from '../../../../lib/theme';
+import { COLORS } from '../../../lib/theme';
 
 const { width } = Dimensions.get('window');
 

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
 import { X, Calendar, Trash2 } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../../../../lib/theme';
+import { COLORS, FONTS } from '../../../../lib/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface EditVlooModalProps {
