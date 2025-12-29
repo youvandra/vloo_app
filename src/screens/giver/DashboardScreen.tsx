@@ -852,17 +852,17 @@ export default function GiverDashboardScreen({ navigation }: any) {
             </View>
 
             <View style={{ 
-              backgroundColor: '#111', 
+              backgroundColor: '#fff', 
               padding: 24, 
               borderRadius: 20, 
               borderWidth: 1, 
-              borderColor: '#333',
+              borderColor: '#000',
               minHeight: 200
             }}>
               <Text style={{ 
                 fontFamily: FONTS.displaySemiBold, 
                 fontSize: 20, 
-                color: '#fff', 
+                color: '#000', 
                 lineHeight: 32,
                 fontStyle: 'italic',
                 textAlign: 'center'
@@ -875,8 +875,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
               <Button 
                 title="Close Preview" 
                 onPress={() => setPreviewModalVisible(false)} 
-                variant="outline"
-                style={styles.actionButton}
+                variant="primary"
+                style={[styles.actionButton, { backgroundColor: '#000' }]}
               />
             </View>
           </ScrollView>
@@ -1258,8 +1258,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cardLogo: {
-    width: 30,
-    height: 30,
+    width: 50,
+    height: 50,
+    marginTop: -10,
   },
   nfcIdContainer: {
     alignItems: 'flex-end',
