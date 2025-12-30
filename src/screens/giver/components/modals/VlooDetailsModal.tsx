@@ -109,7 +109,7 @@ export const VlooDetailsModal = ({
           </View>
         </TouchableWithoutFeedback>
 
-        <View style={[styles.modalContent, { height: '60%' }]}>
+        <View style={[styles.modalContent, { height: '80%' }]}>
           <View style={styles.modalHeader} {...panResponder.panHandlers}>
             <View style={styles.modalIndicator} />
           </View>
