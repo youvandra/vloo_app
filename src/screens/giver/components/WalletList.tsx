@@ -77,15 +77,40 @@ export const WalletList = ({
       {wallets.length > 0 && (
         <View style={[styles.walletHeader, { paddingHorizontal: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
           <Text style={styles.walletTitle}>Linked Wallets</Text>
-          <TouchableOpacity 
-            onPress={() => setIsTestnet(!isTestnet)}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0f0f0', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}
-          >
-              <View style={{ width: 24, height: 14, borderRadius: 7, backgroundColor: isTestnet ? COLORS.primary : '#ccc', justifyContent: 'center', alignItems: isTestnet ? 'flex-end' : 'flex-start', paddingHorizontal: 2 }}>
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#fff' }} />
-              </View>
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#666' }}>Testnet</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', backgroundColor: '#f0f0f0', borderRadius: 20, padding: 4 }}>
+            <TouchableOpacity 
+              onPress={() => setIsTestnet(false)}
+              style={{ 
+                paddingHorizontal: 12, 
+                paddingVertical: 6, 
+                borderRadius: 16, 
+                backgroundColor: !isTestnet ? '#fff' : 'transparent',
+                shadowColor: !isTestnet ? '#000' : 'transparent',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: !isTestnet ? 0.1 : 0,
+                shadowRadius: 2,
+                elevation: !isTestnet ? 2 : 0
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: !isTestnet ? '#000' : '#666' }}>Mainnet</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => setIsTestnet(true)}
+              style={{ 
+                paddingHorizontal: 12, 
+                paddingVertical: 6, 
+                borderRadius: 16, 
+                backgroundColor: isTestnet ? '#fff' : 'transparent',
+                shadowColor: isTestnet ? '#000' : 'transparent',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: isTestnet ? 0.1 : 0,
+                shadowRadius: 2,
+                elevation: isTestnet ? 2 : 0
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: isTestnet ? '#000' : '#666' }}>Testnet</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
