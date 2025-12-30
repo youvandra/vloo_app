@@ -19,6 +19,7 @@ interface BindVlooModalProps {
   wallets: any[];
   balances: Record<string, string>;
   isCreating: boolean;
+  isEditMode?: boolean;
   newVlooName: string;
   newVlooUnlockDate: Date | null;
 }
@@ -33,14 +34,19 @@ export const BindVlooModal = ({
   wallets,
   balances,
   isCreating,
+  isEditMode = false,
   newVlooName,
   newVlooUnlockDate
 }: BindVlooModalProps) => {
 
   const toggleWallet = (wallet: any) => {
-    const isSelected = selectedBindWallets.some((w: any) => w.address === wallet.address && w.type === wallet.type);
-    if (isSelected) {
-      setSelectedBindWallets(selectedBindWallets.filter((w: any) => !(w.address === wallet.address && w.type === wallet.type)));
+    const exists = selectedBindWallets.find((w: any) => 
+      isEditMode ? w.type === wallet.type : (w.address === wallet.address && w.type === wallet.type)
+    );
+    if (exists) {
+      setSelectedBindWallets(selectedBindWallets.filter((w: any) => 
+        isEditMode ? w.type !== wallet.type : (w.address !== wallet.address || w.type !== wallet.type)
+      ));
     } else {
       setSelectedBindWallets([...selectedBindWallets, wallet]);
     }
@@ -94,18 +100,21 @@ export const BindVlooModal = ({
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.stepIndicator}>Step 2 of 3</Text>
+              {!isEditMode && <Text style={styles.stepIndicator}>Step 2 of 3</Text>}
 
               <Text style={styles.summaryText}>
-                Creating <Text style={{ fontFamily: FONTS.bodyBold }}>{newVlooName}</Text>
-                {newVlooUnlockDate && ` • Unlocks ${newVlooUnlockDate.toLocaleDateString()}`}
+                {isEditMode ? 'Managing assets for ' : 'Creating '}
+                <Text style={{ fontFamily: FONTS.bodyBold }}>{newVlooName}</Text>
+                {!isEditMode && newVlooUnlockDate && ` • Unlocks ${newVlooUnlockDate.toLocaleDateString()}`}
               </Text>
 
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionLabel}>Select Wallet to Bind</Text>
                 <View style={styles.walletListContainer}>
                   {wallets.map((wallet: any, index: number) => {
-                    const isSelected = selectedBindWallets.some((w: any) => w.address === wallet.address && w.type === wallet.type);
+                    const isSelected = selectedBindWallets.some((w: any) => 
+                      isEditMode ? w.type === wallet.type : (w.address === wallet.address && w.type === wallet.type)
+                    );
                     return (
                       <TouchableOpacity
                         key={index}
@@ -156,7 +165,7 @@ export const BindVlooModal = ({
                 {isCreating ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.primaryButtonText}>Next</Text>
+                  <Text style={styles.primaryButtonText}>{isEditMode ? 'Save Assets' : 'Next'}</Text>
                 )}
               </TouchableOpacity>
             </ScrollView>

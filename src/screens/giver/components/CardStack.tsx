@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList, Dimensions } from 'react-native';
-import { Plus, MessageSquare, Edit2 } from 'lucide-react-native';
+import { Plus, MessageSquare } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../lib/theme';
 
 const { width } = Dimensions.get('window');
@@ -14,6 +14,7 @@ interface CardStackProps {
   onAddPress: () => void;
   onEditPress: (vloo: any) => void;
   onPreviewPress: (vloo: any) => void;
+  onCardPress: (vloo: any) => void;
 }
 
 export const CardStack = ({ 
@@ -22,7 +23,8 @@ export const CardStack = ({
   onCardChange, 
   onAddPress,
   onEditPress,
-  onPreviewPress
+  onPreviewPress,
+  onCardPress
 }: CardStackProps) => {
   
   const displayData = useMemo(() => {
@@ -33,7 +35,11 @@ export const CardStack = ({
     const cardColor = item.verified_cards?.[0]?.color === 'blue' ? COLORS.primary : '#000';
     
     return (
-      <View style={[styles.mainCard, { backgroundColor: cardColor }]}>
+      <TouchableOpacity 
+        style={[styles.mainCard, { backgroundColor: cardColor }]}
+        activeOpacity={0.9}
+        onPress={() => onCardPress(item)}
+      >
         <View style={styles.cardTop}>
           <Image 
             source={require('../../../assets/logo-min.png')} 
@@ -67,15 +73,9 @@ export const CardStack = ({
             >
                <MessageSquare size={20} color="#fff" />
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.cardSettingsButton, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
-              onPress={() => onEditPress(item)}
-            >
-               <Edit2 size={20} color="#fff" />
-            </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 

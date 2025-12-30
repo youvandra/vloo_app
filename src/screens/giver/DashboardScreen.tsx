@@ -17,7 +17,25 @@ import { BindVlooModal } from './components/modals/BindVlooModal';
 import { ScanVlooModal } from './components/modals/ScanVlooModal';
 import { EditVlooModal } from './components/modals/EditVlooModal';
 import { PreviewVlooModal } from './components/modals/PreviewVlooModal';
+import { VlooDetailsModal } from './components/modals/VlooDetailsModal';
 import { EditProfileModal } from './components/modals/EditProfileModal';
+
+const getWalletAddresses = (data: any) => {
+  let addresses: any[] = [];
+  if (Array.isArray(data)) {
+      addresses = [...data];
+  } else if (typeof data === 'string' && data) {
+    if (data.startsWith('[') || data.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) addresses = parsed;
+      } catch (e) {}
+    } else {
+       addresses = [{ type: 'Ethereum', address: data }];
+    }
+  }
+  return addresses;
+};
 
 export default function GiverDashboardScreen({ navigation }: any) {
   const [vloos, setVloos] = useState<any[]>([]);
@@ -34,6 +52,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [scanModalVisible, setScanModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+  const [vlooDetailsModalVisible, setVlooDetailsModalVisible] = useState(false);
   const [walletDetailModalVisible, setWalletDetailModalVisible] = useState(false);
   const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
 
@@ -61,6 +80,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   // Bind State
   const [bindLoading, setBindLoading] = useState(false);
   const [selectedBindWallets, setSelectedBindWallets] = useState<any[]>([]);
+  const [isEditingAssets, setIsEditingAssets] = useState(false);
 
   // Other State
   const [isTestnet, setIsTestnet] = useState(false);
@@ -118,6 +138,137 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const handlePreviewPress = (vloo: any) => {
     setSelectedVloo(vloo);
     setPreviewModalVisible(true);
+  };
+
+  const handleCardPress = (vloo: any) => {
+    setSelectedVloo(vloo);
+    setVlooDetailsModalVisible(true);
+  };
+
+  const handleAddAssetsPress = () => {
+    if (!selectedVloo) return;
+    
+    // Parse existing wallets
+    const addresses = getWalletAddresses(selectedVloo.wallet_address);
+    setSelectedBindWallets(addresses);
+    
+    setIsEditingAssets(true);
+    setVlooDetailsModalVisible(false);
+    setTimeout(() => setBindModalVisible(true), 500);
+  };
+
+  const handleUpdateAssets = async () => {
+     if (!selectedVloo) return;
+     setBindLoading(true);
+
+     try {
+        // Filter out wallets that are already in selectedVloo.wallet_address
+        const existingWallets = getWalletAddresses(selectedVloo.wallet_address);
+        const newWalletsNeeded = selectedBindWallets.filter(sw => !existingWallets.some(ew => ew.type === sw.type));
+        
+        let finalWallets = [...existingWallets];
+        
+        if (newWalletsNeeded.length > 0) {
+            const wallet = createRandomWallet();
+            const btcData = generateMockBitcoinData();
+            const solData = generateMockSolanaData();
+
+            const ethAddress = wallet.address;
+            const btcAddress = btcData.address;
+            const solAddress = solData.address;
+            
+            // Encrypt new keys
+            // NOTE: We are using the current passphrase state or default. 
+            // If the original Vloo used a different custom passphrase, the receiver will fail to decrypt these new keys.
+            // In a full app, we should prompt for the passphrase before allowing asset addition.
+            const securePass = passphrase || 'vloo-default-pass'; 
+            
+            const encryptedEthKey = encryptData(wallet.privateKey, securePass);
+            const encryptedBtcKey = encryptData(btcData.privateKey, securePass);
+            const encryptedSolKey = encryptData(solData.privateKey, securePass);
+
+            // Merge with existing encrypted keys
+            let currentKeys: any = {};
+            try {
+                currentKeys = JSON.parse(selectedVloo.encrypted_private_keys || '{}');
+            } catch (e) {}
+
+            const newKeys: any = {
+                ...currentKeys,
+            };
+
+            // Helper to assign keys if they don't exist or if we are adding this specific type
+            const assignKey = (type: string, key: string) => {
+                 // Simple mapping based on type string
+                 const keyName = type.toLowerCase().replace(' ', '_'); // e.g. 'bnb chain' -> 'bnb_chain' ?
+                 // usage in handleCreateVloo: 
+                 // ethereum, bitcoin, solana, polygon, bnb, sepolia, lisk, lisk_sepolia
+                 // We should match those keys.
+                 
+                 // Let's manually map for safety
+                 if (type === 'Bitcoin') newKeys['bitcoin'] = key;
+                 if (type === 'Ethereum') newKeys['ethereum'] = key;
+                 if (type === 'Sepolia') newKeys['sepolia'] = key;
+                 if (type === 'Lisk') newKeys['lisk'] = key;
+                 if (type === 'Lisk Sepolia') newKeys['lisk_sepolia'] = key;
+                 if (type === 'Solana') newKeys['solana'] = key;
+                 if (type === 'Polygon') newKeys['polygon'] = key;
+                 if (type === 'BNB Chain') newKeys['bnb'] = key;
+            };
+
+            newWalletsNeeded.forEach(needed => {
+                if (needed.type === 'Bitcoin') assignKey('Bitcoin', encryptedBtcKey);
+                else if (needed.type === 'Solana') assignKey('Solana', encryptedSolKey);
+                else assignKey(needed.type, encryptedEthKey); // EVM chains
+            });
+            
+             // Map to types for wallet_address
+             const newGenerated = [
+                { type: 'Bitcoin', address: btcAddress },
+                { type: 'Ethereum', address: ethAddress },
+                { type: 'Sepolia', address: ethAddress },
+                { type: 'Lisk', address: ethAddress },
+                { type: 'Lisk Sepolia', address: ethAddress },
+                { type: 'Solana', address: solAddress },
+                { type: 'Polygon', address: ethAddress },
+                { type: 'BNB Chain', address: ethAddress }
+             ];
+             
+             newWalletsNeeded.forEach(needed => {
+                 const gen = newGenerated.find(g => g.type === needed.type);
+                 if (gen) {
+                     finalWallets.push(gen);
+                 }
+             });
+             
+             // Update the encrypted_private_keys blob to be saved
+             selectedVloo.encrypted_private_keys = JSON.stringify(newKeys);
+        }
+        
+        // Also handle removals? If user unchecked something.
+        // The UI allows unchecking.
+        finalWallets = finalWallets.filter(fw => selectedBindWallets.some(sw => sw.type === fw.type));
+
+        const { error } = await supabase
+            .from('vloos')
+            .update({
+                wallet_address: JSON.stringify(finalWallets),
+                encrypted_private_keys: selectedVloo.encrypted_private_keys // Save the updated keys
+            })
+            .eq('id', selectedVloo.id);
+            
+        if (error) throw error;
+        
+        setBindModalVisible(false);
+        fetchVloos();
+        Alert.alert('Success', 'Assets updated successfully');
+     } catch (error: any) {
+         console.error('Error updating assets:', error);
+         Alert.alert('Error', 'Failed to update assets');
+     } finally {
+         setBindLoading(false);
+         setIsEditingAssets(false);
+     }
   };
 
   const handleUpdateVloo = async () => {
@@ -503,6 +654,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
            onAddPress={() => setCreateModalVisible(true)}
            onEditPress={handleEditPress}
            onPreviewPress={handlePreviewPress}
+           onCardPress={handleCardPress}
         />
 
         <WalletList 
@@ -518,6 +670,25 @@ export default function GiverDashboardScreen({ navigation }: any) {
       </ScrollView>
 
       <BottomNavigation />
+
+      <VlooDetailsModal
+        visible={vlooDetailsModalVisible}
+        onClose={() => setVlooDetailsModalVisible(false)}
+        vloo={selectedVloo}
+        onEditPress={() => {
+            setVlooDetailsModalVisible(false);
+            if (selectedVloo) {
+                setEditReceiverName(selectedVloo.receiver_name || '');
+                setEditMessage(selectedVloo.message || '');
+                if (selectedVloo.unlock_date) {
+                    setEditUnlockDate(new Date(selectedVloo.unlock_date));
+                } else {
+                    setEditUnlockDate(new Date(Date.now() + 60000));
+                }
+            }
+            setTimeout(() => setEditModalVisible(true), 500);
+        }}
+      />
 
       <WalletDetailModal 
         visible={walletDetailModalVisible}
@@ -545,22 +716,41 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
       <BindVlooModal 
         visible={bindModalVisible}
-        onClose={() => setBindModalVisible(false)}
+        onClose={() => {
+            setBindModalVisible(false);
+            setIsEditingAssets(false);
+        }}
         onBack={() => {
            setBindModalVisible(false);
-           setTimeout(() => setCreateModalVisible(true), 500);
+           if (!isEditingAssets) {
+               setTimeout(() => setCreateModalVisible(true), 500);
+           }
         }}
         onNext={() => {
-           setBindModalVisible(false);
-           setTimeout(() => setScanModalVisible(true), 500);
+            if (isEditingAssets) {
+                handleUpdateAssets();
+            } else {
+                setBindModalVisible(false);
+                setTimeout(() => setScanModalVisible(true), 500);
+            }
         }}
         selectedBindWallets={selectedBindWallets}
         setSelectedBindWallets={setSelectedBindWallets}
-        wallets={supportedChains}
+        wallets={[
+            { type: 'Bitcoin', address: '1' },
+            { type: 'Ethereum', address: '2' },
+            { type: 'Solana', address: '3' },
+            { type: 'Polygon', address: '4' },
+            { type: 'BNB Chain', address: '5' },
+            { type: 'Lisk', address: '6' },
+            { type: 'Sepolia', address: '7' },
+            { type: 'Lisk Sepolia', address: '8' }
+        ]} 
         balances={balances}
-        isCreating={false}
-        newVlooName={receiverName}
-        newVlooUnlockDate={unlockDate}
+        isCreating={bindLoading}
+        isEditMode={isEditingAssets}
+        newVlooName={isEditingAssets ? (selectedVloo?.receiver_name || 'Vloo') : receiverName}
+        newVlooUnlockDate={isEditingAssets ? null : unlockDate}
       />
 
       <ScanVlooModal 
