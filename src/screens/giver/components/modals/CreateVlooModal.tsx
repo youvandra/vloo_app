@@ -130,7 +130,7 @@ export const CreateVlooModal = ({
                 <Text style={styles.inputLabel}>Unlock Date</Text>
                 <TouchableOpacity 
                   style={styles.datePickerButton}
-                  onPress={() => setShowDatePicker(true)}
+                  onPress={() => setShowDatePicker(!showDatePicker)}
                 >
                   <Text style={[styles.dateText, !newVlooUnlockDate && { color: '#999' }]}>
                     {newVlooUnlockDate ? newVlooUnlockDate.toLocaleDateString() : 'Set Date'}
@@ -140,18 +140,31 @@ export const CreateVlooModal = ({
               </View>
 
               {showDatePicker && (
-                <DateTimePicker
-                  value={newVlooUnlockDate || new Date()}
-                  mode="date"
-                  display="default"
-                  onChange={(event, selectedDate) => {
-                    setShowDatePicker(Platform.OS === 'ios');
-                    if (selectedDate) {
-                      setNewVlooUnlockDate(selectedDate);
-                    }
-                  }}
-                  minimumDate={new Date()}
-                />
+                <View style={Platform.OS === 'ios' && styles.datePickerContainer}>
+                  <DateTimePicker
+                    value={newVlooUnlockDate || new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event, selectedDate) => {
+                      if (Platform.OS === 'android') {
+                        setShowDatePicker(false);
+                      }
+                      if (selectedDate) {
+                        setNewVlooUnlockDate(selectedDate);
+                      }
+                    }}
+                    minimumDate={new Date()}
+                    textColor="#000"
+                  />
+                  {Platform.OS === 'ios' && (
+                    <TouchableOpacity 
+                      style={styles.datePickerDoneButton}
+                      onPress={() => setShowDatePicker(false)}
+                    >
+                      <Text style={styles.datePickerDoneText}>Done</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               )}
 
               <TouchableOpacity 
@@ -255,6 +268,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: FONTS.bodyRegular,
     color: '#000',
+  },
+  datePickerContainer: {
+    marginBottom: 24,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  datePickerDoneButton: {
+    padding: 12,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    backgroundColor: '#fff',
+  },
+  datePickerDoneText: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 16,
+    color: COLORS.primary,
   },
   primaryButton: {
     backgroundColor: COLORS.primary,
