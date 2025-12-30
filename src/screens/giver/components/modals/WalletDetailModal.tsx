@@ -94,7 +94,7 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
              </Text>
 
              {/* Address Section */}
-             <View style={{ width: '100%', backgroundColor: '#f5f5f5', padding: 16, marginBottom: 24 }}>
+             <View style={{ width: '100%', backgroundColor: '#f5f5f5', padding: 16, marginBottom: 24, borderRadius: 16, borderWidth: 1, borderColor: '#eee' }}>
                 <Text style={{ fontFamily: fontFamilies.bodyBold, fontSize: 12, color: '#666', marginBottom: 8, textTransform: 'uppercase' }}>
                   Wallet Address
                 </Text>
@@ -103,7 +103,7 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
                     {wallet?.address}
                   </Text>
                   <TouchableOpacity 
-                    style={{ padding: 8, backgroundColor: '#fff', shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 }}
+                    style={{ padding: 8, backgroundColor: '#fff', borderRadius: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 }}
                     onPress={() => copyToClipboard(wallet?.address)}
                   >
                     <Copy size={20} color={COLORS.primary} />
@@ -144,6 +144,8 @@ const styles = StyleSheet.create({
   modalContent: {
     height: '80%',
     backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     borderWidth: 1,
     borderColor: '#eee',
     shadowColor: '#000',
