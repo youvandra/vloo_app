@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ScrollView } from 'react-native';
-import { X, Calendar } from 'lucide-react-native';
+import { X, Calendar, HelpCircle } from 'lucide-react-native';
 import { COLORS, FONTS as THEME_FONTS } from '../../../../lib/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -42,6 +42,7 @@ export const CreateVlooModal = ({
   setNewVlooUnlockDate
 }: CreateVlooModalProps) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showPassphraseInfo, setShowPassphraseInfo] = useState(false);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -91,7 +92,7 @@ export const CreateVlooModal = ({
               <Text style={styles.stepIndicator}>Step 1 of 3</Text>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Who is this for?</Text>
+                <Text style={styles.inputLabel}>Who is this for? *</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. Alice's Birthday"
@@ -102,7 +103,7 @@ export const CreateVlooModal = ({
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Message</Text>
+                <Text style={styles.inputLabel}>Message *</Text>
                 <TextInput
                   style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
                   placeholder="Write a heartfelt message..."
@@ -115,10 +116,20 @@ export const CreateVlooModal = ({
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Passphrase (Optional)</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={styles.inputLabel}>Passphrase *</Text>
+                  <TouchableOpacity onPress={() => setShowPassphraseInfo((v) => !v)}>
+                    <HelpCircle size={18} color={COLORS.accent} />
+                  </TouchableOpacity>
+                </View>
+                {showPassphraseInfo && (
+                  <Text style={{ fontFamily: FONTS.bodyRegular, fontSize: 12, color: '#666', marginBottom: 8 }}>
+                    A passphrase secures the Vloo. Share it safely with the receiver.
+                  </Text>
+                )}
                 <TextInput
                   style={styles.input}
-                  placeholder="Secure your Vloo"
+                  placeholder="Enter a secret passphrase"
                   placeholderTextColor="#999"
                   value={passphrase}
                   onChangeText={setPassphrase}
@@ -127,7 +138,7 @@ export const CreateVlooModal = ({
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Unlock Date</Text>
+                <Text style={styles.inputLabel}>Unlock Date *</Text>
                 <TouchableOpacity 
                   style={styles.datePickerButton}
                   onPress={() => setShowDatePicker(!showDatePicker)}
@@ -168,9 +179,12 @@ export const CreateVlooModal = ({
               )}
 
               <TouchableOpacity 
-                style={[styles.primaryButton, !newVlooName && { opacity: 0.5 }]}
+                style={[
+                  styles.primaryButton, 
+                  (!newVlooName || !message || !passphrase || !newVlooUnlockDate) && { opacity: 0.5 }
+                ]}
                 onPress={onNext}
-                disabled={!newVlooName}
+                disabled={!newVlooName || !message || !passphrase || !newVlooUnlockDate}
               >
                 <Text style={styles.primaryButtonText}>Next</Text>
               </TouchableOpacity>
