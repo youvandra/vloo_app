@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, StyleSheet, ScrollView } from 'react-native';
-import { Copy, Plus } from 'lucide-react-native';
+import { Copy, Plus, X } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../../lib/theme';
 import * as Clipboard from 'expo-clipboard';
 import { Alert } from 'react-native';
@@ -55,6 +55,9 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
         <View style={[styles.modalContent, { height: '80%' }]}>
           <View style={styles.modalHeader} {...panResponder.panHandlers}>
             <View style={styles.modalIndicator} />
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+               <X size={24} color="#000" />
+            </TouchableOpacity>
           </View>
           
           <ScrollView contentContainerStyle={{ alignItems: 'center', paddingVertical: 24, paddingHorizontal: 24 }}>
@@ -159,5 +162,11 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: '#ccc',
     borderRadius: 2,
+  },
+  closeButton: {
+    position: 'absolute',
+    right: 24,
+    top: 16,
+    zIndex: 10,
   },
 });
