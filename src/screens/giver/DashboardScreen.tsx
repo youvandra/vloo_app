@@ -20,7 +20,8 @@ import { PreviewVlooModal } from './components/modals/PreviewVlooModal';
 import { VlooDetailsModal } from './components/modals/VlooDetailsModal';
 import { EditProfileModal } from './components/modals/EditProfileModal';
 import { COLORS, FONTS } from '../../lib/theme';
-import { Edit2, LogOut } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Edit2, LogOut, Fingerprint } from 'lucide-react-native';
 
 const getWalletAddresses = (data: any) => {
   let addresses: any[] = [];
@@ -88,6 +89,66 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
   // Other State
   const [isTestnet, setIsTestnet] = useState(false);
+  const [faceIdEnabled, setFaceIdEnabled] = useState(false);
+  const [faceIdSupported, setFaceIdSupported] = useState(false);
+  const [faceIdLoading, setFaceIdLoading] = useState(false);
+  const [faceIdGateRequired, setFaceIdGateRequired] = useState(false);
+  const [faceIdGateVerified, setFaceIdGateVerified] = useState(false);
+  const [faceIdGateChecking, setFaceIdGateChecking] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const saved = await AsyncStorage.getItem('face_id_enabled');
+        setFaceIdEnabled(saved === 'true');
+        let supported = false;
+        try {
+          const LocalAuthentication = require('expo-local-authentication');
+          const hasHardware = await LocalAuthentication.hasHardwareAsync();
+          const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+          supported = hasHardware && isEnrolled;
+        } catch (e) {
+          supported = false;
+        }
+        setFaceIdSupported(supported);
+      } catch (e) {}
+    })();
+  }, []);
+
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    (async () => {
+      try {
+        const saved = await AsyncStorage.getItem('face_id_enabled');
+        const required = saved === 'true';
+        setFaceIdGateRequired(required);
+        if (!required) {
+          setFaceIdGateVerified(true);
+          setFaceIdGateChecking(false);
+          return;
+        }
+        try {
+          const LocalAuthentication = require('expo-local-authentication');
+          const hasHardware = await LocalAuthentication.hasHardwareAsync();
+          const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+          if (hasHardware && isEnrolled) {
+            const result = await LocalAuthentication.authenticateAsync({ promptMessage: 'Masuk dengan Face ID', cancelLabel: 'Batal' });
+            if (active) setFaceIdGateVerified(!!result?.success);
+          } else {
+            if (active) setFaceIdGateVerified(false);
+          }
+        } catch (e) {
+          if (active) setFaceIdGateVerified(false);
+        } finally {
+          if (active) setFaceIdGateChecking(false);
+        }
+      } catch (e) {
+        setFaceIdGateVerified(true);
+        setFaceIdGateChecking(false);
+      }
+    })();
+    return () => { active = false; };
+  }, []));
 
   // --- Handlers ---
 
@@ -103,6 +164,42 @@ export default function GiverDashboardScreen({ navigation }: any) {
   };
   const handleOpenProfileActions = () => {
     setProfileActionsVisible(true);
+  };
+
+  const requestFaceIdGate = async () => {
+    try {
+      const LocalAuthentication = require('expo-local-authentication');
+      const result = await LocalAuthentication.authenticateAsync({ promptMessage: 'Masuk dengan Face ID', cancelLabel: 'Batal' });
+      setFaceIdGateVerified(!!result?.success);
+    } catch (e) {}
+  };
+
+  const handleToggleFaceId = async () => {
+    if (!faceIdSupported) {
+      Alert.alert('Tidak Didukung', 'Perangkat tidak mendukung Face ID atau belum tersetel.');
+      return;
+    }
+    setFaceIdLoading(true);
+    try {
+      if (!faceIdEnabled) {
+        let success = false;
+        try {
+          const LocalAuthentication = require('expo-local-authentication');
+          const result = await LocalAuthentication.authenticateAsync({ promptMessage: 'Aktifkan Face ID', cancelLabel: 'Batal' });
+          success = !!result?.success;
+        } catch (e) {}
+        if (!success) {
+          Alert.alert('Gagal', 'Verifikasi biometrik dibatalkan atau gagal.');
+          return;
+        }
+      }
+      const newVal = !faceIdEnabled;
+      setFaceIdEnabled(newVal);
+      await AsyncStorage.setItem('face_id_enabled', newVal ? 'true' : 'false');
+      Alert.alert('Berhasil', newVal ? 'Face ID diaktifkan.' : 'Face ID dimatikan.');
+    } finally {
+      setFaceIdLoading(false);
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -659,6 +756,28 @@ export default function GiverDashboardScreen({ navigation }: any) {
     return () => { isMounted = false; };
   }, [currentWalletAddresses, lastBalanceRefresh]);
 
+  if (faceIdGateRequired && !faceIdGateVerified) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ alignItems: 'center', paddingHorizontal: 24 }}>
+          <View style={{ width: 88, height: 88, borderRadius: 44, backgroundColor: 'rgba(52,152,219,0.1)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+            <Fingerprint size={40} color={COLORS.primary} />
+          </View>
+          <Text style={{ fontFamily: FONTS.displayBold, fontSize: 22, color: '#000', marginBottom: 8 }}>Verifikasi Face ID</Text>
+          <Text style={{ fontFamily: FONTS.bodyRegular, fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 24 }}>
+            Silakan verifikasi biometrik untuk masuk ke Dashboard.
+          </Text>
+          <TouchableOpacity
+            onPress={requestFaceIdGate}
+            style={{ backgroundColor: COLORS.primary, paddingVertical: 16, paddingHorizontal: 24, borderRadius: 999, minWidth: 200, alignItems: 'center' }}
+          >
+            <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#fff' }}>Verifikasi</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -829,6 +948,17 @@ export default function GiverDashboardScreen({ navigation }: any) {
           </TouchableWithoutFeedback>
           <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, borderWidth: 1, borderColor: '#eee', padding: 24 }}>
             <Text style={{ fontFamily: FONTS.displayBold, fontSize: 20, color: '#000', marginBottom: 16 }}>Profile</Text>
+            <TouchableOpacity
+              style={{ paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+              onPress={() => {
+                setProfileActionsVisible(false);
+                handleToggleFaceId();
+              }}
+            >
+              <Fingerprint size={18} color={faceIdEnabled ? COLORS.primary : '#000'} />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#000' }}>Face ID {faceIdEnabled ? '(On)' : '(Off)'}</Text>
+            </TouchableOpacity>
+            <View style={{ height: 1, backgroundColor: '#f0f0f0' }} />
             <TouchableOpacity
               style={{ paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}
               onPress={() => {
