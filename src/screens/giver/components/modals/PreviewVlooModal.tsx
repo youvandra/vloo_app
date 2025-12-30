@@ -1,20 +1,22 @@
 import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, Image, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, StyleSheet, ScrollView, Image } from 'react-native';
 import { X } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../../lib/theme';
-
-const { width } = Dimensions.get('window');
 
 interface PreviewVlooModalProps {
   visible: boolean;
   onClose: () => void;
   vloo: any;
+  giverName?: string;
+  giverAvatar?: string;
 }
 
 export const PreviewVlooModal = ({
   visible,
   onClose,
-  vloo
+  vloo,
+  giverName,
+  giverAvatar
 }: PreviewVlooModalProps) => {
 
   const panResponder = useRef(
@@ -32,11 +34,6 @@ export const PreviewVlooModal = ({
   ).current;
 
   if (!vloo) return null;
-
-  const cardColor = vloo.verified_cards?.[0]?.color === 'blue' ? COLORS.primary : '#000';
-  const formattedDate = vloo.unlock_date 
-    ? new Date(vloo.unlock_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    : 'Whenever';
 
   return (
     <Modal
@@ -59,59 +56,26 @@ export const PreviewVlooModal = ({
 
           <ScrollView contentContainerStyle={styles.modalBody}>
             <View style={styles.modalTitleRow}>
-              <Text style={styles.modalTitle}>Card Preview</Text>
+              <Text style={styles.modalTitle}>Message Preview</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                 <X size={24} color="#000" />
               </TouchableOpacity>
             </View>
 
-            <View style={[styles.previewCard, { backgroundColor: cardColor }]}>
-              <View style={styles.cardTop}>
-                <Image 
-                  source={require('../../../../assets/logo-min.png')} 
-                  style={styles.cardLogo} 
-                  resizeMode="contain"
-                />
-                <View style={styles.nfcIdContainer}>
-                   <Text style={[styles.nfcIdLabel, { color: '#666' }]}>CARD ID</Text>
-                   <Text style={[styles.nfcIdValue, { color: '#fff' }]}>{vloo.verified_cards?.[0]?.id || '••••'}</Text>
-                </View>
+            <View style={styles.messageSection}>
+              <View style={styles.avatarWrapper}>
+                {giverAvatar ? (
+                  <Image source={{ uri: giverAvatar }} style={styles.avatar} />
+                ) : (
+                  <View style={[styles.avatar, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#666' }}>
+                      {giverName ? giverName.charAt(0).toUpperCase() : 'G'}
+                    </Text>
+                  </View>
+                )}
               </View>
-              
-              <View style={styles.cardCenter}>
-                <Text style={[styles.receiverNameLabel, { color: '#666' }]}>Sending to</Text>
-                <Text style={[styles.receiverName, { color: '#fff' }]} numberOfLines={1} adjustsFontSizeToFit>
-                  {vloo.receiver_name || 'VLOO Gift'}
-                </Text>
-              </View>
-              
-              <View style={styles.cardBottom}>
-                <View>
-                  <Text style={[styles.cardLabel, { color: '#666' }]}>Unlock Date</Text>
-                  <Text style={[styles.cardValue, { color: '#fff' }]}>{formattedDate}</Text>
-                </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={[styles.cardLabel, { color: '#666' }]}>Status</Text>
-                  <Text style={[styles.cardValue, { color: '#fff' }]}>
-                     {vloo.is_claimed ? 'Claimed' : 'Active'}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.detailsContainer}>
-               <View style={styles.detailRow}>
-                 <Text style={styles.detailLabel}>Assets Bound</Text>
-                 <Text style={styles.detailValue}>
-                   {vloo.amount} {vloo.currency}
-                 </Text>
-               </View>
-               <View style={styles.detailRow}>
-                 <Text style={styles.detailLabel}>Chain</Text>
-                 <Text style={styles.detailValue}>
-                   {vloo.chain || 'Ethereum'}
-                 </Text>
-               </View>
+              <Text style={styles.giverName}>{giverName || 'Giver'}</Text>
+              <Text style={styles.messageText}>"{vloo.message || 'No message provided'}"</Text>
             </View>
 
           </ScrollView>
@@ -128,6 +92,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     borderWidth: 1,
     borderColor: '#eee',
     shadowColor: '#000',
@@ -166,99 +132,37 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 4,
   },
-  previewCard: {
+  messageSection: {
+    marginTop: 24,
+    alignItems: 'center',
     width: '100%',
-    height: 220,
-    padding: 24,
-    justifyContent: 'space-between',
+  },
+  avatarWrapper: {
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
-    marginBottom: 32,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  cardTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
   },
-  cardLogo: {
-    width: 50,
-    height: 50,
-    marginTop: -10,
-  },
-  nfcIdContainer: {
-    alignItems: 'flex-end',
-  },
-  nfcIdLabel: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.6)',
-  },
-  nfcIdValue: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-    letterSpacing: 1,
-  },
-  cardCenter: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingVertical: 10,
-  },
-  receiverNameLabel: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  receiverName: {
-    fontFamily: FONTS.displayBold,
-    fontSize: 28,
-    color: '#fff',
-    letterSpacing: 0.5,
-  },
-  cardBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.15)',
-    marginHorizontal: -24,
-    marginBottom: -24,
-    padding: 24,
-  },
-  cardLabel: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.6)',
-    marginBottom: 4,
-  },
-  cardValue: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: 14,
-    color: '#fff',
-  },
-  detailsContainer: {
-    gap: 16,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  detailLabel: {
-    fontFamily: FONTS.bodyRegular,
+  giverName: {
+    fontFamily: FONTS.bodyBold,
     fontSize: 14,
     color: '#666',
+    letterSpacing: 1,
+    marginBottom: 16,
+    textTransform: 'uppercase',
   },
-  detailValue: {
-    fontFamily: FONTS.bodyBold,
-    fontSize: 16,
+  messageText: {
+    fontFamily: FONTS.displaySemiBold,
+    fontSize: 28,
     color: '#000',
+    textAlign: 'center',
+    lineHeight: 36,
   },
 });

@@ -593,6 +593,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
          visible={previewModalVisible}
          onClose={() => setPreviewModalVisible(false)}
          vloo={selectedVloo}
+         giverName={user?.user_metadata?.full_name}
+         giverAvatar={user?.user_metadata?.avatar_url}
       />
 
       <EditProfileModal 

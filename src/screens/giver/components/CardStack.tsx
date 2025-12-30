@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList, Dimensions } from 'react-native';
-import { Plus, Eye, Edit2 } from 'lucide-react-native';
+import { Plus, MessageSquare, Edit2 } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../lib/theme';
 
 const { width } = Dimensions.get('window');
@@ -65,7 +65,7 @@ export const CardStack = ({
               style={[styles.cardSettingsButton, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
               onPress={() => onPreviewPress(item)}
             >
-               <Eye size={20} color="#fff" />
+               <MessageSquare size={20} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.cardSettingsButton, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
