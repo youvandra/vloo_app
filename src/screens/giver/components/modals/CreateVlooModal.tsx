@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   stepIndicator: {
     fontFamily: FONTS.bodySemiBold,
     fontSize: 14,
-    color: COLORS.primary,
+    color: COLORS.accent,
     marginBottom: 32,
   },
   inputGroup: {
