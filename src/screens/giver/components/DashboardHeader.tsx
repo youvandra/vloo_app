@@ -6,21 +6,25 @@ import { COLORS, FONTS } from '../../../lib/theme';
 interface DashboardHeaderProps {
   user: any;
   onProfilePress: () => void;
+  displayName?: string;
+  displayAvatarUrl?: string;
 }
 
-export const DashboardHeader = ({ user, onProfilePress }: DashboardHeaderProps) => {
+export const DashboardHeader = ({ user, onProfilePress, displayName, displayAvatarUrl }: DashboardHeaderProps) => {
   return (
     <View style={styles.header}>
       <View style={styles.userInfo}>
         <TouchableOpacity onPress={onProfilePress}>
           <Image 
-            source={{ uri: user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/150?u=giver' }} 
+            source={{ uri: displayAvatarUrl || user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/150?u=giver' }} 
             style={styles.avatar} 
           />
         </TouchableOpacity>
         <View>
           <Text style={styles.greeting}>
-            Hello <Text style={{ color: COLORS.accent }}>{user?.user_metadata?.full_name?.split(' ')[0] || 'Giver'}</Text>,
+            Hello <Text style={{ color: COLORS.accent }}>
+              {(displayName || user?.user_metadata?.full_name || 'Giver').split(' ')[0]}
+            </Text>,
           </Text>
         </View>
       </View>

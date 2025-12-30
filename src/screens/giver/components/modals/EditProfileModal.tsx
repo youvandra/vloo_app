@@ -98,18 +98,6 @@ export const EditProfileModal = ({
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Avatar URL</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="https://..."
-                  placeholderTextColor="#999"
-                  value={editAvatarUrl}
-                  onChangeText={setEditAvatarUrl}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Email</Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: '#eee', color: '#666' }]}
@@ -130,13 +118,6 @@ export const EditProfileModal = ({
                 )}
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={styles.signOutButton}
-                onPress={onSignOut}
-              >
-                 <LogOut size={20} color="#FF3B30" />
-                 <Text style={styles.signOutButtonText}>Sign Out</Text>
-              </TouchableOpacity>
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -152,6 +133,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#fff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     borderWidth: 1,
     borderColor: '#eee',
     shadowColor: '#000',
@@ -207,12 +190,14 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyRegular,
     color: '#000',
     backgroundColor: '#f9f9f9',
+    borderRadius: 16,
   },
   primaryButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 18,
     alignItems: 'center',
     marginTop: 8,
+    borderRadius: 999,
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -223,20 +208,5 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyBold,
     fontSize: 16,
     color: '#fff',
-  },
-  signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 24,
-    padding: 16,
-    gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  signOutButtonText: {
-    fontFamily: FONTS.bodyBold,
-    fontSize: 16,
-    color: '#FF3B30',
   },
 });

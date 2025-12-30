@@ -19,6 +19,7 @@ interface WalletDetailModalProps {
 }
 
 export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletDetailModalProps) => {
+  const fontFamilies: any = FONTS || {};
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -83,22 +84,22 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
              </View>
 
              {/* Chain Name */}
-             <Text style={{ fontFamily: FONTS.displayBold, fontSize: 24, color: '#000', marginBottom: 8 }}>
+             <Text style={{ fontFamily: fontFamilies.displayBold, fontSize: 24, color: '#000', marginBottom: 8 }}>
                {wallet?.type}
              </Text>
 
              {/* Balance */}
-             <Text style={{ fontFamily: FONTS.displayBold, fontSize: 36, color: COLORS.primary, marginBottom: 32, textAlign: 'center' }}>
+             <Text style={{ fontFamily: fontFamilies.displayBold, fontSize: 36, color: COLORS.primary, marginBottom: 32, textAlign: 'center' }}>
                 {balance || '0.00'}
              </Text>
 
              {/* Address Section */}
              <View style={{ width: '100%', backgroundColor: '#f5f5f5', padding: 16, marginBottom: 24 }}>
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#666', marginBottom: 8, textTransform: 'uppercase' }}>
+                <Text style={{ fontFamily: fontFamilies.bodyBold, fontSize: 12, color: '#666', marginBottom: 8, textTransform: 'uppercase' }}>
                   Wallet Address
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={{ fontFamily: FONTS.bodyRegular, fontSize: 14, color: '#000', flex: 1, marginRight: 12 }}>
+                  <Text style={{ fontFamily: fontFamilies.bodyRegular, fontSize: 14, color: '#000', flex: 1, marginRight: 12 }}>
                     {wallet?.address}
                   </Text>
                   <TouchableOpacity 
@@ -113,18 +114,18 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
              {/* Tokens Section */}
              <View style={{ width: '100%' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <Text style={{ fontFamily: FONTS.displayBold, fontSize: 18, color: '#000' }}>Tokens</Text>
+                  <Text style={{ fontFamily: fontFamilies.displayBold, fontSize: 18, color: '#000' }}>Tokens</Text>
                   <TouchableOpacity 
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                     onPress={() => Alert.alert('Add Token', 'Feature coming soon')}
                   >
                      <Plus size={16} color={COLORS.primary} />
-                     <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: COLORS.primary }}>Add Token</Text>
+                     <Text style={{ fontFamily: fontFamilies.bodyBold, fontSize: 14, color: COLORS.primary }}>Add Token</Text>
                   </TouchableOpacity>
                 </View>
                 
                 <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-                   <Text style={{ fontFamily: FONTS.bodyRegular, fontSize: 14, color: '#999' }}>No tokens found</Text>
+                   <Text style={{ fontFamily: fontFamilies.bodyRegular, fontSize: 14, color: '#999' }}>No tokens found</Text>
                 </View>
              </View>
 

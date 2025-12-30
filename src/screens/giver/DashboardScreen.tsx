@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { StyleSheet, ScrollView, BackHandler, SafeAreaView, Alert, StatusBar, RefreshControl } from 'react-native';
+import { StyleSheet, ScrollView, BackHandler, SafeAreaView, Alert, StatusBar, RefreshControl, Modal, View, Text, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchBalance } from '../../lib/blockcypher';
 import { supabase } from '../../lib/supabase';
@@ -19,6 +19,8 @@ import { EditVlooModal } from './components/modals/EditVlooModal';
 import { PreviewVlooModal } from './components/modals/PreviewVlooModal';
 import { VlooDetailsModal } from './components/modals/VlooDetailsModal';
 import { EditProfileModal } from './components/modals/EditProfileModal';
+import { COLORS, FONTS } from '../../lib/theme';
+import { Edit2, LogOut } from 'lucide-react-native';
 
 const getWalletAddresses = (data: any) => {
   let addresses: any[] = [];
@@ -42,6 +44,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [balances, setBalances] = useState<Record<string, string>>({});
   const [lastBalanceRefresh, setLastBalanceRefresh] = useState(0); 
@@ -55,6 +58,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [vlooDetailsModalVisible, setVlooDetailsModalVisible] = useState(false);
   const [walletDetailModalVisible, setWalletDetailModalVisible] = useState(false);
   const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
+  const [profileActionsVisible, setProfileActionsVisible] = useState(false);
 
   // Selected Items
   const [selectedVloo, setSelectedVloo] = useState<any>(null);
@@ -97,6 +101,9 @@ export default function GiverDashboardScreen({ navigation }: any) {
     setProfileAvatarUrl(user?.user_metadata?.avatar_url || '');
     setEditProfileModalVisible(true);
   };
+  const handleOpenProfileActions = () => {
+    setProfileActionsVisible(true);
+  };
 
   const handleSaveProfile = async () => {
     if (!profileName.trim()) {
@@ -113,6 +120,15 @@ export default function GiverDashboardScreen({ navigation }: any) {
       if (error) throw error;
 
       setUser(data.user);
+      await supabase
+        .from('users')
+        .upsert({
+          id: data.user.id,
+          email: data.user.email,
+          full_name: profileName,
+          avatar_url: profileAvatarUrl
+        }, { onConflict: 'id' });
+      setUserProfile({ full_name: profileName, avatar_url: profileAvatarUrl });
       setEditProfileModalVisible(false);
       Alert.alert('Success', 'Profile updated successfully');
     } catch (error: any) {
@@ -472,6 +488,16 @@ export default function GiverDashboardScreen({ navigation }: any) {
       }
       
       setUser(session.user);
+      try {
+        const { data: profileData } = await supabase
+          .from('users')
+          .select('full_name, avatar_url')
+          .eq('id', session.user.id)
+          .single();
+        if (profileData) {
+          setUserProfile(profileData);
+        }
+      } catch (e) {}
 
       const { data, error } = await supabase
         .from('vloos')
@@ -639,7 +665,9 @@ export default function GiverDashboardScreen({ navigation }: any) {
       
       <DashboardHeader 
         user={user} 
-        onProfilePress={handleOpenEditProfile} 
+        onProfilePress={handleOpenProfileActions} 
+        displayName={userProfile?.full_name}
+        displayAvatarUrl={userProfile?.avatar_url}
       />
       
       <ScrollView 
@@ -786,6 +814,45 @@ export default function GiverDashboardScreen({ navigation }: any) {
          giverName={user?.user_metadata?.full_name}
          giverAvatar={user?.user_metadata?.avatar_url}
       />
+      
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={profileActionsVisible}
+        onRequestClose={() => setProfileActionsVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <TouchableWithoutFeedback onPress={() => setProfileActionsVisible(false)}>
+            <View style={StyleSheet.absoluteFillObject}>
+               <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} />
+            </View>
+          </TouchableWithoutFeedback>
+          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, borderWidth: 1, borderColor: '#eee', padding: 24 }}>
+            <Text style={{ fontFamily: FONTS.displayBold, fontSize: 20, color: '#000', marginBottom: 16 }}>Profile</Text>
+            <TouchableOpacity
+              style={{ paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+              onPress={() => {
+                setProfileActionsVisible(false);
+                handleOpenEditProfile();
+              }}
+            >
+              <Edit2 size={18} color="#000" />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#000' }}>Edit Profile</Text>
+            </TouchableOpacity>
+            <View style={{ height: 1, backgroundColor: '#f0f0f0' }} />
+            <TouchableOpacity
+              style={{ paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+              onPress={() => {
+                setProfileActionsVisible(false);
+                handleSignOut();
+              }}
+            >
+              <LogOut size={18} color="#FF3B30" />
+              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#FF3B30' }}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <EditProfileModal 
          visible={editProfileModalVisible}
