@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, StyleSheet, ScrollView } from 'react-native';
-import { Copy } from 'lucide-react-native';
+import { Copy, Plus } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../../lib/theme';
 import * as Clipboard from 'expo-clipboard';
 import { Alert } from 'react-native';
@@ -90,7 +90,7 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
              </Text>
 
              {/* Address Section */}
-             <View style={{ width: '100%', backgroundColor: '#f5f5f5', padding: 16 }}>
+             <View style={{ width: '100%', backgroundColor: '#f5f5f5', padding: 16, marginBottom: 24 }}>
                 <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: '#666', marginBottom: 8, textTransform: 'uppercase' }}>
                   Wallet Address
                 </Text>
@@ -104,6 +104,24 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
                   >
                     <Copy size={20} color={COLORS.primary} />
                   </TouchableOpacity>
+                </View>
+             </View>
+
+             {/* Tokens Section */}
+             <View style={{ width: '100%' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <Text style={{ fontFamily: FONTS.displayBold, fontSize: 18, color: '#000' }}>Tokens</Text>
+                  <TouchableOpacity 
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                    onPress={() => Alert.alert('Add Token', 'Feature coming soon')}
+                  >
+                     <Plus size={16} color={COLORS.primary} />
+                     <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: COLORS.primary }}>Add Token</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                <View style={{ alignItems: 'center', paddingVertical: 24 }}>
+                   <Text style={{ fontFamily: FONTS.bodyRegular, fontSize: 14, color: '#999' }}>No tokens found</Text>
                 </View>
              </View>
 
