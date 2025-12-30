@@ -949,36 +949,42 @@ export default function GiverDashboardScreen({ navigation }: any) {
           <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, borderWidth: 1, borderColor: '#eee', padding: 24 }}>
             <Text style={{ fontFamily: FONTS.displayBold, fontSize: 20, color: '#000', marginBottom: 16 }}>Profile</Text>
             <TouchableOpacity
-              style={{ paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+              style={{ paddingVertical: 14 }}
               onPress={() => {
                 setProfileActionsVisible(false);
                 handleToggleFaceId();
               }}
             >
-              <Fingerprint size={18} color={faceIdEnabled ? COLORS.primary : '#000'} />
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#000' }}>Face ID {faceIdEnabled ? '(On)' : '(Off)'}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#000' }}>Face ID {faceIdEnabled ? '(On)' : '(Off)'}</Text>
+                <Fingerprint size={18} color={faceIdEnabled ? COLORS.primary : '#000'} />
+              </View>
             </TouchableOpacity>
             <View style={{ height: 1, backgroundColor: '#f0f0f0' }} />
             <TouchableOpacity
-              style={{ paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+              style={{ paddingVertical: 14 }}
               onPress={() => {
                 setProfileActionsVisible(false);
                 handleOpenEditProfile();
               }}
             >
-              <Edit2 size={18} color="#000" />
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#000' }}>Edit Profile</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#000' }}>Edit Profile</Text>
+                <Edit2 size={18} color="#000" />
+              </View>
             </TouchableOpacity>
             <View style={{ height: 1, backgroundColor: '#f0f0f0' }} />
             <TouchableOpacity
-              style={{ paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+              style={{ paddingVertical: 14 }}
               onPress={() => {
                 setProfileActionsVisible(false);
                 handleSignOut();
               }}
             >
-              <LogOut size={18} color="#FF3B30" />
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#FF3B30' }}>Sign Out</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#FF3B30' }}>Sign Out</Text>
+                <LogOut size={18} color="#FF3B30" />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
