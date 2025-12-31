@@ -182,12 +182,21 @@ export const CalendarScreen = () => {
       {/* Reminders List */}
       <View style={styles.remindersContainer}>
         <View style={styles.remindersHeader}>
-          <Text style={styles.sectionTitle}>
-            {selectedDate.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </Text>
-          <Text style={styles.reminderCount}>
-            {selectedDateReminders.length} {selectedDateReminders.length === 1 ? 'Reminder' : 'Reminders'}
-          </Text>
+          <View>
+            <Text style={styles.sectionTitle}>
+              {selectedDate.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </Text>
+            <Text style={styles.reminderCount}>
+              {selectedDateReminders.length} {selectedDateReminders.length === 1 ? 'Reminder' : 'Reminders'}
+            </Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.addReminderButton}
+            onPress={() => setModalVisible(true)}
+          >
+            <Plus size={16} color={COLORS.primary} style={{ marginRight: 4 }} />
+            <Text style={styles.addReminderText}>Add Reminder</Text>
+          </TouchableOpacity>
         </View>
 
         <FlatList
@@ -209,14 +218,6 @@ export const CalendarScreen = () => {
           }
         />
       </View>
-
-      {/* FAB */}
-      <TouchableOpacity 
-        style={styles.fab}
-        onPress={() => setModalVisible(true)}
-      >
-        <Plus size={24} color="#fff" />
-      </TouchableOpacity>
 
       <CreateReminderModal 
         visible={modalVisible}
@@ -317,18 +318,32 @@ const styles = StyleSheet.create({
   remindersHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'baseline',
-    marginBottom: 16,
+    alignItems: 'center',
+    marginBottom: 20,
   },
   sectionTitle: {
     fontFamily: FONTS.displayBold,
     fontSize: 18,
     color: '#000',
+    marginBottom: 4,
   },
   reminderCount: {
     fontFamily: FONTS.bodyRegular,
     fontSize: 14,
     color: '#666',
+  },
+  addReminderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: 'rgba(52,152,219,0.1)',
+  },
+  addReminderText: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 14,
+    color: COLORS.primary,
   },
   remindersList: {
     paddingBottom: 100, // Space for FAB
