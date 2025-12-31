@@ -13,7 +13,7 @@ import {
   ScrollView
 } from 'react-native';
 import { COLORS, FONTS } from '../../lib/theme';
-import { ChevronLeft, ChevronRight, Bell, Plus, Calendar as CalendarIcon, Edit2, Trash2 } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Bell, Plus, Calendar as CalendarIcon, MoreVertical, Edit2, Trash2 } from 'lucide-react-native';
 import { CreateReminderModal } from './components/modals/calendar/CreateReminderModal';
 import { MonthYearPickerModal } from './components/modals/calendar/MonthYearPickerModal';
 import { ReminderDetailsModal } from './components/modals/calendar/ReminderDetailsModal';
@@ -48,6 +48,8 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
   const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [allRemindersVisible, setAllRemindersVisible] = useState(false);
+  const [actionMenuVisible, setActionMenuVisible] = useState(false);
+  const [actionMenuReminder, setActionMenuReminder] = useState<Reminder | null>(null);
   
   const remindersByDate = useMemo(() => {
     const groups: Record<string, Reminder[]> = {};
@@ -292,11 +294,14 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
            <Text style={styles.reminderLabel}>{cardCountText}</Text>
          </View>
          <View style={styles.reminderActions}>
-           <TouchableOpacity onPress={() => handleEditReminder(item)} style={styles.actionButton}>
-             <Edit2 size={16} color="#666" />
-           </TouchableOpacity>
-           <TouchableOpacity onPress={() => handleDeleteReminder(item.id)} style={[styles.actionButton, styles.deleteButton]}>
-             <Trash2 size={16} color={COLORS.error || '#FF3B30'} />
+           <TouchableOpacity 
+             onPress={() => {
+               setActionMenuReminder(item);
+               setActionMenuVisible(true);
+             }} 
+             style={styles.actionButton}
+           >
+             <MoreVertical size={16} color="#666" />
            </TouchableOpacity>
          </View>
        </TouchableOpacity>
@@ -484,6 +489,55 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
         onEdit={handleEditReminder}
         onDelete={handleDeleteReminder}
       />
+      
+      <Modal
+        visible={actionMenuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setActionMenuVisible(false);
+          setActionMenuReminder(null);
+        }}
+      >
+        <View style={styles.actionsModalRoot}>
+          <TouchableWithoutFeedback onPress={() => {
+            setActionMenuVisible(false);
+            setActionMenuReminder(null);
+          }}>
+            <View style={styles.actionsModalOverlay} />
+          </TouchableWithoutFeedback>
+          <View style={styles.actionsModalSheet}>
+          <View style={styles.actionsModalHeader}>
+              <Text style={styles.actionsModalTitle}>{actionMenuReminder?.title || 'Actions'}</Text>
+            </View>
+            <View style={{ paddingHorizontal: 24, paddingVertical: 8 }}>
+              <TouchableOpacity
+                style={styles.actionRow}
+                onPress={() => {
+                  if (actionMenuReminder) handleEditReminder(actionMenuReminder);
+                  setActionMenuVisible(false);
+                  setActionMenuReminder(null);
+                }}
+              >
+                <Text style={styles.actionRowText}>Edit</Text>
+                <Edit2 size={16} color="#000" />
+              </TouchableOpacity>
+              <View style={styles.actionDivider} />
+              <TouchableOpacity
+                style={styles.actionRow}
+                onPress={() => {
+                  if (actionMenuReminder) handleDeleteReminder(actionMenuReminder.id);
+                  setActionMenuVisible(false);
+                  setActionMenuReminder(null);
+                }}
+              >
+                <Text style={[styles.actionRowText, { color: COLORS.error || '#FF3B30' }]}>Delete</Text>
+                <Trash2 size={16} color={COLORS.error || '#FF3B30'} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -707,12 +761,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginLeft: 'auto',
   },
   actionButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: '#f5f5f5',
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   deleteButton: {
     backgroundColor: 'rgba(255, 59, 48, 0.1)',
@@ -769,5 +826,46 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
     zIndex: 100, // Ensure it's on top
+  },
+  actionsModalRoot: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  actionsModalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  actionsModalSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
+  actionsModalHeader: {
+    paddingHorizontal: 24,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  actionsModalTitle: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 18,
+    color: '#000',
+  },
+  actionRow: {
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  actionRowText: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 16,
+    color: '#000',
+  },
+  actionDivider: {
+    height: 1,
+    backgroundColor: '#f0f0f0',
   },
 });
