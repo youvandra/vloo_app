@@ -778,6 +778,33 @@ export default function GiverDashboardScreen({ navigation }: any) {
     return () => { isMounted = false; };
   }, [currentWalletAddresses, lastBalanceRefresh]);
 
+  const renderSkeleton = () => {
+    return (
+      <View style={{ flex: 1 }}>
+        <View style={styles.skeletonCardStack}>
+          <View style={styles.skeletonCard} />
+        </View>
+
+        <View style={styles.skeletonWalletHeader}>
+          <View style={styles.skeletonTitle} />
+          <View style={styles.skeletonToggle} />
+        </View>
+
+        <View>
+          {[1, 2, 3].map((key) => (
+            <View key={key} style={styles.skeletonWalletItem}>
+              <View style={styles.skeletonWalletIcon} />
+              <View style={{ flex: 1 }}>
+                <View style={styles.skeletonWalletText1} />
+                <View style={styles.skeletonWalletText2} />
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
   if (faceIdGateRequired && !faceIdGateVerified) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' }}>
@@ -813,32 +840,36 @@ export default function GiverDashboardScreen({ navigation }: any) {
             displayAvatarUrl={userProfile?.avatar_url}
           />
           
-          <ScrollView 
-            contentContainerStyle={{ paddingBottom: 100 }}
-            showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000" />}
-          >
-            <CardStack 
-               vloos={vloos}
-               currentCardIndex={currentCardIndex}
-               onCardChange={setCurrentCardIndex}
-               onAddPress={() => setCreateModalVisible(true)}
-               onEditPress={handleEditPress}
-               onPreviewPress={handlePreviewPress}
-               onCardPress={handleCardPress}
-            />
+          {loading ? (
+            renderSkeleton()
+          ) : (
+            <ScrollView 
+              contentContainerStyle={{ paddingBottom: 100 }}
+              showsVerticalScrollIndicator={false}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000" />}
+            >
+              <CardStack 
+                 vloos={vloos}
+                 currentCardIndex={currentCardIndex}
+                 onCardChange={setCurrentCardIndex}
+                 onAddPress={() => setCreateModalVisible(true)}
+                 onEditPress={handleEditPress}
+                 onPreviewPress={handlePreviewPress}
+                 onCardPress={handleCardPress}
+              />
 
-            <WalletList 
-               wallets={currentWalletAddresses}
-               loading={loading}
-               refreshing={refreshing}
-               onRefresh={onRefresh}
-               onWalletPress={handleWalletPress}
-               balances={balances}
-               isTestnet={isTestnet}
-               setIsTestnet={setIsTestnet}
-            />
-          </ScrollView>
+              <WalletList 
+                 wallets={currentWalletAddresses}
+                 loading={loading}
+                 refreshing={refreshing}
+                 onRefresh={onRefresh}
+                 onWalletPress={handleWalletPress}
+                 balances={balances}
+                 isTestnet={isTestnet}
+                 setIsTestnet={setIsTestnet}
+              />
+            </ScrollView>
+          )}
         </>
       ) : activeTab === 'goals' ? (
         <GoalsScreen />
@@ -1043,5 +1074,66 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  skeletonCardStack: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    marginTop: 24,
+  },
+  skeletonCard: {
+    width: '100%',
+    height: 400,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 24,
+    marginHorizontal: 24,
+  },
+  skeletonWalletHeader: {
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 16,
+    paddingHorizontal: 24,
+  },
+  skeletonTitle: {
+    width: 120,
+    height: 24,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+  },
+  skeletonToggle: {
+    width: 140,
+    height: 32,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 16,
+  },
+  skeletonWalletItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 16,
+    marginBottom: 12,
+    marginHorizontal: 24,
+  },
+  skeletonWalletIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#eee',
+    marginRight: 16,
+  },
+  skeletonWalletText1: {
+    width: '40%',
+    height: 16,
+    backgroundColor: '#eee',
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  skeletonWalletText2: {
+    width: '20%',
+    height: 12,
+    backgroundColor: '#eee',
+    borderRadius: 4,
   },
 });

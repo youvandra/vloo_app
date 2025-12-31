@@ -73,9 +73,11 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
   };
 
   const [reminderToEdit, setReminderToEdit] = useState<Reminder | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchReminders = async () => {
     try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -107,6 +109,8 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
       }
     } catch (error) {
       console.error('Error fetching reminders:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -274,6 +278,22 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
     );
   };
 
+  const renderSkeleton = () => {
+    return (
+      <View style={{ gap: 12 }}>
+        {[1, 2, 3].map((key) => (
+          <View key={key} style={styles.skeletonCard}>
+            <View style={styles.skeletonIcon} />
+            <View style={{ flex: 1, gap: 8 }}>
+              <View style={styles.skeletonTitle} />
+              <View style={styles.skeletonLabel} />
+            </View>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   const renderReminderItem = ({ item }: { item: Reminder }) => {
     const cardCount = item.cardAmounts ? Object.keys(item.cardAmounts).length : 0;
     const cardCountText = `${cardCount} CARD${cardCount !== 1 ? 'S' : ''} REMINDING`;
@@ -380,24 +400,30 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
           </TouchableOpacity>
         </View>
 
-        <FlatList
-          data={selectedDateReminders}
-          renderItem={renderReminderItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.remindersList}
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <CalendarIcon size={40} color="#ddd" />
-              <Text style={styles.emptyStateText}>No reminders for this day</Text>
-              <TouchableOpacity 
-                style={styles.addReminderLink}
-                onPress={() => setModalVisible(true)}
-              >
-                <Text style={styles.addReminderLinkText}>Set a reminder</Text>
-              </TouchableOpacity>
-            </View>
-          }
-        />
+        {loading ? (
+          <View style={{ paddingHorizontal: 24, paddingTop: 8 }}>
+            {renderSkeleton()}
+          </View>
+        ) : (
+          <FlatList
+            data={selectedDateReminders}
+            renderItem={renderReminderItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.remindersList}
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <CalendarIcon size={40} color="#ddd" />
+                <Text style={styles.emptyStateText}>No reminders for this day</Text>
+                <TouchableOpacity 
+                  style={styles.addReminderLink}
+                  onPress={() => setModalVisible(true)}
+                >
+                  <Text style={styles.addReminderLinkText}>Set a reminder</Text>
+                </TouchableOpacity>
+              </View>
+            }
+          />
+        )}
       </View>
 
       <CreateReminderModal 
@@ -867,5 +893,33 @@ const styles = StyleSheet.create({
   actionDivider: {
     height: 1,
     backgroundColor: '#f0f0f0',
+  },
+  skeletonCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#f9f9f9',
+    marginBottom: 8,
+  },
+  skeletonIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#eee',
+    marginRight: 12,
+  },
+  skeletonTitle: {
+    height: 16,
+    width: '60%',
+    backgroundColor: '#eee',
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonLabel: {
+    height: 12,
+    width: '40%',
+    backgroundColor: '#eee',
+    borderRadius: 4,
   },
 });
