@@ -11,6 +11,7 @@ import {
 import { COLORS, FONTS } from '../../lib/theme';
 import { ChevronLeft, ChevronRight, Bell, Plus, Calendar as CalendarIcon } from 'lucide-react-native';
 import { CreateReminderModal } from './components/modals/calendar/CreateReminderModal';
+import { MonthYearPickerModal } from './components/modals/calendar/MonthYearPickerModal';
 
 const { width } = Dimensions.get('window');
 const CELL_WIDTH = (width - 48) / 7;
@@ -28,6 +29,7 @@ export const CalendarScreen = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [modalVisible, setModalVisible] = useState(false);
+  const [monthPickerVisible, setMonthPickerVisible] = useState(false);
   const [reminders, setReminders] = useState<Reminder[]>([
     {
       id: '1',
@@ -69,6 +71,10 @@ export const CalendarScreen = () => {
   const changeMonth = (increment: number) => {
     const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + increment, 1);
     setCurrentMonth(newDate);
+  };
+
+  const handleMonthSelect = (date: Date) => {
+    setCurrentMonth(date);
   };
 
   const isSameDay = (d1: Date, d2: Date) => {
@@ -150,9 +156,11 @@ export const CalendarScreen = () => {
         <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.arrowButton}>
           <ChevronLeft size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.monthTitle}>
-          {currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
-        </Text>
+        <TouchableOpacity onPress={() => setMonthPickerVisible(true)}>
+          <Text style={styles.monthTitle}>
+            {currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
+          </Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => changeMonth(1)} style={styles.arrowButton}>
           <ChevronRight size={24} color="#000" />
         </TouchableOpacity>
@@ -224,6 +232,13 @@ export const CalendarScreen = () => {
         onClose={() => setModalVisible(false)}
         onCreate={handleCreateReminder}
         initialDate={selectedDate}
+      />
+      
+      <MonthYearPickerModal
+        visible={monthPickerVisible}
+        onClose={() => setMonthPickerVisible(false)}
+        onSelect={handleMonthSelect}
+        initialDate={currentMonth}
       />
     </View>
   );
