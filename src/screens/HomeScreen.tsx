@@ -67,8 +67,8 @@ export default function HomeScreen({ navigation }: any) {
 
             <View style={styles.textWrapper}>
               <Text style={styles.headline}>
-                Crypto Gifting,{'\n'}
-                <Text style={styles.headlineHighlight}>Simplified.</Text>
+                Your Simplest{'\n'}
+                <Text style={styles.headlineHighlight}>Crypto Access.</Text>
               </Text>
               <Text style={styles.subheadline}>
                 The easiest way to manage, send, and receive digital assets with a single scan.
