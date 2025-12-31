@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, StyleSheet, ScrollView, Image } from 'react-native';
-import { X, ChevronRight } from 'lucide-react-native';
+import { X, ChevronRight, Edit2, Trash2 } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../../../lib/theme';
 
 interface ReminderDetailsModalProps {
@@ -9,6 +9,8 @@ interface ReminderDetailsModalProps {
   reminder: any;
   vloos: any[];
   onCardPress: (vloo: any) => void;
+  onEdit: (reminder: any) => void;
+  onDelete: (reminderId: string) => void;
 }
 
 export const ReminderDetailsModal = ({
@@ -17,6 +19,8 @@ export const ReminderDetailsModal = ({
   reminder,
   vloos,
   onCardPress,
+  onEdit,
+  onDelete
 }: ReminderDetailsModalProps) => {
 
   if (!reminder) return null;
@@ -72,9 +76,17 @@ export const ReminderDetailsModal = ({
               <Text style={styles.title}>{reminder.title}</Text>
               <Text style={styles.date}>{new Date(reminder.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <X size={24} color="#000" />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity onPress={() => onEdit(reminder)} style={styles.actionButton}>
+                <Edit2 size={20} color="#666" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => onDelete(reminder.id)} style={[styles.actionButton, styles.deleteButton]}>
+                <Trash2 size={20} color={COLORS.error || '#FF3B30'} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <X size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -122,6 +134,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+  },
+  deleteButton: {
+    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+  },
   title: {
     fontFamily: FONTS.displayBold,
     fontSize: 20,
@@ -135,6 +160,7 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 4,
+    marginLeft: 8,
   },
   scrollView: {
     flex: 1,

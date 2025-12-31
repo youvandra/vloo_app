@@ -44,6 +44,8 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
   const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
 
+  const [reminderToEdit, setReminderToEdit] = useState<Reminder | null>(null);
+
   const fetchReminders = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -126,7 +128,7 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
     return reminders.some(r => isSameDay(r.date, date));
   };
 
-  const handleCreateReminder = async (newReminder: { title: string; date: Date; cardAmounts: Record<string, { amount: string; coin: string }> }) => {
+  const handleCreateReminder = async (newReminder: { title: string; date: Date; cardAmounts: Record<string, { amount: string; coin: string }>, id?: string }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -135,24 +137,79 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
         return;
       }
 
-      const { error } = await supabase
-        .from('user_calendar')
-        .insert({
-          user_id: user.id,
-          title: newReminder.title,
-          date: newReminder.date.toISOString(),
-          card_amounts: newReminder.cardAmounts
-        });
+      if (newReminder.id) {
+        // Update existing reminder
+        const { error } = await supabase
+          .from('user_calendar')
+          .update({
+            title: newReminder.title,
+            date: newReminder.date.toISOString(),
+            card_amounts: newReminder.cardAmounts
+          })
+          .eq('id', newReminder.id)
+          .eq('user_id', user.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Create new reminder
+        const { error } = await supabase
+          .from('user_calendar')
+          .insert({
+            user_id: user.id,
+            title: newReminder.title,
+            date: newReminder.date.toISOString(),
+            card_amounts: newReminder.cardAmounts
+          });
+
+        if (error) throw error;
+      }
 
       // Refresh list
       fetchReminders();
       setSelectedDate(newReminder.date);
+      setReminderToEdit(null); // Reset edit state
     } catch (error: any) {
-      console.error('Error creating reminder:', error);
-      Alert.alert('Error', error.message || 'Failed to create reminder');
+      console.error('Error saving reminder:', error);
+      Alert.alert('Error', error.message || 'Failed to save reminder');
     }
+  };
+
+  const handleDeleteReminder = (reminderId: string) => {
+    Alert.alert(
+      "Delete Reminder",
+      "Are you sure you want to delete this reminder?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "Delete", 
+          onPress: async () => {
+            try {
+              const { error } = await supabase
+                .from('user_calendar')
+                .delete()
+                .eq('id', reminderId);
+                
+              if (error) throw error;
+              
+              setDetailsModalVisible(false);
+              fetchReminders();
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Failed to delete reminder');
+            }
+          },
+          style: "destructive"
+        }
+      ]
+    );
+  };
+
+  const handleEditReminder = (reminder: Reminder) => {
+    setDetailsModalVisible(false);
+    setReminderToEdit(reminder);
+    setModalVisible(true);
   };
 
   const selectedDateReminders = reminders.filter(r => isSameDay(r.date, selectedDate));
@@ -201,6 +258,7 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
         <Bell size={20} color={COLORS.primary} />
       </View>
       <View style={styles.reminderInfo}>
+        <Text style={styles.reminderLabel}>REMINDER</Text>
         <Text style={styles.reminderTitle}>{item.title}</Text>
       </View>
       {item.amount ? (
@@ -291,10 +349,14 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
 
       <CreateReminderModal 
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
+        onClose={() => {
+          setModalVisible(false);
+          setReminderToEdit(null);
+        }}
         onCreate={handleCreateReminder}
         initialDate={selectedDate}
         cards={vloos}
+        reminderToEdit={reminderToEdit}
       />
       
       <MonthYearPickerModal
@@ -314,6 +376,8 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
             onCardPress(vloo);
           }
         }}
+        onEdit={handleEditReminder}
+        onDelete={handleDeleteReminder}
       />
     </View>
   );
@@ -398,18 +462,19 @@ const styles = StyleSheet.create({
   },
   remindersContainer: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     marginTop: 24,
-    padding: 24,
-    paddingBottom: 0, // FAB space handled by FlatList contentContainerStyle usually, but here container padding
+    paddingTop: 24,
   },
   remindersHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 0,
+    paddingHorizontal: 24,
+    paddingBottom: 12,
   },
   sectionTitle: {
     fontFamily: FONTS.displayBold,
@@ -439,39 +504,42 @@ const styles = StyleSheet.create({
     paddingBottom: 100, // Space for FAB
   },
   reminderCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   reminderIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f5f7ff',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
   reminderInfo: {
     flex: 1,
+    marginRight: 12,
+  },
+  reminderLabel: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 10,
+    color: '#888',
+    marginBottom: 4,
+    textTransform: 'uppercase',
   },
   reminderTitle: {
-    fontFamily: FONTS.bodyBold,
-    fontSize: 16,
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 14,
     color: '#000',
   },
   reminderAmount: {
     fontFamily: FONTS.bodyBold,
     fontSize: 16,
-    color: COLORS.primary,
+    color: '#000',
   },
   emptyState: {
     alignItems: 'center',

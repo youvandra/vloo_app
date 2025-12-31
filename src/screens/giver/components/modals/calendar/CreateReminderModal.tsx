@@ -24,13 +24,15 @@ interface CreateReminderModalProps {
   onCreate: (reminder: { 
     title: string; 
     date: Date; 
-    cardAmounts: Record<string, { amount: string; coin: string }> 
+    cardAmounts: Record<string, { amount: string; coin: string }>;
+    id?: string;
   }) => void;
   initialDate?: Date;
   cards?: any[]; // Pass available cards
+  reminderToEdit?: any; // Reminder to edit
 }
 
-export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, cards = [] }: CreateReminderModalProps) => {
+export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, cards = [], reminderToEdit }: CreateReminderModalProps) => {
   const [title, setTitle] = useState('');
   const [cardAmounts, setCardAmounts] = useState<Record<string, string>>({});
   const [cardCoins, setCardCoins] = useState<Record<string, string>>({});
@@ -42,15 +44,39 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, c
   // Reset state when modal opens
   React.useEffect(() => {
     if (visible) {
-      setTitle('');
-      setCardAmounts({});
-      setCardCoins({});
-      setSelectedCardIds([]);
-      setAmountMode('each');
-      setGlobalAmount('');
-      setGlobalCoin(COINS[0]);
+      if (reminderToEdit) {
+        // Pre-fill for edit mode
+        setTitle(reminderToEdit.title);
+        
+        const cardAmountsData = reminderToEdit.cardAmounts || {};
+        const cardIds = Object.keys(cardAmountsData);
+        setSelectedCardIds(cardIds);
+        
+        const amounts: Record<string, string> = {};
+        const coins: Record<string, string> = {};
+        
+        cardIds.forEach(id => {
+          amounts[id] = cardAmountsData[id].amount;
+          coins[id] = cardAmountsData[id].coin;
+        });
+        
+        setCardAmounts(amounts);
+        setCardCoins(coins);
+        setAmountMode('each'); // Default to 'each' for editing to preserve individual settings
+        setGlobalAmount('');
+        setGlobalCoin(COINS[0]);
+      } else {
+        // Reset for create mode
+        setTitle('');
+        setCardAmounts({});
+        setCardCoins({});
+        setSelectedCardIds([]);
+        setAmountMode('each');
+        setGlobalAmount('');
+        setGlobalCoin(COINS[0]);
+      }
     }
-  }, [visible]);
+  }, [visible, reminderToEdit]);
 
   const handleCreate = () => {
     if (title) {
@@ -69,8 +95,9 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, c
 
       onCreate({ 
         title, 
-        date: initialDate || new Date(),
-        cardAmounts: selectedAmounts
+        date: reminderToEdit ? reminderToEdit.date : (initialDate || new Date()),
+        cardAmounts: selectedAmounts,
+        id: reminderToEdit?.id 
       });
       onClose();
     }
@@ -185,7 +212,7 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, c
         
         <View style={[styles.modalContent, { height: '80%' }]}>
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Set Reminder</Text>
+            <Text style={styles.headerTitle}>{reminderToEdit ? 'Edit Reminder' : 'Set Reminder'}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <X size={24} color="#000" />
             </TouchableOpacity>
@@ -270,7 +297,7 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, c
                   onPress={handleCreate}
                   disabled={!title}
                 >
-                  <Text style={styles.createButtonText}>Set Reminder</Text>
+                  <Text style={styles.createButtonText}>{reminderToEdit ? 'Save Changes' : 'Set Reminder'}</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
