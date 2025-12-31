@@ -246,26 +246,31 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
     );
   };
 
-  const renderReminderItem = ({ item }: { item: Reminder }) => (
-    <TouchableOpacity 
-      style={styles.reminderCard}
-      onPress={() => {
-        setSelectedReminder(item);
-        setDetailsModalVisible(true);
-      }}
-    >
-      <View style={styles.reminderIcon}>
-        <Bell size={20} color={COLORS.primary} />
-      </View>
-      <View style={styles.reminderInfo}>
-        <Text style={styles.reminderLabel}>REMINDER</Text>
-        <Text style={styles.reminderTitle}>{item.title}</Text>
-      </View>
-      {item.amount ? (
-        <Text style={styles.reminderAmount}>{item.amount} {item.coin}</Text>
-      ) : null}
-    </TouchableOpacity>
-  );
+  const renderReminderItem = ({ item }: { item: Reminder }) => {
+    const cardCount = item.cardAmounts ? Object.keys(item.cardAmounts).length : 0;
+    const cardCountText = `${cardCount} CARD${cardCount !== 1 ? 'S' : ''} REMINDING`;
+
+    return (
+      <TouchableOpacity 
+        style={styles.reminderCard}
+        onPress={() => {
+          setSelectedReminder(item);
+          setDetailsModalVisible(true);
+        }}
+      >
+        <View style={styles.reminderIcon}>
+          <Bell size={20} color={COLORS.primary} />
+        </View>
+        <View style={styles.reminderInfo}>
+          <Text style={styles.reminderTitle}>{item.title}</Text>
+          <Text style={styles.reminderLabel}>{cardCountText}</Text>
+        </View>
+        {item.amount ? (
+          <Text style={styles.reminderAmount}>{item.amount} {item.coin}</Text>
+        ) : null}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -528,13 +533,13 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodySemiBold,
     fontSize: 10,
     color: '#888',
-    marginBottom: 4,
     textTransform: 'uppercase',
   },
   reminderTitle: {
-    fontFamily: FONTS.bodyRegular,
+    fontFamily: FONTS.bodyBold,
     fontSize: 14,
     color: '#000',
+    marginBottom: 4,
   },
   reminderAmount: {
     fontFamily: FONTS.bodyBold,
