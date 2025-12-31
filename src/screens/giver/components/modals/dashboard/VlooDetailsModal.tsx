@@ -124,6 +124,11 @@ export const VlooDetailsModal = ({
             </View>
 
             <View style={styles.infoSection}>
+               <Text style={styles.label}>Card ID</Text>
+               <Text style={styles.value}>{vloo.verified_cards?.[0]?.id || '••••'}</Text>
+            </View>
+
+            <View style={styles.infoSection}>
                <Text style={styles.label}>Recipient</Text>
                <Text style={styles.value}>{vloo.receiver_name || 'VLOO Gift'}</Text>
             </View>
@@ -134,6 +139,13 @@ export const VlooDetailsModal = ({
                  {vloo.unlock_date ? new Date(vloo.unlock_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Whenever'}
                </Text>
             </View>
+
+            {vloo.message ? (
+              <View style={styles.infoSection}>
+                 <Text style={styles.label}>Message</Text>
+                 <Text style={[styles.value, { fontFamily: FONTS.bodyRegular }]}>{vloo.message}</Text>
+              </View>
+            ) : null}
 
             <View style={styles.assetsSection}>
                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
