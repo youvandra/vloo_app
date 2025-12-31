@@ -20,12 +20,17 @@ interface Reminder {
   id: string;
   title: string;
   amount?: string;
+  coin?: string;
   date: Date;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export const CalendarScreen = () => {
+interface CalendarScreenProps {
+  vloos?: any[];
+}
+
+export const CalendarScreen = ({ vloos = [] }: CalendarScreenProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [modalVisible, setModalVisible] = useState(false);
@@ -87,11 +92,19 @@ export const CalendarScreen = () => {
     return reminders.some(r => isSameDay(r.date, date));
   };
 
-  const handleCreateReminder = (newReminder: { title: string; amount: string; date: Date }) => {
+  const handleCreateReminder = (newReminder: { title: string; date: Date; cardAmounts: Record<string, { amount: string; coin: string }> }) => {
+    const amounts = Object.values(newReminder.cardAmounts);
+    const totalAmount = amounts.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+    
+    // Determine coin to display (use the first one or 'Mixed' if multiple)
+    const coins = new Set(amounts.map(a => a.coin));
+    const displayCoin = coins.size === 1 ? amounts[0].coin : (coins.size > 1 ? 'Mixed' : '');
+
     const reminder: Reminder = {
       id: Date.now().toString(),
       title: newReminder.title,
-      amount: newReminder.amount,
+      amount: totalAmount > 0 ? totalAmount.toString() : undefined,
+      coin: displayCoin,
       date: newReminder.date
     };
     setReminders([...reminders, reminder]);
@@ -142,7 +155,7 @@ export const CalendarScreen = () => {
         <Text style={styles.reminderTime}>All Day</Text>
       </View>
       {item.amount ? (
-        <Text style={styles.reminderAmount}>${item.amount}</Text>
+        <Text style={styles.reminderAmount}>{item.amount} {item.coin}</Text>
       ) : null}
     </View>
   );
@@ -232,6 +245,7 @@ export const CalendarScreen = () => {
         onClose={() => setModalVisible(false)}
         onCreate={handleCreateReminder}
         initialDate={selectedDate}
+        cards={vloos}
       />
       
       <MonthYearPickerModal

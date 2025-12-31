@@ -826,7 +826,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
       ) : activeTab === 'goals' ? (
         <GoalsScreen />
       ) : activeTab === 'calendar' ? (
-        <CalendarScreen />
+        <CalendarScreen vloos={vloos} />
       ) : (
         <View style={{ flex: 1 }} />
       )}
