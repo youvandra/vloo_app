@@ -610,6 +610,14 @@ export default function GiverDashboardScreen({ navigation }: any) {
         }
       } catch (e) {}
 
+      // Attempt to update expired statuses before fetching
+      try {
+        await supabase.rpc('update_expired_vloos');
+      } catch (e) {
+        // Ignore error if function doesn't exist yet or permission denied
+        console.log('Auto-update status skipped:', e);
+      }
+
       const { data, error } = await supabase
         .from('vloos')
         .select('id, giver_id, created_at, status, wallet_address, unlock_date, message, receiver_name, verified_cards(id, color)')

@@ -54,8 +54,10 @@ export const CardStack = ({
             resizeMode="contain"
           />
           <View style={styles.nfcIdContainer}>
-             <Text style={[styles.nfcIdLabel, { color: '#666' }]}>CARD ID</Text>
-             <Text style={[styles.nfcIdValue, { color: '#fff' }]}>{item.verified_cards?.[0]?.id || '••••'}</Text>
+             <Text style={[styles.nfcIdLabel, { color: '#666' }]}>STATUS</Text>
+             <Text style={[styles.nfcIdValue, { color: '#fff' }]}>
+               {(item.status || 'Inactive').toUpperCase()}
+             </Text>
           </View>
         </View>
         
