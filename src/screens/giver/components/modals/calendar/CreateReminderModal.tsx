@@ -211,6 +211,7 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, c
         </TouchableWithoutFeedback>
         
         <View style={[styles.modalContent, { height: '80%' }]}>
+          <View style={styles.handleBar} />
           <View style={styles.header}>
             <Text style={styles.headerTitle}>{reminderToEdit ? 'Edit Reminder' : 'Set Reminder'}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -280,13 +281,17 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, c
                   )}
 
                   {cards.length > 0 ? (
-                    <View>
+                    <ScrollView 
+                      style={styles.cardsScroll}
+                      nestedScrollEnabled={true}
+                      showsVerticalScrollIndicator={true}
+                    >
                       {cards.map(item => (
                         <View key={item.id} style={{ marginBottom: 12 }}>
                           {renderCardItem({ item })}
                         </View>
                       ))}
-                    </View>
+                    </ScrollView>
                   ) : (
                     <Text style={styles.noCardsText}>No cards available</Text>
                   )}
@@ -329,11 +334,19 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
     minHeight: 400,
   },
+  handleBar: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 24,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   headerTitle: {
     fontFamily: FONTS.displayBold,
@@ -434,6 +447,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginBottom: 8,
+  },
+  cardsScroll: {
+    maxHeight: 280,
   },
   cardsList: {
     gap: 12,

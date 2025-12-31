@@ -71,6 +71,7 @@ export const ReminderDetailsModal = ({
         </TouchableWithoutFeedback>
         
         <View style={styles.modalView}>
+          <View style={styles.handleBar} />
           <View style={styles.header}>
             <View>
               <Text style={styles.title}>{reminder.title}</Text>
@@ -125,6 +126,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+  },
+  handleBar: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 4,
   },
   header: {
     flexDirection: 'row',
