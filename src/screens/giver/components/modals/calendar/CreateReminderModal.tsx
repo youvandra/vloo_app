@@ -203,7 +203,6 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, c
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Reminder Title</Text>
                   <View style={styles.inputContainer}>
-                    <Bell size={20} color="#666" style={styles.inputIcon} />
                     <TextInput
                       style={styles.input}
                       placeholder="e.g. Fund Birthday Card"
