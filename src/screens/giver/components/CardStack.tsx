@@ -105,15 +105,20 @@ export const CardStack = ({
       {/* Cards Header */}
       <View style={[styles.walletHeader, { paddingHorizontal: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
          <Text style={styles.walletTitle}>Cards ({vloos.length})</Text>
-         {vloos.length > 5 && (
-           <TouchableOpacity 
-             onPress={onAddPress}
-             style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-           >
-             <Plus size={16} color={COLORS.primary} />
-             <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: COLORS.primary }}>Add Card</Text>
-           </TouchableOpacity>
-         )}
+         <TouchableOpacity 
+           onPress={onAddPress}
+           style={{ 
+             flexDirection: 'row', 
+             alignItems: 'center', 
+             paddingVertical: 8,
+             paddingHorizontal: 12,
+             borderRadius: 20,
+             backgroundColor: 'rgba(52,152,219,0.1)'
+           }}
+         >
+           <Plus size={16} color={COLORS.primary} style={{ marginRight: 4 }} />
+           <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 14, color: COLORS.primary }}>Add Card</Text>
+         </TouchableOpacity>
       </View>
 
       {/* Cards Stack */}
