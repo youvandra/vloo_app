@@ -60,7 +60,7 @@ export const ScanVlooModal = ({
 
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
@@ -77,9 +77,6 @@ export const ScanVlooModal = ({
           style={{ width: '100%', height: '80%' }}
         >
           <View style={[styles.modalContent, { height: '100%' }]}>
-            <View style={styles.modalHeader} {...panResponder.panHandlers}>
-              <View style={styles.modalIndicator} />
-            </View>
 
             <ScrollView contentContainerStyle={styles.modalBody}>
               <View style={styles.modalTitleRow}>
@@ -191,12 +188,6 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  modalIndicator: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#ccc',
-    borderRadius: 2,
   },
   modalBody: {
     padding: 24,

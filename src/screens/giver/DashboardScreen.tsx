@@ -959,7 +959,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
       />
       
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={profileActionsVisible}
         onRequestClose={() => setProfileActionsVisible(false)}

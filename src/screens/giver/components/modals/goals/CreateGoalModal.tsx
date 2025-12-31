@@ -39,7 +39,7 @@ export const CreateGoalModal = ({ visible, onClose, onCreate }: CreateGoalModalP
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <TouchableWithoutFeedback onPress={onClose}>

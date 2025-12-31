@@ -41,7 +41,7 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
 
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
@@ -55,7 +55,6 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
         
         <View style={[styles.modalContent, { height: '80%' }]}>
           <View style={styles.modalHeader} {...panResponder.panHandlers}>
-            <View style={styles.modalIndicator} />
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                <X size={24} color="#000" />
             </TouchableOpacity>
@@ -159,12 +158,6 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  modalIndicator: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#ccc',
-    borderRadius: 2,
   },
   closeButton: {
     position: 'absolute',
