@@ -59,7 +59,7 @@ export const ReminderDetailsModal = ({
 
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
@@ -70,7 +70,6 @@ export const ReminderDetailsModal = ({
         </TouchableWithoutFeedback>
         
         <View style={styles.modalView}>
-          <View style={styles.handleBar} />
           <View style={styles.header}>
             <View>
               <Text style={styles.title}>{reminder.title}</Text>
@@ -102,13 +101,13 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   modalView: {
     backgroundColor: 'white',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    height: '60%',
+    height: '80%',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

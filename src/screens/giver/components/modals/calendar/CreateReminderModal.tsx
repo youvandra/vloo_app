@@ -201,7 +201,7 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, c
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <View style={styles.root}>
@@ -209,8 +209,7 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, c
           <View style={styles.overlay} />
         </TouchableWithoutFeedback>
         
-        <View style={[styles.modalContent, { height: '80%' }]}>
-          <View style={styles.handleBar} />
+        <View style={[styles.modalContent, { height: '80%' }]}>          
           <View style={styles.header}>
             <Text style={styles.headerTitle}>{reminderToEdit ? 'Edit Reminder' : 'Set Reminder'}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -321,7 +320,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   container: {
     width: '100%',
@@ -347,7 +346,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    marginBottom: 16,
   },
   headerTitle: {
     fontFamily: FONTS.displayBold,

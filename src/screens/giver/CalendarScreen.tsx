@@ -422,7 +422,7 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
       <Modal
         visible={allRemindersVisible}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setAllRemindersVisible(false)}
       >
         <View style={styles.allModalRoot}>
@@ -627,13 +627,13 @@ const styles = StyleSheet.create({
   },
   allModalOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   allModalSheet: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '70%',
+    height: '80%',
     paddingTop: 16,
     paddingBottom: 24,
   },
