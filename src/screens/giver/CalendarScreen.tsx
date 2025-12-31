@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -6,12 +6,14 @@ import {
   TouchableOpacity, 
   FlatList, 
   StatusBar, 
-  Dimensions 
+  Dimensions,
+  Alert
 } from 'react-native';
 import { COLORS, FONTS } from '../../lib/theme';
 import { ChevronLeft, ChevronRight, Bell, Plus, Calendar as CalendarIcon } from 'lucide-react-native';
 import { CreateReminderModal } from './components/modals/calendar/CreateReminderModal';
 import { MonthYearPickerModal } from './components/modals/calendar/MonthYearPickerModal';
+import { supabase } from '../../lib/supabase';
 
 const { width } = Dimensions.get('window');
 const CELL_WIDTH = (width - 48) / 7;
@@ -35,20 +37,46 @@ export const CalendarScreen = ({ vloos = [] }: CalendarScreenProps) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [modalVisible, setModalVisible] = useState(false);
   const [monthPickerVisible, setMonthPickerVisible] = useState(false);
-  const [reminders, setReminders] = useState<Reminder[]>([
-    {
-      id: '1',
-      title: 'Fund Birthday Card',
-      amount: '50',
-      date: new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() + 2) // 2 days from now
-    },
-    {
-      id: '2',
-      title: 'Monthly Savings',
-      amount: '100',
-      date: new Date(new Date().getFullYear(), new Date().getMonth(), 15) // 15th of this month
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+
+  const fetchReminders = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('user_calendar')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      if (data) {
+        const formattedReminders: Reminder[] = data.map((item: any) => {
+          // Calculate total amount and display coin logic
+          const amounts = Object.values(item.card_amounts || {}) as { amount: string; coin: string }[];
+          const totalAmount = amounts.reduce((sum, a) => sum + (parseFloat(a.amount) || 0), 0);
+          const coins = new Set(amounts.map(a => a.coin));
+          const displayCoin = coins.size === 1 ? amounts[0]?.coin : (coins.size > 1 ? 'Mixed' : '');
+
+          return {
+            id: item.id,
+            title: item.title,
+            amount: totalAmount > 0 ? totalAmount.toString() : undefined,
+            coin: displayCoin,
+            date: new Date(item.date)
+          };
+        });
+        setReminders(formattedReminders);
+      }
+    } catch (error) {
+      console.error('Error fetching reminders:', error);
     }
-  ]);
+  };
+
+  useEffect(() => {
+    fetchReminders();
+  }, []);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -92,23 +120,33 @@ export const CalendarScreen = ({ vloos = [] }: CalendarScreenProps) => {
     return reminders.some(r => isSameDay(r.date, date));
   };
 
-  const handleCreateReminder = (newReminder: { title: string; date: Date; cardAmounts: Record<string, { amount: string; coin: string }> }) => {
-    const amounts = Object.values(newReminder.cardAmounts);
-    const totalAmount = amounts.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-    
-    // Determine coin to display (use the first one or 'Mixed' if multiple)
-    const coins = new Set(amounts.map(a => a.coin));
-    const displayCoin = coins.size === 1 ? amounts[0].coin : (coins.size > 1 ? 'Mixed' : '');
+  const handleCreateReminder = async (newReminder: { title: string; date: Date; cardAmounts: Record<string, { amount: string; coin: string }> }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        Alert.alert('Error', 'You must be logged in to set a reminder');
+        return;
+      }
 
-    const reminder: Reminder = {
-      id: Date.now().toString(),
-      title: newReminder.title,
-      amount: totalAmount > 0 ? totalAmount.toString() : undefined,
-      coin: displayCoin,
-      date: newReminder.date
-    };
-    setReminders([...reminders, reminder]);
-    setSelectedDate(newReminder.date); // Switch to the date of the new reminder
+      const { error } = await supabase
+        .from('user_calendar')
+        .insert({
+          user_id: user.id,
+          title: newReminder.title,
+          date: newReminder.date.toISOString(),
+          card_amounts: newReminder.cardAmounts
+        });
+
+      if (error) throw error;
+
+      // Refresh list
+      fetchReminders();
+      setSelectedDate(newReminder.date);
+    } catch (error: any) {
+      console.error('Error creating reminder:', error);
+      Alert.alert('Error', error.message || 'Failed to create reminder');
+    }
   };
 
   const selectedDateReminders = reminders.filter(r => isSameDay(r.date, selectedDate));
@@ -152,7 +190,6 @@ export const CalendarScreen = ({ vloos = [] }: CalendarScreenProps) => {
       </View>
       <View style={styles.reminderInfo}>
         <Text style={styles.reminderTitle}>{item.title}</Text>
-        <Text style={styles.reminderTime}>All Day</Text>
       </View>
       {item.amount ? (
         <Text style={styles.reminderAmount}>{item.amount} {item.coin}</Text>
@@ -406,11 +443,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyBold,
     fontSize: 16,
     color: '#000',
-  },
-  reminderTime: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 12,
-    color: '#666',
   },
   reminderAmount: {
     fontFamily: FONTS.bodyBold,
