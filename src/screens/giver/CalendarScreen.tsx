@@ -22,7 +22,7 @@ interface Reminder {
   date: Date;
 }
 
-const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const CalendarScreen = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -184,7 +184,7 @@ export const CalendarScreen = () => {
         <View style={styles.remindersHeader}>
           <View>
             <Text style={styles.sectionTitle}>
-              {selectedDate.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}
+              {selectedDate.toLocaleDateString('default', { weekday: 'short', month: 'long', day: 'numeric' })}
             </Text>
             <Text style={styles.reminderCount}>
               {selectedDateReminders.length} {selectedDateReminders.length === 1 ? 'Reminder' : 'Reminders'}
