@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { COLORS, FONTS } from '../../lib/theme';
 import { ChevronLeft, ChevronRight, Bell, Plus, Calendar as CalendarIcon } from 'lucide-react-native';
-import { CreateReminderModal } from './components/modals/CreateReminderModal';
+import { CreateReminderModal } from './components/modals/calendar/CreateReminderModal';
 
 const { width } = Dimensions.get('window');
 const CELL_WIDTH = (width - 48) / 7;

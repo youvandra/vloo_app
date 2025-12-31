@@ -1,15 +1,15 @@
 import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, StyleSheet, ScrollView } from 'react-native';
 import { Copy, Plus, X } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../../../lib/theme';
+import { COLORS, FONTS } from '../../../../../lib/theme';
 import * as Clipboard from 'expo-clipboard';
 import { Alert } from 'react-native';
-import BitcoinIcon from '../../../../assets/icons/chains/bitcoin.svg';
-import EthIcon from '../../../../assets/icons/chains/eth.svg';
-import SolanaIcon from '../../../../assets/icons/chains/solana.svg';
-import PolygonIcon from '../../../../assets/icons/chains/polygon.svg';
-import BnbIcon from '../../../../assets/icons/chains/bnb.svg';
-import LiskIcon from '../../../../assets/icons/chains/lisk.svg';
+import BitcoinIcon from '../../../../../assets/icons/chains/bitcoin.svg';
+import EthIcon from '../../../../../assets/icons/chains/eth.svg';
+import SolanaIcon from '../../../../../assets/icons/chains/solana.svg';
+import PolygonIcon from '../../../../../assets/icons/chains/polygon.svg';
+import BnbIcon from '../../../../../assets/icons/chains/bnb.svg';
+import LiskIcon from '../../../../../assets/icons/chains/lisk.svg';
 
 interface WalletDetailModalProps {
   visible: boolean;

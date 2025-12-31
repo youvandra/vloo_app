@@ -1,13 +1,13 @@
 import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, StyleSheet, ScrollView, Image } from 'react-native';
 import { X, Edit2, Wallet } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../../../lib/theme';
-import BitcoinIcon from '../../../../assets/icons/chains/bitcoin.svg';
-import EthIcon from '../../../../assets/icons/chains/eth.svg';
-import SolanaIcon from '../../../../assets/icons/chains/solana.svg';
-import PolygonIcon from '../../../../assets/icons/chains/polygon.svg';
-import BnbIcon from '../../../../assets/icons/chains/bnb.svg';
-import LiskIcon from '../../../../assets/icons/chains/lisk.svg';
+import { COLORS, FONTS } from '../../../../../lib/theme';
+import BitcoinIcon from '../../../../../assets/icons/chains/bitcoin.svg';
+import EthIcon from '../../../../../assets/icons/chains/eth.svg';
+import SolanaIcon from '../../../../../assets/icons/chains/solana.svg';
+import PolygonIcon from '../../../../../assets/icons/chains/polygon.svg';
+import BnbIcon from '../../../../../assets/icons/chains/bnb.svg';
+import LiskIcon from '../../../../../assets/icons/chains/lisk.svg';
 
 interface VlooDetailsModalProps {
   visible: boolean;

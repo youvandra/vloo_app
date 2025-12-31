@@ -11,43 +11,27 @@ import {
   TouchableWithoutFeedback, 
   Keyboard 
 } from 'react-native';
-import { X, Calendar as CalendarIcon, DollarSign, Bell } from 'lucide-react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { COLORS, FONTS } from '../../../../lib/theme';
+import { X, Calendar as CalendarIcon, DollarSign, Target } from 'lucide-react-native';
+import { COLORS, FONTS } from '../../../../../lib/theme';
 
-interface CreateReminderModalProps {
+interface CreateGoalModalProps {
   visible: boolean;
   onClose: () => void;
-  onCreate: (reminder: { title: string; amount: string; date: Date }) => void;
-  initialDate?: Date;
+  onCreate: (goal: { title: string; targetAmount: string; deadline: string }) => void;
 }
 
-export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate }: CreateReminderModalProps) => {
+export const CreateGoalModal = ({ visible, onClose, onCreate }: CreateGoalModalProps) => {
   const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(initialDate || new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  // Reset state when modal opens
-  React.useEffect(() => {
-    if (visible) {
-      setTitle('');
-      setAmount('');
-      setDate(initialDate || new Date());
-    }
-  }, [visible, initialDate]);
+  const [targetAmount, setTargetAmount] = useState('');
+  const [deadline, setDeadline] = useState('');
 
   const handleCreate = () => {
-    if (title) {
-      onCreate({ title, amount, date });
+    if (title && targetAmount) {
+      onCreate({ title, targetAmount, deadline });
+      setTitle('');
+      setTargetAmount('');
+      setDeadline('');
       onClose();
-    }
-  };
-
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDate(selectedDate);
     }
   };
 
@@ -67,7 +51,7 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate }:
             >
               <View style={styles.modalContent}>
                 <View style={styles.header}>
-                  <Text style={styles.headerTitle}>Set Reminder</Text>
+                  <Text style={styles.headerTitle}>New Goal</Text>
                   <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                     <X size={24} color="#000" />
                   </TouchableOpacity>
@@ -75,12 +59,12 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate }:
 
                 <View style={styles.form}>
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Reminder Title</Text>
+                    <Text style={styles.label}>Goal Title</Text>
                     <View style={styles.inputContainer}>
-                      <Bell size={20} color="#666" style={styles.inputIcon} />
+                      <Target size={20} color="#666" style={styles.inputIcon} />
                       <TextInput
                         style={styles.input}
-                        placeholder="e.g. Fund Birthday Card"
+                        placeholder="e.g. New Laptop, Charity"
                         value={title}
                         onChangeText={setTitle}
                         placeholderTextColor="#999"
@@ -89,14 +73,14 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate }:
                   </View>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Amount to Fund (Optional)</Text>
+                    <Text style={styles.label}>Target Amount ($)</Text>
                     <View style={styles.inputContainer}>
                       <DollarSign size={20} color="#666" style={styles.inputIcon} />
                       <TextInput
                         style={styles.input}
                         placeholder="0.00"
-                        value={amount}
-                        onChangeText={setAmount}
+                        value={targetAmount}
+                        onChangeText={setTargetAmount}
                         keyboardType="numeric"
                         placeholderTextColor="#999"
                       />
@@ -104,33 +88,25 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate }:
                   </View>
 
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Date</Text>
-                    <TouchableOpacity 
-                      style={styles.inputContainer}
-                      onPress={() => setShowDatePicker(true)}
-                    >
+                    <Text style={styles.label}>Target Date (Optional)</Text>
+                    <View style={styles.inputContainer}>
                       <CalendarIcon size={20} color="#666" style={styles.inputIcon} />
-                      <Text style={[styles.input, { paddingVertical: 16 }]}>
-                        {date.toLocaleDateString()}
-                      </Text>
-                    </TouchableOpacity>
-                    {showDatePicker && (
-                      <DateTimePicker
-                        value={date}
-                        mode="date"
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        onChange={onDateChange}
-                        minimumDate={new Date()}
+                      <TextInput
+                        style={styles.input}
+                        placeholder="YYYY-MM-DD"
+                        value={deadline}
+                        onChangeText={setDeadline}
+                        placeholderTextColor="#999"
                       />
-                    )}
+                    </View>
                   </View>
 
                   <TouchableOpacity 
-                    style={[styles.createButton, !title && styles.disabledButton]}
+                    style={[styles.createButton, (!title || !targetAmount) && styles.disabledButton]}
                     onPress={handleCreate}
-                    disabled={!title}
+                    disabled={!title || !targetAmount}
                   >
-                    <Text style={styles.createButtonText}>Set Reminder</Text>
+                    <Text style={styles.createButtonText}>Create Goal</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -190,7 +166,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     borderRadius: 12,
     paddingHorizontal: 16,
-    minHeight: 56,
+    height: 56,
     borderWidth: 1,
     borderColor: '#eee',
   },

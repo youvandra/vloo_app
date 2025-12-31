@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Target, Plus, TrendingUp, Calendar } from 'lucide-react-native';
-import { CreateGoalModal } from './components/modals/CreateGoalModal';
+import { CreateGoalModal } from './components/modals/goals/CreateGoalModal';
 
 interface Goal {
   id: string;

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ScrollView, ActivityIndicator } from 'react-native';
 import { X, ArrowLeft, ScanLine, Keyboard } from 'lucide-react-native';
-import { COLORS, FONTS as THEME_FONTS } from '../../../../lib/theme';
+import { COLORS, FONTS as THEME_FONTS } from '../../../../../lib/theme';
 
 // Fallback theme
 const FONTS = THEME_FONTS || {

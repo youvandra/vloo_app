@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, StyleSheet, ScrollView, Image } from 'react-native';
 import { X } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../../../lib/theme';
+import { COLORS, FONTS } from '../../../../../lib/theme';
 
 interface PreviewVlooModalProps {
   visible: boolean;
