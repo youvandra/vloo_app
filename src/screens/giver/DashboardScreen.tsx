@@ -19,6 +19,8 @@ import { EditVlooModal } from './components/modals/EditVlooModal';
 import { PreviewVlooModal } from './components/modals/PreviewVlooModal';
 import { VlooDetailsModal } from './components/modals/VlooDetailsModal';
 import { EditProfileModal } from './components/modals/EditProfileModal';
+import { GoalsScreen } from './GoalsScreen';
+import { CalendarScreen } from './CalendarScreen';
 import { COLORS, FONTS } from '../../lib/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Edit2, LogOut, Fingerprint } from 'lucide-react-native';
@@ -86,6 +88,9 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [bindLoading, setBindLoading] = useState(false);
   const [selectedBindWallets, setSelectedBindWallets] = useState<any[]>([]);
   const [isEditingAssets, setIsEditingAssets] = useState(false);
+
+  // Navigation State
+  const [activeTab, setActiveTab] = useState('home');
 
   // Other State
   const [isTestnet, setIsTestnet] = useState(false);
@@ -782,41 +787,51 @@ export default function GiverDashboardScreen({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
-      <DashboardHeader 
-        user={user} 
-        onProfilePress={handleOpenProfileActions} 
-        displayName={userProfile?.full_name}
-        displayAvatarUrl={userProfile?.avatar_url}
-      />
-      
-      <ScrollView 
-        contentContainerStyle={{ paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000" />}
-      >
-        <CardStack 
-           vloos={vloos}
-           currentCardIndex={currentCardIndex}
-           onCardChange={setCurrentCardIndex}
-           onAddPress={() => setCreateModalVisible(true)}
-           onEditPress={handleEditPress}
-           onPreviewPress={handlePreviewPress}
-           onCardPress={handleCardPress}
-        />
+      {activeTab === 'home' ? (
+        <>
+          <DashboardHeader 
+            user={user} 
+            onProfilePress={handleOpenProfileActions} 
+            displayName={userProfile?.full_name}
+            displayAvatarUrl={userProfile?.avatar_url}
+          />
+          
+          <ScrollView 
+            contentContainerStyle={{ paddingBottom: 100 }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000" />}
+          >
+            <CardStack 
+               vloos={vloos}
+               currentCardIndex={currentCardIndex}
+               onCardChange={setCurrentCardIndex}
+               onAddPress={() => setCreateModalVisible(true)}
+               onEditPress={handleEditPress}
+               onPreviewPress={handlePreviewPress}
+               onCardPress={handleCardPress}
+            />
 
-        <WalletList 
-           wallets={currentWalletAddresses}
-           loading={loading}
-           refreshing={refreshing}
-           onRefresh={onRefresh}
-           onWalletPress={handleWalletPress}
-           balances={balances}
-           isTestnet={isTestnet}
-           setIsTestnet={setIsTestnet}
-        />
-      </ScrollView>
+            <WalletList 
+               wallets={currentWalletAddresses}
+               loading={loading}
+               refreshing={refreshing}
+               onRefresh={onRefresh}
+               onWalletPress={handleWalletPress}
+               balances={balances}
+               isTestnet={isTestnet}
+               setIsTestnet={setIsTestnet}
+            />
+          </ScrollView>
+        </>
+      ) : activeTab === 'goals' ? (
+        <GoalsScreen />
+      ) : activeTab === 'calendar' ? (
+        <CalendarScreen />
+      ) : (
+        <View style={{ flex: 1 }} />
+      )}
 
-      <BottomNavigation />
+      <BottomNavigation activeTab={activeTab} onTabPress={setActiveTab} />
 
       <VlooDetailsModal
         visible={vlooDetailsModalVisible}

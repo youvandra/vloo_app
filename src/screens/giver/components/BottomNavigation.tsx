@@ -1,30 +1,56 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { Home, BarChart2, CreditCard, Grid } from 'lucide-react-native';
+import { Home, Target, Calendar } from 'lucide-react-native';
 import { COLORS } from '../../../lib/theme';
 
 const { width } = Dimensions.get('window');
 
-export const BottomNavigation = () => {
+interface BottomNavigationProps {
+  activeTab?: string;
+  onTabPress?: (tab: string) => void;
+}
+
+export const BottomNavigation = ({ activeTab = 'home', onTabPress = () => {} }: BottomNavigationProps) => {
   return (
     <View style={styles.bottomNavContainer}>
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItemActive}>
-          <View style={[styles.navIconActive, { backgroundColor: '#fff' }]}>
-            <Home size={20} color="#000" />
-          </View>
+        <TouchableOpacity 
+          style={activeTab === 'home' ? styles.navItemActive : styles.navItem}
+          onPress={() => onTabPress('home')}
+        >
+          {activeTab === 'home' ? (
+             <View style={[styles.navIconActive, { backgroundColor: '#fff' }]}>
+               <Home size={20} color="#000" />
+             </View>
+          ) : (
+             <Home size={20} color="#fff" />
+          )}
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.navItem}>
-          <BarChart2 size={20} color="#fff" />
+        <TouchableOpacity 
+          style={activeTab === 'goals' ? styles.navItemActive : styles.navItem}
+          onPress={() => onTabPress('goals')}
+        >
+           {activeTab === 'goals' ? (
+             <View style={[styles.navIconActive, { backgroundColor: '#fff' }]}>
+               <Target size={20} color="#000" />
+             </View>
+          ) : (
+             <Target size={20} color="#fff" />
+          )}
         </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.navItem}>
-          <CreditCard size={20} color="#fff" />
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.navItem}>
-          <Grid size={20} color="#fff" />
+
+        <TouchableOpacity 
+          style={activeTab === 'calendar' ? styles.navItemActive : styles.navItem}
+          onPress={() => onTabPress('calendar')}
+        >
+           {activeTab === 'calendar' ? (
+             <View style={[styles.navIconActive, { backgroundColor: '#fff' }]}>
+               <Calendar size={20} color="#000" />
+             </View>
+          ) : (
+             <Calendar size={20} color="#fff" />
+          )}
         </TouchableOpacity>
       </View>
     </View>
