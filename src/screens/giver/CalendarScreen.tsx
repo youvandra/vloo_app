@@ -7,10 +7,13 @@ import {
   FlatList, 
   StatusBar, 
   Dimensions,
-  Alert
+  Alert,
+  Modal,
+  TouchableWithoutFeedback,
+  ScrollView
 } from 'react-native';
 import { COLORS, FONTS } from '../../lib/theme';
-import { ChevronLeft, ChevronRight, Bell, Plus, Calendar as CalendarIcon } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Bell, Plus, Calendar as CalendarIcon, Edit2, Trash2 } from 'lucide-react-native';
 import { CreateReminderModal } from './components/modals/calendar/CreateReminderModal';
 import { MonthYearPickerModal } from './components/modals/calendar/MonthYearPickerModal';
 import { ReminderDetailsModal } from './components/modals/calendar/ReminderDetailsModal';
@@ -18,6 +21,7 @@ import { supabase } from '../../lib/supabase';
 
 const { width } = Dimensions.get('window');
 const CELL_WIDTH = (width - 48) / 7;
+const INFO_MAX_WIDTH = Math.max(160, width - 216);
 
 interface Reminder {
   id: string;
@@ -43,6 +47,28 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(null);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [allRemindersVisible, setAllRemindersVisible] = useState(false);
+  
+  const remindersByDate = useMemo(() => {
+    const groups: Record<string, Reminder[]> = {};
+    reminders.forEach(r => {
+      const d = new Date(r.date);
+      const key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
+    });
+    // sort each group by title
+    Object.keys(groups).forEach(k => {
+      groups[k].sort((a, b) => a.title.localeCompare(b.title));
+    });
+    return groups;
+  }, [reminders]);
+  
+  const formatDateLabel = (key: string) => {
+    const [y, m, d] = key.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
+  };
 
   const [reminderToEdit, setReminderToEdit] = useState<Reminder | null>(null);
 
@@ -250,31 +276,48 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
     const cardCount = item.cardAmounts ? Object.keys(item.cardAmounts).length : 0;
     const cardCountText = `${cardCount} CARD${cardCount !== 1 ? 'S' : ''} REMINDING`;
 
-    return (
-      <TouchableOpacity 
-        style={styles.reminderCard}
-        onPress={() => {
-          setSelectedReminder(item);
-          setDetailsModalVisible(true);
-        }}
-      >
-        <View style={styles.reminderIcon}>
-          <Bell size={20} color={COLORS.primary} />
-        </View>
-        <View style={styles.reminderInfo}>
-          <Text style={styles.reminderTitle}>{item.title}</Text>
-          <Text style={styles.reminderLabel}>{cardCountText}</Text>
-        </View>
-        {item.amount ? (
-          <Text style={styles.reminderAmount}>{item.amount} {item.coin}</Text>
-        ) : null}
-      </TouchableOpacity>
-    );
-  };
+     return (
+       <TouchableOpacity 
+         style={styles.reminderCard}
+         onPress={() => {
+           setSelectedReminder(item);
+           setDetailsModalVisible(true);
+         }}
+       >
+         <View style={styles.reminderIcon}>
+           <Bell size={20} color={COLORS.primary} />
+         </View>
+         <View style={styles.reminderInfo}>
+           <Text style={styles.reminderTitle} numberOfLines={1} ellipsizeMode="tail">{item.title}</Text>
+           <Text style={styles.reminderLabel}>{cardCountText}</Text>
+         </View>
+         <View style={styles.reminderActions}>
+           <TouchableOpacity onPress={() => handleEditReminder(item)} style={styles.actionButton}>
+             <Edit2 size={16} color="#666" />
+           </TouchableOpacity>
+           <TouchableOpacity onPress={() => handleDeleteReminder(item.id)} style={[styles.actionButton, styles.deleteButton]}>
+             <Trash2 size={16} color={COLORS.error || '#FF3B30'} />
+           </TouchableOpacity>
+         </View>
+       </TouchableOpacity>
+     );
+   };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      
+      <View style={styles.allRemindersWrapper}>
+        <TouchableOpacity 
+          style={styles.allRemindersButton}
+          onPress={() => setAllRemindersVisible(true)}
+        >
+          <View style={styles.allRemindersContent}>
+            <CalendarIcon size={16} color={COLORS.primary} />
+            <Text style={styles.allRemindersText}>All Reminders</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
       
       {/* Calendar Header */}
       <View style={styles.header}>
@@ -371,6 +414,63 @@ export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps)
         initialDate={currentMonth}
       />
 
+      <Modal
+        visible={allRemindersVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setAllRemindersVisible(false)}
+      >
+        <View style={styles.allModalRoot}>
+          <TouchableWithoutFeedback onPress={() => setAllRemindersVisible(false)}>
+            <View style={styles.allModalOverlay} />
+          </TouchableWithoutFeedback>
+          <View style={styles.allModalSheet}>
+            <View style={styles.allModalHeader}>
+              <Text style={styles.allModalTitle}>All Reminders</Text>
+            </View>
+            <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 24 }}>
+              {Object.keys(remindersByDate)
+                .sort((a, b) => {
+                  // sort by actual date
+                  const [ay, am, ad] = a.split('-').map(Number);
+                  const [by, bm, bd] = b.split('-').map(Number);
+                  return new Date(ay, am - 1, ad).getTime() - new Date(by, bm - 1, bd).getTime();
+                })
+                    .map(key => (
+                      <View style={styles.groupContainer} key={key}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            const [y, m, d] = key.split('-').map(Number);
+                            const target = new Date(y, m - 1, d);
+                            setCurrentMonth(new Date(y, m - 1, 1));
+                            setSelectedDate(target);
+                            setAllRemindersVisible(false);
+                          }}
+                        >
+                          <Text style={styles.groupDateHeader}>{formatDateLabel(key)}</Text>
+                        </TouchableOpacity>
+                        {remindersByDate[key].map(rem => (
+                          <TouchableOpacity
+                            key={rem.id}
+                            style={styles.nameItem}
+                            onPress={() => {
+                          setAllRemindersVisible(false);
+                          setSelectedReminder(rem);
+                          setDetailsModalVisible(true);
+                        }}
+                      >
+                        <Text style={styles.nameItemText} numberOfLines={1} ellipsizeMode="tail">
+                          {rem.title}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       <ReminderDetailsModal
         visible={detailsModalVisible}
         onClose={() => setDetailsModalVisible(false)}
@@ -398,7 +498,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
   arrowButton: {
     padding: 8,
@@ -411,7 +511,7 @@ const styles = StyleSheet.create({
   weekdays: {
     flexDirection: 'row',
     paddingHorizontal: 24,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   weekdayCell: {
     width: CELL_WIDTH,
@@ -424,6 +524,32 @@ const styles = StyleSheet.create({
   },
   calendarContainer: {
     paddingHorizontal: 24,
+    marginBottom: 12,
+  },
+  allRemindersWrapper: {
+    paddingHorizontal: 24,
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  allRemindersButton: {
+    width: '100%',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  allRemindersContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  allRemindersText: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 14,
+    color: COLORS.primary,
   },
   calendarGrid: {
     // 
@@ -440,6 +566,53 @@ const styles = StyleSheet.create({
   },
   todayCell: {
     backgroundColor: '#f0f0f0',
+  },
+  allModalRoot: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  allModalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  allModalSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '70%',
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
+  allModalHeader: {
+    paddingHorizontal: 24,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  allModalTitle: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 18,
+    color: '#000',
+  },
+  groupContainer: {
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  groupDateHeader: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 14,
+    color: '#000',
+    marginBottom: 8,
+  },
+  nameItem: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  nameItemText: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 14,
+    color: '#000',
   },
   dayText: {
     fontFamily: FONTS.bodyRegular,
@@ -470,14 +643,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    marginTop: 24,
-    paddingTop: 24,
+    marginTop: 8,
+    paddingTop: 16,
   },
   remindersHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 0,
+    marginBottom: 8,
     paddingHorizontal: 24,
     paddingBottom: 12,
   },
@@ -528,6 +701,21 @@ const styles = StyleSheet.create({
   reminderInfo: {
     flex: 1,
     marginRight: 12,
+    maxWidth: INFO_MAX_WIDTH,
+  },
+  reminderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+  },
+  deleteButton: {
+    backgroundColor: 'rgba(255, 59, 48, 0.1)',
   },
   reminderLabel: {
     fontFamily: FONTS.bodySemiBold,

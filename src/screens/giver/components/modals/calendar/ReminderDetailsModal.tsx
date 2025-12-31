@@ -77,17 +77,9 @@ export const ReminderDetailsModal = ({
               <Text style={styles.title}>{reminder.title}</Text>
               <Text style={styles.date}>{new Date(reminder.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</Text>
             </View>
-            <View style={styles.headerActions}>
-              <TouchableOpacity onPress={() => onEdit(reminder)} style={styles.actionButton}>
-                <Edit2 size={20} color="#666" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => onDelete(reminder.id)} style={[styles.actionButton, styles.deleteButton]}>
-                <Trash2 size={20} color={COLORS.error || '#FF3B30'} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <X size={24} color="#000" />
+            </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>

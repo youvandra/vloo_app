@@ -45,8 +45,7 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, c
   React.useEffect(() => {
     if (visible) {
       if (reminderToEdit) {
-        // Pre-fill for edit mode
-        setTitle(reminderToEdit.title);
+        setTitle(reminderToEdit.title.slice(0, 19));
         
         const cardAmountsData = reminderToEdit.cardAmounts || {};
         const cardIds = Object.keys(cardAmountsData);
@@ -230,16 +229,18 @@ export const CreateReminderModal = ({ visible, onClose, onCreate, initialDate, c
               <View style={styles.form}>
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Reminder Title</Text>
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="e.g. Fund Birthday Card"
-                      value={title}
-                      onChangeText={setTitle}
-                      placeholderTextColor="#999"
-                    />
-                  </View>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. Fund Birthday Card"
+                    value={title}
+                    onChangeText={setTitle}
+                    maxLength={19}
+                    placeholderTextColor="#999"
+                  />
+                  <Text style={styles.charCount}>{title.length}/19</Text>
                 </View>
+              </View>
 
                 <View style={styles.inputGroup}>
                   <View style={styles.selectionHeader}>
@@ -376,6 +377,14 @@ const styles = StyleSheet.create({
     minHeight: 56,
     borderWidth: 1,
     borderColor: '#eee',
+  },
+  charCount: {
+    position: 'absolute',
+    right: 12,
+    bottom: 8,
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 12,
+    color: '#999',
   },
   inputIcon: {
     marginRight: 12,
@@ -556,7 +565,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   selectedCoinItem: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.accent,
   },
   coinText: {
     fontFamily: FONTS.bodyBold,
