@@ -13,6 +13,7 @@ import { COLORS, FONTS } from '../../lib/theme';
 import { ChevronLeft, ChevronRight, Bell, Plus, Calendar as CalendarIcon } from 'lucide-react-native';
 import { CreateReminderModal } from './components/modals/calendar/CreateReminderModal';
 import { MonthYearPickerModal } from './components/modals/calendar/MonthYearPickerModal';
+import { ReminderDetailsModal } from './components/modals/calendar/ReminderDetailsModal';
 import { supabase } from '../../lib/supabase';
 
 const { width } = Dimensions.get('window');
@@ -24,20 +25,24 @@ interface Reminder {
   amount?: string;
   coin?: string;
   date: Date;
+  cardAmounts?: Record<string, { amount: string; coin: string }>;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 interface CalendarScreenProps {
   vloos?: any[];
+  onCardPress?: (vloo: any) => void;
 }
 
-export const CalendarScreen = ({ vloos = [] }: CalendarScreenProps) => {
+export const CalendarScreen = ({ vloos = [], onCardPress }: CalendarScreenProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [modalVisible, setModalVisible] = useState(false);
   const [monthPickerVisible, setMonthPickerVisible] = useState(false);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(null);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
 
   const fetchReminders = async () => {
     try {
@@ -64,7 +69,8 @@ export const CalendarScreen = ({ vloos = [] }: CalendarScreenProps) => {
             title: item.title,
             amount: totalAmount > 0 ? totalAmount.toString() : undefined,
             coin: displayCoin,
-            date: new Date(item.date)
+            date: new Date(item.date),
+            cardAmounts: item.card_amounts
           };
         });
         setReminders(formattedReminders);
@@ -184,7 +190,13 @@ export const CalendarScreen = ({ vloos = [] }: CalendarScreenProps) => {
   };
 
   const renderReminderItem = ({ item }: { item: Reminder }) => (
-    <View style={styles.reminderCard}>
+    <TouchableOpacity 
+      style={styles.reminderCard}
+      onPress={() => {
+        setSelectedReminder(item);
+        setDetailsModalVisible(true);
+      }}
+    >
       <View style={styles.reminderIcon}>
         <Bell size={20} color={COLORS.primary} />
       </View>
@@ -194,7 +206,7 @@ export const CalendarScreen = ({ vloos = [] }: CalendarScreenProps) => {
       {item.amount ? (
         <Text style={styles.reminderAmount}>{item.amount} {item.coin}</Text>
       ) : null}
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -290,6 +302,18 @@ export const CalendarScreen = ({ vloos = [] }: CalendarScreenProps) => {
         onClose={() => setMonthPickerVisible(false)}
         onSelect={handleMonthSelect}
         initialDate={currentMonth}
+      />
+
+      <ReminderDetailsModal
+        visible={detailsModalVisible}
+        onClose={() => setDetailsModalVisible(false)}
+        reminder={selectedReminder}
+        vloos={vloos}
+        onCardPress={(vloo) => {
+          if (onCardPress) {
+            onCardPress(vloo);
+          }
+        }}
       />
     </View>
   );

@@ -826,7 +826,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
       ) : activeTab === 'goals' ? (
         <GoalsScreen />
       ) : activeTab === 'calendar' ? (
-        <CalendarScreen vloos={vloos} />
+        <CalendarScreen vloos={vloos} onCardPress={handleCardPress} />
       ) : (
         <View style={{ flex: 1 }} />
       )}
