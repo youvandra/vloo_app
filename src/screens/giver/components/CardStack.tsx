@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList, Dimensions } from 'react-native';
 import { Plus, MessageSquare } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../lib/theme';
@@ -30,6 +30,13 @@ export const CardStack = ({
   const displayData = useMemo(() => {
     return [...vloos, { id: 'placeholder', isPlaceholder: true }];
   }, [vloos]);
+  
+  const listRef = useRef<FlatList<any>>(null);
+  
+  useEffect(() => {
+    const offset = currentCardIndex * (CARD_WIDTH + CARD_SPACING);
+    listRef.current?.scrollToOffset({ offset, animated: true });
+  }, [currentCardIndex]);
 
   const renderCard = (item: any) => {
     const cardColor = item.verified_cards?.[0]?.color === 'blue' ? COLORS.primary : '#000';
@@ -124,6 +131,7 @@ export const CardStack = ({
       {/* Cards Stack */}
       <View style={styles.cardStackContainer}>
         <FlatList
+          ref={listRef}
           data={displayData}
           renderItem={renderCardItem}
           horizontal

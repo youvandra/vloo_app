@@ -262,6 +262,15 @@ export default function GiverDashboardScreen({ navigation }: any) {
     setSelectedVloo(vloo);
     setVlooDetailsModalVisible(true);
   };
+  
+  const handleGoToCardFromCalendar = (vloo: any) => {
+    setSelectedVloo(vloo);
+    const index = vloos.findIndex((v: any) => v.id === vloo.id);
+    if (index >= 0) {
+      setCurrentCardIndex(index);
+    }
+    setActiveTab('home');
+  };
 
   const handleAddAssetsPress = () => {
     if (!selectedVloo) return;
@@ -826,7 +835,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
       ) : activeTab === 'goals' ? (
         <GoalsScreen />
       ) : activeTab === 'calendar' ? (
-        <CalendarScreen vloos={vloos} onCardPress={handleCardPress} />
+        <CalendarScreen vloos={vloos} onCardPress={handleGoToCardFromCalendar} />
       ) : (
         <View style={{ flex: 1 }} />
       )}

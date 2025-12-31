@@ -46,10 +46,9 @@ export const ReminderDetailsModal = ({
         </View>
         <View style={styles.cardInfo}>
           <Text style={styles.cardName}>{vloo.receiver_name || 'Unnamed Card'}</Text>
-          <Text style={styles.cardMessage} numberOfLines={1}>{vloo.message || 'No message'}</Text>
+          <Text style={styles.amountText}>{amountInfo.amount} {amountInfo.coin}</Text>
         </View>
         <View style={styles.amountContainer}>
-          <Text style={styles.amountText}>{amountInfo.amount} {amountInfo.coin}</Text>
           <ChevronRight size={16} color="#999" />
         </View>
       </TouchableOpacity>
