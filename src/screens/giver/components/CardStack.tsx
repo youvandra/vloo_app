@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, FlatList, Dimensions } from 'react-native';
-import { Plus, MessageSquare } from 'lucide-react-native';
+import { Plus, MessageSquare, Eye } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../lib/theme';
 
 const { width } = Dimensions.get('window');
@@ -76,6 +76,10 @@ export const CardStack = ({
             </Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
+            <View style={styles.scanBadge}>
+               <Eye size={14} color="rgba(255,255,255,0.8)" />
+               <Text style={styles.scanCount}>{item.scan_count || 0}</Text>
+            </View>
             <TouchableOpacity 
               style={[styles.cardSettingsButton, { backgroundColor: 'rgba(255,255,255,0.1)' }]}
               onPress={() => onPreviewPress(item)}
@@ -314,6 +318,20 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  scanBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  scanCount: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 12,
+    color: '#fff',
   },
   paginationContainer: {
     flexDirection: 'row',

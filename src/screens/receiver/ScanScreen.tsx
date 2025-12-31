@@ -54,6 +54,13 @@ export default function ReceiverScanScreen({ navigation }: any) {
         throw new Error('Card not found or not bound to a VLOO');
       }
 
+      if (cardData?.vloos?.id) {
+        // Increment scan count
+        await supabase.rpc('increment_vloo_scan_count', { 
+          p_vloo_id: cardData.vloos.id 
+        });
+      }
+
       navigation.navigate('ReceiverClaim', { vloo: cardData.vloos });
 
     } catch (error: any) {

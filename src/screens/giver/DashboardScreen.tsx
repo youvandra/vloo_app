@@ -620,7 +620,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
       const { data, error } = await supabase
         .from('vloos')
-        .select('id, giver_id, created_at, status, wallet_address, unlock_date, message, receiver_name, verified_cards(id, color)')
+        .select('id, giver_id, created_at, status, wallet_address, unlock_date, message, receiver_name, scan_count, verified_cards(id, color)')
         .eq('giver_id', session.user.id)
         .order('created_at', { ascending: false });
 
