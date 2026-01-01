@@ -13,12 +13,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }: any) {
   const handleGiverPress = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      navigation.navigate('GiverDashboard');
-    } else {
-      navigation.navigate('GiverLogin');
-    }
+    navigation.navigate('GiverDashboard');
   };
 
   return (

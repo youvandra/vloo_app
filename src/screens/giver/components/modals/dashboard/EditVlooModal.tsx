@@ -10,8 +10,6 @@ interface EditVlooModalProps {
   onSave: () => void;
   onDelete: () => void;
   vloo: any;
-  editVlooName: string;
-  setEditVlooName: (name: string) => void;
   editVlooMessage: string;
   setEditVlooMessage: (message: string) => void;
   editVlooDate: Date | null;
@@ -25,8 +23,6 @@ export const EditVlooModal = ({
   onSave,
   onDelete,
   vloo,
-  editVlooName,
-  setEditVlooName,
   editVlooMessage,
   setEditVlooMessage,
   editVlooDate,
@@ -75,17 +71,6 @@ export const EditVlooModal = ({
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                   <X size={24} color="#000" />
                 </TouchableOpacity>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Recipient Name</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Name"
-                  placeholderTextColor="#999"
-                  value={editVlooName}
-                  onChangeText={setEditVlooName}
-                />
               </View>
 
               <View style={styles.inputGroup}>
@@ -143,9 +128,9 @@ export const EditVlooModal = ({
               )}
 
               <TouchableOpacity 
-                style={[styles.primaryButton, !editVlooName && { opacity: 0.5 }]}
+                style={[styles.primaryButton, !editVlooMessage && { opacity: 0.5 }]}
                 onPress={onSave}
-                disabled={!editVlooName || isSaving}
+                disabled={!editVlooMessage || isSaving}
               >
                 {isSaving ? (
                   <ActivityIndicator color="#fff" />

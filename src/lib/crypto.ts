@@ -20,3 +20,10 @@ export const decryptData = (ciphertext: string, passphrase: string): string => {
     return '';
   }
 };
+
+export const generateDeterministicPrivateKey = (cardId: string, passphrase: string): string => {
+  const masterKey = process.env.EXPO_PUBLIC_KEY_MASTER || 'default-master-key-DO-NOT-USE-IN-PROD';
+  const message = `${cardId}:${passphrase}`;
+  const hash = CryptoJS.HmacSHA256(message, masterKey);
+  return hash.toString(CryptoJS.enc.Hex);
+};

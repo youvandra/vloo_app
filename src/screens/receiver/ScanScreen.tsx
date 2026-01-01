@@ -32,7 +32,7 @@ export default function ReceiverScanScreen({ navigation }: any) {
       
       const { data: cardData, error: cardError } = await supabase
         .from('verified_cards')
-        .select('vloo_id, vloos(id, status, message, unlock_date, receiver_name, wallet_address)')
+        .select('*')
         .eq('id', cardId)
         .single();
 
@@ -45,23 +45,33 @@ export default function ReceiverScanScreen({ navigation }: any) {
                     id: 'demo-id',
                     status: 'locked',
                     message: 'Happy Birthday! Here is your gift.',
-                    unlock_date: new Date().toISOString(),
-                    encrypted_private_key: 'demo-key'
+                    unlock_date: new Date().toISOString()
                 }
             });
             return;
         }
-        throw new Error('Card not found or not bound to a VLOO');
+        throw new Error('Card not found');
       }
 
-      if (cardData?.vloos?.id) {
-        // Increment scan count
-        await supabase.rpc('increment_vloo_scan_count', { 
-          p_vloo_id: cardData.vloos.id 
-        });
+      // Check if card is bound/active
+      if (!cardData.message) {
+          throw new Error('This card has not been set up yet.');
       }
 
-      navigation.navigate('ReceiverClaim', { vloo: cardData.vloos });
+      if (cardData.id) {
+        // Increment scan count (we might need to update RPC or just do it manually if RLS allows, or skip for MVP)
+        // Since we disabled RLS, we can update directly
+        try {
+            await supabase
+                .from('verified_cards')
+                .update({ scan_count: (cardData.scan_count || 0) + 1 })
+                .eq('id', cardData.id);
+        } catch (e) {
+            console.log('Failed to increment scan count', e);
+        }
+      }
+
+      navigation.navigate('ReceiverClaim', { vloo: cardData });
 
     } catch (error: any) {
       console.error(error);

@@ -18,8 +18,6 @@ interface CreateVlooModalProps {
   visible: boolean;
   onClose: () => void;
   onNext: () => void;
-  newVlooName: string;
-  setNewVlooName: (name: string) => void;
   message: string;
   setMessage: (message: string) => void;
   passphrase: string;
@@ -32,8 +30,6 @@ export const CreateVlooModal = ({
   visible,
   onClose,
   onNext,
-  newVlooName,
-  setNewVlooName,
   message,
   setMessage,
   passphrase,
@@ -42,7 +38,6 @@ export const CreateVlooModal = ({
   setNewVlooUnlockDate
 }: CreateVlooModalProps) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showPassphraseInfo, setShowPassphraseInfo] = useState(false);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -85,18 +80,7 @@ export const CreateVlooModal = ({
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.stepIndicator}>Step 1 of 3</Text>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Who is this for? *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. Alice's Birthday"
-                  placeholderTextColor="#999"
-                  value={newVlooName}
-                  onChangeText={setNewVlooName}
-                />
-              </View>
+              <Text style={styles.stepIndicator}>Step 1 of 2</Text>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Message *</Text>
@@ -112,24 +96,14 @@ export const CreateVlooModal = ({
               </View>
 
               <View style={styles.inputGroup}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={styles.inputLabel}>Passphrase *</Text>
-                  <TouchableOpacity onPress={() => setShowPassphraseInfo((v) => !v)}>
-                    <HelpCircle size={18} color={COLORS.accent} />
-                  </TouchableOpacity>
-                </View>
-                {showPassphraseInfo && (
-                  <Text style={{ fontFamily: FONTS.bodyRegular, fontSize: 12, color: '#666', marginBottom: 8 }}>
-                    A passphrase secures the Vloo. Share it safely with the receiver.
-                  </Text>
-                )}
+                <Text style={styles.inputLabel}>Passphrase (for key generation) *</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Enter a secret passphrase"
                   placeholderTextColor="#999"
                   value={passphrase}
                   onChangeText={setPassphrase}
-                  secureTextEntry
+                  secureTextEntry={true}
                 />
               </View>
 
@@ -177,10 +151,10 @@ export const CreateVlooModal = ({
               <TouchableOpacity 
                 style={[
                   styles.primaryButton, 
-                  (!newVlooName || !message || !passphrase || !newVlooUnlockDate) && { opacity: 0.5 }
+                  (!message || !passphrase || !newVlooUnlockDate) && { opacity: 0.5 }
                 ]}
                 onPress={onNext}
-                disabled={!newVlooName || !message || !passphrase || !newVlooUnlockDate}
+                disabled={!message || !passphrase || !newVlooUnlockDate}
               >
                 <Text style={styles.primaryButtonText}>Next</Text>
               </TouchableOpacity>
@@ -231,13 +205,17 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   closeButton: {
-    padding: 4,
+    padding: 8,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 999,
   },
   stepIndicator: {
     fontFamily: FONTS.bodySemiBold,
     fontSize: 14,
-    color: COLORS.accent,
-    marginBottom: 32,
+    color: COLORS.primary,
+    marginBottom: 24,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   inputGroup: {
     marginBottom: 24,
@@ -245,46 +223,48 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontFamily: FONTS.bodyBold,
     fontSize: 14,
-    color: '#000',
-    marginBottom: 12,
+    color: '#333',
+    marginBottom: 8,
+    marginLeft: 4,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#eee',
-    padding: 16,
-    fontSize: 16,
-    fontFamily: FONTS.bodyRegular,
-    color: '#000',
     backgroundColor: '#f9f9f9',
     borderRadius: 16,
+    padding: 16,
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 16,
+    color: '#000',
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   datePickerButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#eee',
-    padding: 16,
+    justifyContent: 'space-between',
     backgroundColor: '#f9f9f9',
     borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   dateText: {
-    fontSize: 16,
     fontFamily: FONTS.bodyRegular,
+    fontSize: 16,
     color: '#000',
   },
   datePickerContainer: {
-    marginBottom: 24,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
     borderRadius: 16,
-    overflow: 'hidden',
+    marginBottom: 24,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   datePickerDoneButton: {
     padding: 12,
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: '#eee',
-    backgroundColor: '#fff',
   },
   datePickerDoneText: {
     fontFamily: FONTS.bodyBold,
@@ -294,14 +274,10 @@ const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 18,
-    alignItems: 'center',
-    marginTop: 24,
     borderRadius: 999,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 40,
   },
   primaryButtonText: {
     fontFamily: FONTS.bodyBold,

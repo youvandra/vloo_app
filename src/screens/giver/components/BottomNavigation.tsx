@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   labelText: {
     fontSize: 12,
-    fontFamily: FONTS.bodyMedium || 'System',
+    fontFamily: FONTS.bodySemiBold || 'System',
     marginTop: 4,
   }
 });

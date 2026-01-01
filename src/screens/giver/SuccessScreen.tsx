@@ -7,7 +7,7 @@ import { Button } from '../../components/Button';
 import { CheckCircle } from 'lucide-react-native';
 
 export default function GiverSuccessScreen({ route, navigation }: any) {
-  const { cardId, walletAddresses, address } = route.params;
+  const { cardId } = route.params;
 
   return (
     <View style={styles.container}>

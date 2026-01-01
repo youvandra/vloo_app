@@ -7,16 +7,12 @@ interface PreviewVlooModalProps {
   visible: boolean;
   onClose: () => void;
   vloo: any;
-  giverName?: string;
-  giverAvatar?: string;
 }
 
 export const PreviewVlooModal = ({
   visible,
   onClose,
   vloo,
-  giverName,
-  giverAvatar
 }: PreviewVlooModalProps) => {
 
   const panResponder = useRef(
@@ -59,18 +55,6 @@ export const PreviewVlooModal = ({
             </View>
 
             <View style={styles.messageSection}>
-              <View style={styles.avatarWrapper}>
-                {giverAvatar ? (
-                  <Image source={{ uri: giverAvatar }} style={styles.avatar} />
-                ) : (
-                  <View style={[styles.avatar, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
-                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#666' }}>
-                      {giverName ? giverName.charAt(0).toUpperCase() : 'G'}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.giverName}>{giverName || 'Giver'}</Text>
               <Text style={styles.messageText}>"{vloo.message || 'No message provided'}"</Text>
             </View>
 

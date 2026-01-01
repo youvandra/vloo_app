@@ -1,0 +1,1 @@
+ALTER TABLE vloos DROP COLUMN IF EXISTS giver_id;
