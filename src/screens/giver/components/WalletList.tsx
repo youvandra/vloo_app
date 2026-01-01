@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator, StyleSheet, Animated } from 'react-native';
+import { Settings, RotateCw } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../lib/theme';
 import BitcoinIcon from '../../../assets/icons/chains/bitcoin.svg';
 import EthIcon from '../../../assets/icons/chains/eth.svg';
@@ -15,8 +16,7 @@ interface WalletListProps {
   onRefresh: () => void;
   onWalletPress: (wallet: any) => void;
   balances: Record<string, string>;
-  isTestnet: boolean;
-  setIsTestnet: (val: boolean) => void;
+  onAddPress: () => void;
 }
 
 const Skeleton = ({ width, height, style }: { width: number | string, height: number, style?: any }) => {
@@ -62,8 +62,7 @@ export const WalletList = ({
   onRefresh, 
   onWalletPress, 
   balances,
-  isTestnet,
-  setIsTestnet
+  onAddPress
 }: WalletListProps) => {
 
   const formatAddress = (addr: string) => {
@@ -77,38 +76,33 @@ export const WalletList = ({
       {wallets.length > 0 && (
         <View style={[styles.walletHeader, { paddingHorizontal: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
           <Text style={styles.walletTitle}>Linked Wallets</Text>
-          <View style={{ flexDirection: 'row', backgroundColor: '#f0f0f0', borderRadius: 20, padding: 4 }}>
+          <View style={{ flexDirection: 'row' }}>
             <TouchableOpacity 
-              onPress={() => setIsTestnet(false)}
+              onPress={onAddPress}
               style={{ 
-                paddingHorizontal: 12, 
-                paddingVertical: 6, 
-                borderRadius: 16, 
-                backgroundColor: !isTestnet ? '#fff' : 'transparent',
-                shadowColor: !isTestnet ? '#000' : 'transparent',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: !isTestnet ? 0.1 : 0,
-                shadowRadius: 2,
-                elevation: !isTestnet ? 2 : 0
+                width: 36,
+                height: 36,
+                borderRadius: 18, 
+                backgroundColor: '#f0f0f0',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginRight: 8
               }}
             >
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: !isTestnet ? '#000' : '#666' }}>Mainnet</Text>
+               <Settings size={20} color={COLORS.primary} />
             </TouchableOpacity>
             <TouchableOpacity 
-              onPress={() => setIsTestnet(true)}
+              onPress={onRefresh}
               style={{ 
-                paddingHorizontal: 12, 
-                paddingVertical: 6, 
-                borderRadius: 16, 
-                backgroundColor: isTestnet ? '#fff' : 'transparent',
-                shadowColor: isTestnet ? '#000' : 'transparent',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: isTestnet ? 0.1 : 0,
-                shadowRadius: 2,
-                elevation: isTestnet ? 2 : 0
+                width: 36,
+                height: 36,
+                borderRadius: 18, 
+                backgroundColor: '#f0f0f0',
+                justifyContent: 'center',
+                alignItems: 'center'
               }}
             >
-              <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 12, color: isTestnet ? '#000' : '#666' }}>Testnet</Text>
+               <RotateCw size={20} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
         </View>

@@ -20,7 +20,6 @@ import { PreviewVlooModal } from './components/modals/dashboard/PreviewVlooModal
 import { VlooDetailsModal } from './components/modals/dashboard/VlooDetailsModal';
 import { EditProfileModal } from './components/modals/dashboard/EditProfileModal';
 import { GoalsScreen } from './GoalsScreen';
-import { CalendarScreen } from './CalendarScreen';
 import { COLORS, FONTS } from '../../lib/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Edit2, LogOut, Fingerprint } from 'lucide-react-native';
@@ -263,15 +262,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
     setVlooDetailsModalVisible(true);
   };
   
-  const handleGoToCardFromCalendar = (vloo: any) => {
-    setSelectedVloo(vloo);
-    const index = vloos.findIndex((v: any) => v.id === vloo.id);
-    if (index >= 0) {
-      setCurrentCardIndex(index);
-    }
-    setActiveTab('home');
-  };
-
   const handleAddAssetsPress = () => {
     if (!selectedVloo) return;
     
@@ -720,16 +710,25 @@ export default function GiverDashboardScreen({ navigation }: any) {
     return [];
   }, [vloos, currentCardIndex]);
 
-  // Testnet Filter
+  // Unified Wallet List
   const currentWalletAddresses = useMemo(() => {
-      return allWalletAddresses.filter((wallet: any) => {
-          if (isTestnet) {
-              return ['Sepolia', 'Lisk Sepolia'].includes(wallet.type);
-          } else {
-              return !['Sepolia', 'Lisk Sepolia'].includes(wallet.type);
-          }
-      });
-  }, [allWalletAddresses, isTestnet]);
+    return allWalletAddresses;
+  }, [allWalletAddresses]);
+
+  // Handle Add More Wallets
+  const handleAddMoreWallets = () => {
+    if (currentCardIndex < vloos.length) {
+      const currentVloo = vloos[currentCardIndex];
+      setSelectedVloo(currentVloo);
+      
+      // Set existing bound wallets
+      const existingWallets = getWalletAddresses(currentVloo.wallet_address);
+      setSelectedBindWallets(existingWallets);
+      
+      setIsEditingAssets(true);
+      setBindModalVisible(true);
+    }
+  };
 
   // Supported Chains for New Vloo
   const supportedChains = useMemo(() => {
@@ -873,13 +872,15 @@ export default function GiverDashboardScreen({ navigation }: any) {
         </>
       ) : activeTab === 'goals' ? (
         <GoalsScreen />
-      ) : activeTab === 'calendar' ? (
-        <CalendarScreen vloos={vloos} onCardPress={handleGoToCardFromCalendar} />
       ) : (
         <View style={{ flex: 1 }} />
       )}
 
-      <BottomNavigation activeTab={activeTab} onTabPress={setActiveTab} />
+      <BottomNavigation 
+        activeTab={activeTab} 
+        onTabPress={setActiveTab} 
+        onScanPress={() => setScanModalVisible(true)}
+      />
 
       <VlooDetailsModal
         visible={vlooDetailsModalVisible}
