@@ -116,6 +116,13 @@ export default function GiverLoginScreen({ navigation }: any) {
 
           <View style={styles.authContainer}>
             <Button 
+              title="Continue without login" 
+              onPress={() => navigation.replace('GiverDashboard')}
+              variant="outline"
+              style={[styles.actionButton, { borderColor: '#E5E7EB' }]}
+              textStyle={{ color: '#000', fontFamily: FONTS.bodySemiBold }}
+            />
+            <Button 
               title={loading ? "Connecting..." : "Continue with Google"} 
               onPress={handleGoogleLogin}
               variant="primary"

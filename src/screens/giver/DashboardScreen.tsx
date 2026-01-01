@@ -522,7 +522,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
         }
         
         if (!currentUser) {
-           Alert.alert('Session Expired', 'Please log in again.');
+           Alert.alert('Authentication Required', 'Please log in to create a Vloo.');
            setBindLoading(false);
            return;
         }
@@ -584,7 +584,12 @@ export default function GiverDashboardScreen({ navigation }: any) {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
-         navigation.replace('GiverLogin');
+         // Guest mode
+         setUser(null);
+         setUserProfile(null);
+         setVloos([]);
+         setLoading(false);
+         setRefreshing(false);
          return;
       }
       
