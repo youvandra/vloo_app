@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions, Text } from 'react-native';
-import { CreditCard, AlignJustify, ScanLine } from 'lucide-react-native';
+import { WalletCards, AlignJustify, ScanLine } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 import { COLORS, FONTS } from '../../../lib/theme';
 
@@ -76,11 +76,10 @@ export const BottomNavigation = ({
           onPress={() => onTabPress('home')}
           activeOpacity={0.7}
         >
-          <CreditCard 
+          <WalletCards 
             size={24} 
             color={activeTab === 'home' ? COLORS.primary : '#8E8E93'} 
-            fill={activeTab === 'home' ? COLORS.primary : 'none'}
-            strokeWidth={activeTab === 'home' ? 0 : 2}
+            strokeWidth={2}
           />
            <View style={{ position: 'absolute', opacity: 0 }} />
         </TouchableOpacity>

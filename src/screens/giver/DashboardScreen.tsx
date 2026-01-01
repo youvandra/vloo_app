@@ -40,6 +40,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [vloos, setVloos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   // Modals
@@ -236,16 +237,18 @@ export default function GiverDashboardScreen({ navigation }: any) {
       const { data, error } = await supabase
         .from('verified_cards')
         .select('*')
-        .in('id', localIds)
-        .order('created_at', { ascending: false });
+        .in('id', localIds);
 
       if (error) throw error;
       
-      // Map data to match expected structure if needed, or just use as is
-      // Previously: id, message, unlock_date, status, verified_cards(id, color)
-      // Now: id (is card id), message, unlock_date, status, color
-      // We might need to adapt the UI to use 'id' as card ID
-      setVloos(data || []);
+      // Sort data based on localIds order
+      const sortedData = (data || []).sort((a, b) => {
+          const indexA = localIds.indexOf(a.id);
+          const indexB = localIds.indexOf(b.id);
+          return indexA - indexB;
+      });
+
+      setVloos(sortedData);
     } catch (error) {
       console.error('Error fetching vloos:', error);
     } finally {
@@ -268,7 +271,31 @@ export default function GiverDashboardScreen({ navigation }: any) {
     fetchVloos();
   };
 
-
+  const handleDeleteCard = async (vloo: any) => {
+    Alert.alert(
+      'Remove Card',
+      'Are you sure you want to remove this card locally? You can restore it later by scanning it again.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Remove', 
+          style: 'destructive',
+          onPress: async () => {
+             try {
+                 const currentIds = await getLocalCardIds();
+                 const newIds = currentIds.filter((id: string) => id !== vloo.id);
+                 await AsyncStorage.setItem('my_card_ids', JSON.stringify(newIds));
+                 
+                 // Update UI
+                 setVloos(prev => prev.filter(v => v.id !== vloo.id));
+             } catch (e) {
+                 Alert.alert('Error', 'Failed to remove card locally');
+             }
+          }
+        }
+      ]
+    );
+  };
 
   const renderSkeleton = () => {
     return (
@@ -311,12 +338,26 @@ export default function GiverDashboardScreen({ navigation }: any) {
             <ScrollView 
               contentContainerStyle={{ paddingBottom: 100 }}
               showsVerticalScrollIndicator={false}
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000" />}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#000" enabled={!isEditing} />}
+              scrollEnabled={!isEditing}
             >
               <CardStack 
                  vloos={vloos}
+                 isEditing={isEditing}
                  onAddPress={() => setAddOptionsModalVisible(true)}
+                 onEditPress={() => setIsEditing(!isEditing)}
                  onCardPress={handleCardPress}
+                 onReorder={async (fromIndex, toIndex) => {
+                    const updatedVloos = [...vloos];
+                    const [movedItem] = updatedVloos.splice(fromIndex, 1);
+                    updatedVloos.splice(toIndex, 0, movedItem);
+                    setVloos(updatedVloos);
+
+                    // Save new order to AsyncStorage
+                    const newOrderIds = updatedVloos.map(v => v.id);
+                    await AsyncStorage.setItem('my_card_ids', JSON.stringify(newOrderIds));
+                 }}
+                 onDeletePress={handleDeleteCard}
               />
             </ScrollView>
           )}
