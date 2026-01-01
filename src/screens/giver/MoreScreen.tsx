@@ -28,7 +28,11 @@ const MenuItem = ({ icon, label, onPress }: MenuItemProps) => (
   </TouchableOpacity>
 );
 
-export const MoreScreen = () => {
+interface MoreScreenProps {
+  onNavigate: (screen: string) => void;
+}
+
+export const MoreScreen = ({ onNavigate }: MoreScreenProps) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -47,7 +51,7 @@ export const MoreScreen = () => {
           <MenuItem 
             icon={<Settings size={22} color={COLORS.primary} />} 
             label="Setting" 
-            onPress={() => {}} 
+            onPress={() => onNavigate('settings')} 
           />
         </View>
 

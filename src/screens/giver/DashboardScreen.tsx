@@ -18,12 +18,12 @@ import { ScanVlooModal } from './components/modals/dashboard/ScanVlooModal';
 import { EditVlooModal } from './components/modals/dashboard/EditVlooModal';
 import { PreviewVlooModal } from './components/modals/dashboard/PreviewVlooModal';
 import { VlooDetailsModal } from './components/modals/dashboard/VlooDetailsModal';
-import { EditProfileModal } from './components/modals/dashboard/EditProfileModal';
 import { AddVlooOptionsModal } from './components/modals/dashboard/AddVlooOptionsModal';
 import { MoreScreen } from './MoreScreen';
+import { SettingsScreen } from './SettingsScreen';
 import { COLORS, FONTS } from '../../lib/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Edit2, LogOut, Fingerprint } from 'lucide-react-native';
+import { Fingerprint } from 'lucide-react-native';
 
 const getWalletAddresses = (data: any) => {
   let addresses: any[] = [];
@@ -61,17 +61,11 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [vlooDetailsModalVisible, setVlooDetailsModalVisible] = useState(false);
   const [walletDetailModalVisible, setWalletDetailModalVisible] = useState(false);
-  const [editProfileModalVisible, setEditProfileModalVisible] = useState(false);
-  const [profileActionsVisible, setProfileActionsVisible] = useState(false);
+  const [moreScreenView, setMoreScreenView] = useState<'menu' | 'settings'>('menu');
 
   // Selected Items
   const [selectedVloo, setSelectedVloo] = useState<any>(null);
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
-
-  // Profile State
-  const [profileName, setProfileName] = useState('');
-  const [profileAvatarUrl, setProfileAvatarUrl] = useState('');
-  const [profileLoading, setProfileLoading] = useState(false);
 
   // Edit Vloo State
   const [editReceiverName, setEditReceiverName] = useState('');
@@ -163,15 +157,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
     setWalletDetailModalVisible(true);
   };
 
-  const handleOpenEditProfile = () => {
-    setProfileName(user?.user_metadata?.full_name || '');
-    setProfileAvatarUrl(user?.user_metadata?.avatar_url || '');
-    setEditProfileModalVisible(true);
-  };
-  const handleOpenProfileActions = () => {
-    setProfileActionsVisible(true);
-  };
-
   const requestFaceIdGate = async () => {
     try {
       const LocalAuthentication = require('expo-local-authentication');
@@ -208,38 +193,23 @@ export default function GiverDashboardScreen({ navigation }: any) {
     }
   };
 
-  const handleSaveProfile = async () => {
-    if (!profileName.trim()) {
-      Alert.alert('Error', 'Name cannot be empty');
-      return;
-    }
+  const handleUpdateProfile = async (name: string, avatarUrl: string) => {
+    const { data, error } = await supabase.auth.updateUser({
+      data: { full_name: name, avatar_url: avatarUrl }
+    });
 
-    setProfileLoading(true);
-    try {
-      const { data, error } = await supabase.auth.updateUser({
-        data: { full_name: profileName, avatar_url: profileAvatarUrl }
-      });
+    if (error) throw error;
 
-      if (error) throw error;
-
-      setUser(data.user);
-      await supabase
-        .from('users')
-        .upsert({
-          id: data.user.id,
-          email: data.user.email,
-          full_name: profileName,
-          avatar_url: profileAvatarUrl
-        }, { onConflict: 'id' });
-      setUserProfile({ full_name: profileName, avatar_url: profileAvatarUrl });
-      setEditProfileModalVisible(false);
-      Alert.alert('Success', 'Profile updated successfully');
-    } catch (error: any) {
-      console.error('Error updating profile:', error);
-      Alert.alert('Error', 'Failed to update profile');
-    } finally {
-      setProfileLoading(false);
-    }
+    setUser(data.user);
+    await supabase
+      .from('users')
+      .upsert({
+        id: data.user.id,
+        email: data.user.email,
+        full_name: name,
+        avatar_url: avatarUrl
+      }, { onConflict: 'id' });
+    setUserProfile({ full_name: name, avatar_url: avatarUrl });
   };
 
   const handleEditPress = (vloo: any) => {
@@ -839,12 +809,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
       
       {activeTab === 'home' ? (
         <>
-          <DashboardHeader 
-            user={user} 
-            onProfilePress={handleOpenProfileActions} 
-            displayName={userProfile?.full_name}
-            displayAvatarUrl={userProfile?.avatar_url}
-          />
+          <DashboardHeader balance="$0.00" />
           
           {loading ? (
             renderSkeleton()
@@ -877,7 +842,19 @@ export default function GiverDashboardScreen({ navigation }: any) {
           )}
         </>
       ) : activeTab === 'more' ? (
-        <MoreScreen />
+        moreScreenView === 'settings' ? (
+          <SettingsScreen 
+            onBack={() => setMoreScreenView('menu')}
+            user={user}
+            onSignOut={handleSignOut}
+            onUpdateProfile={handleUpdateProfile}
+            faceIdEnabled={faceIdEnabled}
+            faceIdSupported={faceIdSupported}
+            onToggleFaceId={handleToggleFaceId}
+          />
+        ) : (
+          <MoreScreen onNavigate={(screen) => setMoreScreenView(screen as any)} />
+        )
       ) : (
         <View style={{ flex: 1 }} />
       )}
@@ -1017,74 +994,9 @@ export default function GiverDashboardScreen({ navigation }: any) {
          giverAvatar={user?.user_metadata?.avatar_url}
       />
       
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={profileActionsVisible}
-        onRequestClose={() => setProfileActionsVisible(false)}
-      >
-        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <TouchableWithoutFeedback onPress={() => setProfileActionsVisible(false)}>
-            <View style={StyleSheet.absoluteFillObject}>
-               <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} />
-            </View>
-          </TouchableWithoutFeedback>
-          <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, borderWidth: 1, borderColor: '#eee', padding: 24 }}>
-            <Text style={{ fontFamily: FONTS.displayBold, fontSize: 20, color: '#000', marginBottom: 16 }}>Profile</Text>
-            <TouchableOpacity
-              style={{ paddingVertical: 14 }}
-              onPress={() => {
-                setProfileActionsVisible(false);
-                handleToggleFaceId();
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#000' }}>Face ID {faceIdEnabled ? '(On)' : '(Off)'}</Text>
-                <Fingerprint size={18} color={faceIdEnabled ? COLORS.primary : '#000'} />
-              </View>
-            </TouchableOpacity>
-            <View style={{ height: 1, backgroundColor: '#f0f0f0' }} />
-            <TouchableOpacity
-              style={{ paddingVertical: 14 }}
-              onPress={() => {
-                setProfileActionsVisible(false);
-                handleOpenEditProfile();
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#000' }}>Edit Profile</Text>
-                <Edit2 size={18} color="#000" />
-              </View>
-            </TouchableOpacity>
-            <View style={{ height: 1, backgroundColor: '#f0f0f0' }} />
-            <TouchableOpacity
-              style={{ paddingVertical: 14 }}
-              onPress={() => {
-                setProfileActionsVisible(false);
-                handleSignOut();
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={{ fontFamily: FONTS.bodyBold, fontSize: 16, color: '#FF3B30' }}>Sign Out</Text>
-                <LogOut size={18} color="#FF3B30" />
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
 
-      <EditProfileModal 
-         visible={editProfileModalVisible}
-         onClose={() => setEditProfileModalVisible(false)}
-         user={user}
-         onSave={handleSaveProfile}
-         isSaving={profileLoading}
-         editName={profileName}
-         setEditName={setProfileName}
-         editAvatarUrl={profileAvatarUrl}
-         setEditAvatarUrl={setProfileAvatarUrl}
-         onSignOut={handleSignOut}
-      />
+
+
       
     </SafeAreaView>
   );

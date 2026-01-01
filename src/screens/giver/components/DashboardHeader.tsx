@@ -4,29 +4,15 @@ import { Bell } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../lib/theme';
 
 interface DashboardHeaderProps {
-  user: any;
-  onProfilePress: () => void;
-  displayName?: string;
-  displayAvatarUrl?: string;
+  balance?: string;
 }
 
-export const DashboardHeader = ({ user, onProfilePress, displayName, displayAvatarUrl }: DashboardHeaderProps) => {
+export const DashboardHeader = ({ balance = '$0.00' }: DashboardHeaderProps) => {
   return (
     <View style={styles.header}>
-      <View style={styles.userInfo}>
-        <TouchableOpacity onPress={onProfilePress}>
-          <Image 
-            source={{ uri: displayAvatarUrl || user?.user_metadata?.avatar_url || 'https://i.pravatar.cc/150?u=giver' }} 
-            style={styles.avatar} 
-          />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.greeting}>
-            Hello <Text style={{ color: COLORS.accent }}>
-              {(displayName || user?.user_metadata?.full_name || 'Giver').split(' ')[0]}
-            </Text>,
-          </Text>
-        </View>
+      <View>
+        <Text style={styles.label}>Total Balance</Text>
+        <Text style={styles.balance}>{balance}</Text>
       </View>
       <View style={styles.headerActions}>
         <TouchableOpacity style={styles.headerButton}>
@@ -46,21 +32,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingHorizontal: 24,
   },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  label: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#eee',
-  },
-  greeting: {
+  balance: {
     fontFamily: FONTS.displayBold,
-    fontSize: 18,
+    fontSize: 32,
     color: '#000',
   },
   headerActions: {
