@@ -19,6 +19,7 @@ import { EditVlooModal } from './components/modals/dashboard/EditVlooModal';
 import { PreviewVlooModal } from './components/modals/dashboard/PreviewVlooModal';
 import { VlooDetailsModal } from './components/modals/dashboard/VlooDetailsModal';
 import { EditProfileModal } from './components/modals/dashboard/EditProfileModal';
+import { AddVlooOptionsModal } from './components/modals/dashboard/AddVlooOptionsModal';
 import { MoreScreen } from './MoreScreen';
 import { COLORS, FONTS } from '../../lib/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -52,6 +53,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [lastBalanceRefresh, setLastBalanceRefresh] = useState(0); 
 
   // Modals
+  const [addOptionsModalVisible, setAddOptionsModalVisible] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [bindModalVisible, setBindModalVisible] = useState(false);
   const [scanModalVisible, setScanModalVisible] = useState(false);
@@ -856,7 +858,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                  vloos={vloos}
                  currentCardIndex={currentCardIndex}
                  onCardChange={setCurrentCardIndex}
-                 onAddPress={() => setCreateModalVisible(true)}
+                 onAddPress={() => setAddOptionsModalVisible(true)}
                  onEditPress={handleEditPress}
                  onPreviewPress={handlePreviewPress}
                  onCardPress={handleCardPress}
@@ -910,6 +912,19 @@ export default function GiverDashboardScreen({ navigation }: any) {
         onClose={() => setWalletDetailModalVisible(false)}
         wallet={selectedWallet}
         balance={selectedWallet ? balances[`${selectedWallet.type}-${selectedWallet.address}`] : '0.00'}
+      />
+
+      <AddVlooOptionsModal 
+        visible={addOptionsModalVisible}
+        onClose={() => setAddOptionsModalVisible(false)}
+        onNewCard={() => {
+           setAddOptionsModalVisible(false);
+           setTimeout(() => setCreateModalVisible(true), 500);
+        }}
+        onImportCard={() => {
+           setAddOptionsModalVisible(false);
+           Alert.alert('Coming Soon', 'Import Card feature will be available soon.');
+        }}
       />
 
       <CreateVlooModal 
