@@ -19,7 +19,7 @@ import { EditVlooModal } from './components/modals/dashboard/EditVlooModal';
 import { PreviewVlooModal } from './components/modals/dashboard/PreviewVlooModal';
 import { VlooDetailsModal } from './components/modals/dashboard/VlooDetailsModal';
 import { EditProfileModal } from './components/modals/dashboard/EditProfileModal';
-import { GoalsScreen } from './GoalsScreen';
+import { MoreScreen } from './MoreScreen';
 import { COLORS, FONTS } from '../../lib/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Edit2, LogOut, Fingerprint } from 'lucide-react-native';
@@ -864,14 +864,13 @@ export default function GiverDashboardScreen({ navigation }: any) {
                  onRefresh={onRefresh}
                  onWalletPress={handleWalletPress}
                  balances={balances}
-                 isTestnet={isTestnet}
-                 setIsTestnet={setIsTestnet}
+                 onAddPress={handleAddMoreWallets}
               />
             </ScrollView>
           )}
         </>
-      ) : activeTab === 'goals' ? (
-        <GoalsScreen />
+      ) : activeTab === 'more' ? (
+        <MoreScreen />
       ) : (
         <View style={{ flex: 1 }} />
       )}

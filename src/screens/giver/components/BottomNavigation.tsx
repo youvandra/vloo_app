@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions, Text } from 'react-native';
-import { CreditCard, LayoutGrid, ScanLine } from 'lucide-react-native';
+import { CreditCard, AlignJustify, ScanLine } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 import { COLORS, FONTS } from '../../../lib/theme';
 
@@ -88,15 +88,15 @@ export const BottomNavigation = ({
         {/* Spacer for Center Button */}
         <View style={{ width: curveWidth }} />
 
-        {/* Right Tab: More (Goals/Menu) */}
+        {/* Right Tab: More (Menu) */}
         <TouchableOpacity 
           style={styles.tabItem} 
-          onPress={() => onTabPress('goals')}
+          onPress={() => onTabPress('more')}
           activeOpacity={0.7}
         >
-          <LayoutGrid 
+          <AlignJustify 
             size={24} 
-            color={activeTab === 'goals' ? COLORS.primary : '#8E8E93'} 
+            color={activeTab === 'more' ? COLORS.primary : '#8E8E93'} 
           />
         </TouchableOpacity>
       </View>
@@ -120,7 +120,7 @@ export const BottomNavigation = ({
          </View>
          <View style={{ width: curveWidth }} />
          <View style={styles.labelWrapper}>
-           <Text style={[styles.labelText, { color: activeTab === 'goals' ? COLORS.primary : '#8E8E93' }]}>More</Text>
+           <Text style={[styles.labelText, { color: activeTab === 'more' ? COLORS.primary : '#8E8E93' }]}>More</Text>
          </View>
       </View>
     </View>
