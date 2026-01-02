@@ -311,9 +311,12 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     marginTop: 10,
     paddingBottom: 24,
+    alignItems: 'center',
   },
   mainCard: {
     width: '100%',
+    maxWidth: 340,
+    alignSelf: 'center',
     height: 220,
     borderRadius: 24,
     padding: 24,

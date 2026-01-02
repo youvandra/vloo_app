@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
 import { Bell } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../lib/theme';
 
@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 30,
-    marginTop: 10,
+    marginTop: Platform.select({ android: 50, ios: 10 }),
     paddingHorizontal: 24,
   },
   label: {
