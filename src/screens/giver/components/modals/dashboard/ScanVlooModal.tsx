@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { X, ArrowLeft, ScanLine, Keyboard } from 'lucide-react-native';
+import NfcManager, { NfcTech } from 'react-native-nfc-manager';
 import { COLORS, FONTS as THEME_FONTS } from '../../../../../lib/theme';
 
 // Fallback theme
@@ -45,11 +46,35 @@ export const ScanVlooModal = ({
     })
   ).current;
 
-  const handleScan = () => {
-    // Simulate scanning
-    // In real app, this would trigger NFC manager
-    const simulatedId = 'vloo-card-' + Math.floor(Math.random() * 1000000);
-    onBind(simulatedId);
+  useEffect(() => {
+    const initNfc = async () => {
+      const supported = await NfcManager.isSupported();
+      if (supported) {
+        await NfcManager.start();
+      }
+    };
+    initNfc();
+
+    return () => {
+      NfcManager.cancelTechnologyRequest().catch(() => 0);
+    };
+  }, []);
+
+  const handleScan = async () => {
+    try {
+      await NfcManager.requestTechnology(NfcTech.NfcA);
+      const tag = await NfcManager.getTag();
+      if (tag && tag.id) {
+        onBind(tag.id);
+      } else {
+        Alert.alert('Error', 'Could not read card ID');
+      }
+    } catch (ex) {
+      console.warn('NFC Scan Error:', ex);
+      NfcManager.cancelTechnologyRequest().catch(() => 0);
+    } finally {
+      NfcManager.cancelTechnologyRequest().catch(() => 0);
+    }
   };
 
   const handleManualSubmit = () => {
@@ -126,7 +151,7 @@ export const ScanVlooModal = ({
                         {isBinding ? (
                             <ActivityIndicator color="#fff" />
                         ) : (
-                            <Text style={styles.primaryButtonText}>Simulate Tap</Text>
+                            <Text style={styles.primaryButtonText}>Tap to Scan (NFC)</Text>
                         )}
                     </TouchableOpacity>
                 </View>

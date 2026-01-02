@@ -1,25 +1,18 @@
 import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, StyleSheet, ScrollView } from 'react-native';
-import { Copy, Plus, X } from 'lucide-react-native';
-import { COLORS, FONTS } from '../../../../../lib/theme';
+import { View, Text, Modal, TouchableWithoutFeedback, StyleSheet, TouchableOpacity, PanResponder } from 'react-native';
+import { X, Copy } from 'lucide-react-native';
+import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
-import { Alert } from 'react-native';
-import BitcoinIcon from '../../../../../assets/icons/chains/bitcoin.svg';
-import EthIcon from '../../../../../assets/icons/chains/eth.svg';
-import SolanaIcon from '../../../../../assets/icons/chains/solana.svg';
-import PolygonIcon from '../../../../../assets/icons/chains/polygon.svg';
-import BnbIcon from '../../../../../assets/icons/chains/bnb.svg';
-import LiskIcon from '../../../../../assets/icons/chains/lisk.svg';
+import { COLORS, FONTS } from '../../../../../lib/theme';
 
 interface WalletDetailModalProps {
   visible: boolean;
   onClose: () => void;
   wallet: any;
-  balance: string;
+  price: number;
 }
 
-export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletDetailModalProps) => {
-  const fontFamilies: any = FONTS || {};
+export const WalletDetailModal = ({ visible, onClose, wallet, price }: WalletDetailModalProps) => {
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -34,9 +27,26 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
     })
   ).current;
 
-  const copyToClipboard = async (text: string) => {
-    await Clipboard.setStringAsync(text);
-    Alert.alert('Copied', 'Address copied to clipboard');
+  if (!wallet) return null;
+
+  const copyToClipboard = async () => {
+    await Clipboard.setStringAsync(wallet.address);
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(price);
+  };
+
+  const getSymbol = (type: string) => {
+    if (!type) return '';
+    const lower = type.toLowerCase();
+    if (lower.includes('bitcoin') || lower === 'btc') return 'BTC';
+    if (lower.includes('ethereum') || lower === 'eth') return 'ETH';
+    if (lower.includes('solana') || lower === 'sol') return 'SOL';
+    if (lower.includes('polygon') || lower === 'pol' || lower === 'matic') return 'POL';
+    if (lower.includes('bnb')) return 'BNB';
+    if (lower.includes('lisk')) return 'LSK';
+    return '';
   };
 
   return (
@@ -46,89 +56,41 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+      <View style={styles.modalContainer}>
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={StyleSheet.absoluteFillObject}>
-             <View style={styles.modalOverlay} />
+             <View style={styles.backdrop} />
           </View>
         </TouchableWithoutFeedback>
-        
-        <View style={[styles.modalContent, { height: '80%' }]}>
-          <View style={styles.modalHeader} {...panResponder.panHandlers}>
+
+        <View style={styles.content} {...panResponder.panHandlers}>
+          <View style={styles.handleContainer}>
+            <View style={styles.handle} />
+          </View>
+
+          <View style={styles.header}>
+            <Text style={styles.title}>{wallet.type}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-               <X size={24} color="#000" />
+              <X size={24} color="#000" />
             </TouchableOpacity>
           </View>
-          
-          <ScrollView contentContainerStyle={{ alignItems: 'center', paddingVertical: 24, paddingHorizontal: 24 }}>
-             {/* Logo */}
-             <View style={{ marginBottom: 16 }}>
-               {wallet?.type === 'Bitcoin' ? (
-                 <BitcoinIcon width={64} height={64} />
-               ) : wallet?.type === 'Ethereum' || wallet?.type === 'Sepolia' ? (
-                 <EthIcon width={64} height={64} />
-               ) : wallet?.type === 'Lisk' || wallet?.type === 'Lisk Sepolia' ? (
-                 <LiskIcon width={64} height={64} />
-               ) : wallet?.type === 'Solana' ? (
-                 <SolanaIcon width={64} height={64} />
-               ) : wallet?.type === 'Polygon' ? (
-                 <PolygonIcon width={64} height={64} />
-               ) : wallet?.type === 'BNB Chain' ? (
-                 <BnbIcon width={64} height={64} />
-               ) : (
-                 <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#f0f0f0', alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 32 }}>?</Text>
-                 </View>
-               )}
-             </View>
 
-             {/* Chain Name */}
-             <Text style={{ fontFamily: fontFamilies.displayBold, fontSize: 24, color: '#000', marginBottom: 8 }}>
-               {wallet?.type}
-             </Text>
+          <View style={styles.qrContainer}>
+             <QRCode value={wallet.address} size={200} />
+          </View>
 
-             {/* Balance */}
-             <Text style={{ fontFamily: fontFamilies.displayBold, fontSize: 36, color: COLORS.primary, marginBottom: 32, textAlign: 'center' }}>
-                {balance || '0.00'}
-             </Text>
+          <View style={styles.addressContainer}>
+            <Text style={styles.addressLabel}>Address</Text>
+            <TouchableOpacity style={styles.addressRow} onPress={copyToClipboard}>
+              <Text style={styles.addressText}>{wallet.address}</Text>
+              <Copy size={16} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
 
-             {/* Address Section */}
-             <View style={{ width: '100%', backgroundColor: '#f5f5f5', padding: 16, marginBottom: 24, borderRadius: 16, borderWidth: 1, borderColor: '#eee' }}>
-                <Text style={{ fontFamily: fontFamilies.bodyBold, fontSize: 12, color: '#666', marginBottom: 8, textTransform: 'uppercase' }}>
-                  Wallet Address
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={{ fontFamily: fontFamilies.bodyRegular, fontSize: 14, color: '#000', flex: 1, marginRight: 12 }}>
-                    {wallet?.address}
-                  </Text>
-                  <TouchableOpacity 
-                    style={{ padding: 8, backgroundColor: '#fff', borderRadius: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 }}
-                    onPress={() => copyToClipboard(wallet?.address)}
-                  >
-                    <Copy size={20} color={COLORS.primary} />
-                  </TouchableOpacity>
-                </View>
-             </View>
-
-             {/* Tokens Section */}
-             <View style={{ width: '100%' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <Text style={{ fontFamily: fontFamilies.displayBold, fontSize: 18, color: '#000' }}>Tokens</Text>
-                  <TouchableOpacity 
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                    onPress={() => Alert.alert('Add Token', 'Feature coming soon')}
-                  >
-                     <Plus size={16} color={COLORS.primary} />
-                     <Text style={{ fontFamily: fontFamilies.bodyBold, fontSize: 14, color: COLORS.primary }}>Add Token</Text>
-                  </TouchableOpacity>
-                </View>
-                
-                <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-                   <Text style={{ fontFamily: fontFamilies.bodyRegular, fontSize: 14, color: '#999' }}>No tokens found</Text>
-                </View>
-             </View>
-
-          </ScrollView>
+          <View style={styles.priceContainer}>
+            <Text style={styles.priceLabel}>Current Price</Text>
+            <Text style={styles.priceText}>1 {getSymbol(wallet.type)} ≈ {formatPrice(price)}</Text>
+          </View>
         </View>
       </View>
     </Modal>
@@ -136,33 +98,92 @@ export const WalletDetailModal = ({ visible, onClose, wallet, balance }: WalletD
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
+  modalContainer: {
     flex: 1,
+    justifyContent: 'flex-end',
+  },
+  backdrop: {
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  modalContent: {
-    height: '80%',
+  content: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    borderWidth: 1,
-    borderColor: '#eee',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -5 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 20,
-    width: '100%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+    minHeight: 450,
   },
-  modalHeader: {
-    height: 40,
-    justifyContent: 'center',
+  handleContainer: {
     alignItems: 'center',
+    marginBottom: 8,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 2,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  title: {
+    fontFamily: FONTS.displayBold,
+    fontSize: 20,
+    color: '#000',
   },
   closeButton: {
-    position: 'absolute',
-    right: 24,
-    top: 16,
-    zIndex: 10,
+    padding: 4,
+  },
+  qrContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#eee',
+    alignSelf: 'center',
+  },
+  addressContainer: {
+    marginBottom: 24,
+    backgroundColor: '#F8F9FA',
+    padding: 16,
+    borderRadius: 12,
+  },
+  addressLabel: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  addressText: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 13,
+    color: '#000',
+    flex: 1,
+  },
+  priceContainer: {
+    alignItems: 'center',
+  },
+  priceLabel: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  priceText: {
+    fontFamily: FONTS.bodyBold,
+    fontSize: 18,
+    color: COLORS.primary,
   },
 });

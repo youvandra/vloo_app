@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 30,
-    marginTop: Platform.select({ android: 50, ios: 10 }),
+    marginTop: Platform.select({ android: 60, ios: 0 }),
     paddingHorizontal: 24,
   },
   label: {

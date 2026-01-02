@@ -75,12 +75,12 @@ export const fetchBalance = async (address: string, chainType: string): Promise<
         if (data.result) {
             const balanceWei = parseInt(data.result, 16);
             const balanceEth = balanceWei / 1000000000000000000;
-            return `${balanceEth.toFixed(4)} ETH`; // Lisk uses ETH as gas
+            return `${balanceEth.toFixed(4)} LSK`; // User wants LSK symbol
         }
-        return '0.00 ETH';
+        return '0.00 LSK';
     } catch (e) {
         console.error('Error fetching Lisk balance:', e);
-        return '0.00 ETH';
+        return '0.00 LSK';
     }
   } else if (normalizedType === 'lisk sepolia') {
     // Lisk Sepolia Testnet RPC
@@ -100,12 +100,12 @@ export const fetchBalance = async (address: string, chainType: string): Promise<
         if (data.result) {
             const balanceWei = parseInt(data.result, 16);
             const balanceEth = balanceWei / 1000000000000000000;
-            return `${balanceEth.toFixed(4)} ETH`;
+            return `${balanceEth.toFixed(4)} LSK`;
         }
-        return '0.00 ETH';
+        return '0.00 LSK';
     } catch (e) {
         console.error('Error fetching Lisk Sepolia balance:', e);
-        return '0.00 ETH';
+        return '0.00 LSK';
     }
   } else {
     // Unsupported by BlockCypher or this integration

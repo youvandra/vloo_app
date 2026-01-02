@@ -231,14 +231,15 @@ export const CardStack = ({
               marginTop: marginTop,
               zIndex: index,
               elevation: index + 10,
+              transform: [], // 2D view for placeholder
             }
           ]}
           onPress={onAddPress}
           activeOpacity={0.8}
         >
-          <View style={styles.placeholderContent}>
+          <View style={styles.placeholderInner}>
             <View style={styles.placeholderIconContainer}>
-              <Plus size={40} color="#fff" />
+              <Plus size={32} color="#fff" />
             </View>
             <Text style={styles.placeholderText}>Create New Vloo Card</Text>
             <Text style={styles.placeholderSubtext}>Tap to add another recipient</Text>
@@ -333,27 +334,38 @@ const styles = StyleSheet.create({
     ],
   },
   placeholderCard: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: '#fff',
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  placeholderInner: {
+    flex: 1,
+    width: '100%',
     borderWidth: 2,
     borderColor: '#eee',
     borderStyle: 'dashed',
+    borderRadius: 20,
     justifyContent: 'center',
-    alignItems: 'center',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  placeholderContent: {
     alignItems: 'center',
     gap: 12,
   },
   placeholderIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   placeholderText: {
     fontFamily: FONTS.displayBold,

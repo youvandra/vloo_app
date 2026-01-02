@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, SafeAreaView, Platform } from 'react-native';
 import { 
   CreditCard, 
   Settings, 
@@ -105,6 +105,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
+    paddingTop: Platform.select({ android: 60, ios: 16 }),
   },
   headerTitle: {
     fontFamily: FONTS.displayBold,
@@ -114,6 +115,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 24,
     paddingBottom: 100,
+    width: '100%',
+    maxWidth: 600,
+    alignSelf: 'center',
   },
   section: {
     backgroundColor: '#fff',

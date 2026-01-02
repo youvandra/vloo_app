@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, SafeAreaView, StatusBar, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, SafeAreaView, StatusBar, Alert, Platform } from 'react-native';
 import { ArrowLeft, Edit2, Copy, Eye, MessageSquare, ArrowDown, ArrowUp, ArrowLeftRight, CreditCard } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../lib/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
+import { fetchBalance } from '../../lib/blockcypher';
 import BitcoinIcon from '../../assets/icons/chains/bitcoin.svg';
 import EthIcon from '../../assets/icons/chains/eth.svg';
 import SolanaIcon from '../../assets/icons/chains/solana.svg';
@@ -11,11 +12,14 @@ import PolygonIcon from '../../assets/icons/chains/polygon.svg';
 import BnbIcon from '../../assets/icons/chains/bnb.svg';
 import LiskIcon from '../../assets/icons/chains/lisk.svg';
 import { EditVlooModal } from './components/modals/dashboard/EditVlooModal';
+import { WalletDetailModal } from './components/modals/dashboard/WalletDetailModal';
 import { supabase } from '../../lib/supabase';
 
 export default function VlooDetailsScreen({ route, navigation }: any) {
   const { vloo } = route.params;
   const [wallets, setWallets] = useState<any[]>([]);
+  const [prices, setPrices] = useState<any>({});
+  const [walletBalances, setWalletBalances] = useState<{[key: string]: string}>({});
   
   // Edit State
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -23,11 +27,58 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   const [editUnlockDate, setEditUnlockDate] = useState<Date | null>(new Date());
   const [editLoading, setEditLoading] = useState(false);
 
+  // Detail Modal State
+  const [selectedWallet, setSelectedWallet] = useState<any>(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+
   useEffect(() => {
     if (vloo?.id) {
       loadWallets();
     }
   }, [vloo]);
+
+  useEffect(() => {
+    if (wallets.length > 0) {
+      // Fetch Balances
+      wallets.forEach(async (w) => {
+        const bal = await fetchBalance(w.address, w.type);
+        setWalletBalances(prev => ({...prev, [w.address]: bal}));
+      });
+
+      // Fetch Prices separately for each coin type found
+      const uniqueTypes = new Set(wallets.map(w => w.type));
+      uniqueTypes.forEach(type => {
+         const coinId = getCoinIdFromType(type);
+         if (coinId) {
+             fetchCoinPrice(coinId);
+         }
+      });
+    }
+  }, [wallets]);
+
+  const getCoinIdFromType = (type: string) => {
+    if (!type) return '';
+    const lower = type.toLowerCase();
+    if (lower.includes('bitcoin')) return 'bitcoin';
+    if (lower.includes('ethereum')) return 'ethereum';
+    if (lower.includes('solana')) return 'solana';
+    if (lower.includes('polygon') || lower.includes('matic')) return 'matic-network';
+    if (lower.includes('bnb')) return 'binancecoin';
+    if (lower.includes('lisk')) return 'lisk';
+    return '';
+  };
+
+  const fetchCoinPrice = async (coinId: string) => {
+    try {
+      console.log(`Fetching price for: ${coinId}`);
+      const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=idr`);
+      const data = await response.json();
+      console.log(`Price for ${coinId}:`, data);
+      setPrices((prev: any) => ({ ...prev, ...data }));
+    } catch (e) {
+      console.error(`Error fetching price for ${coinId}:`, e);
+    }
+  };
 
   const loadWallets = async () => {
     try {
@@ -88,6 +139,52 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   const handleDelete = async () => {
       // Placeholder for delete logic if needed, or pass it from parent
       Alert.alert('Delete', 'Delete functionality coming soon.');
+  };
+
+  const formatIDR = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);
+  };
+  
+  const formatAddress = (address: string) => {
+      if (!address) return '';
+      if (address.length < 10) return address;
+      return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+  
+  const getPriceId = (symbol: string) => {
+      if (!symbol) return '';
+      const s = symbol.toUpperCase();
+      if (s === 'BTC') return 'bitcoin';
+      if (s === 'ETH') return 'ethereum';
+      if (s === 'SOL') return 'solana';
+      if (s === 'POL' || s === 'MATIC') return 'matic-network';
+      if (s === 'BNB') return 'binancecoin';
+      if (s === 'LSK') return 'lisk';
+      return '';
+  };
+  
+  const getWalletPrice = (wallet: any) => {
+      if (!wallet) return 0;
+      const balanceStr = walletBalances[wallet.address] || '';
+      let symbol = balanceStr.split(' ')[1];
+      
+      if (!symbol) {
+          const type = wallet.type.toLowerCase();
+          if (type.includes('bitcoin')) symbol = 'BTC';
+          else if (type.includes('ethereum')) symbol = 'ETH';
+          else if (type.includes('solana')) symbol = 'SOL';
+          else if (type.includes('polygon')) symbol = 'POL';
+          else if (type.includes('bnb')) symbol = 'BNB';
+          else if (type.includes('lisk')) symbol = 'LSK';
+      }
+      
+      const priceId = getPriceId(symbol || '');
+      return prices[priceId]?.idr || 0;
+  };
+
+  const handleWalletPress = (wallet: any) => {
+    setSelectedWallet(wallet);
+    setDetailModalVisible(true);
   };
 
   if (!vloo) return null;
@@ -163,8 +260,31 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
           <View style={styles.infoSection}>
              <Text style={styles.label}>Linked Wallets</Text>
              <View style={styles.walletsContainer}>
-               {wallets.map((wallet: any, index: number) => (
-                 <View key={index} style={styles.walletRow}>
+               {wallets.map((wallet: any, index: number) => {
+                 const balanceStr = walletBalances[wallet.address] || '';
+                 let [amountStr, symbol] = balanceStr.split(' ');
+                 
+                 // If symbol missing from balance (e.g. initial load or empty), derive from type
+                 if (!symbol) {
+                    const type = wallet.type.toLowerCase();
+                    if (type.includes('bitcoin')) symbol = 'BTC';
+                    else if (type.includes('ethereum')) symbol = 'ETH';
+                    else if (type.includes('solana')) symbol = 'SOL';
+                    else if (type.includes('polygon')) symbol = 'POL';
+                    else if (type.includes('bnb')) symbol = 'BNB';
+                    else if (type.includes('lisk')) symbol = 'LSK';
+                    
+                    // If balance string was empty/default, set amount to 0
+                    if (!amountStr) amountStr = '0.00';
+                 }
+
+                 const amount = parseFloat(amountStr) || 0;
+                 const priceId = getPriceId(symbol);
+                 const price = prices[priceId]?.idr || 0;
+                 const idrValue = amount * price;
+
+                 return (
+                 <TouchableOpacity key={index} style={styles.walletRow} onPress={() => handleWalletPress(wallet)}>
                    <View style={styles.walletIcon}>
                      {wallet.type === 'Bitcoin' ? <BitcoinIcon width={24} height={24} /> :
                       wallet.type === 'Ethereum' ? <EthIcon width={24} height={24} /> :
@@ -176,13 +296,14 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
                    </View>
                    <View style={styles.walletInfo}>
                      <Text style={styles.walletType}>{wallet.type}</Text>
-                     <Text style={styles.walletAddress} numberOfLines={1} ellipsizeMode="middle">{wallet.address}</Text>
+                     <Text style={styles.walletAddress}>{symbol}</Text>
                    </View>
-                   <TouchableOpacity onPress={() => copyToClipboard(wallet.address)} style={styles.copyButton}>
-                     <Copy size={16} color="#666" />
-                   </TouchableOpacity>
-                 </View>
-               ))}
+                   <View style={styles.walletBalanceContainer}>
+                     <Text style={styles.walletBalanceText}>{amountStr}</Text>
+                     <Text style={styles.walletIdrText}>{formatIDR(idrValue)}</Text>
+                   </View>
+                 </TouchableOpacity>
+               )})}
              </View>
           </View>
         )}
@@ -199,6 +320,13 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
         editVlooDate={editUnlockDate}
         setEditVlooDate={setEditUnlockDate}
         isSaving={editLoading}
+      />
+
+      <WalletDetailModal 
+        visible={detailModalVisible}
+        onClose={() => setDetailModalVisible(false)}
+        wallet={selectedWallet}
+        price={getWalletPrice(selectedWallet)}
       />
     </SafeAreaView>
   );
@@ -217,6 +345,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    paddingTop: Platform.select({ android: 60, ios: 16 }),
   },
   headerTitle: {
     fontFamily: FONTS.displayBold,
@@ -235,6 +364,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 32,
     paddingHorizontal: 12,
+    width: '100%',
+    maxWidth: 340,
+    alignSelf: 'center',
   },
   actionButton: {
     alignItems: 'center',
@@ -255,6 +387,8 @@ const styles = StyleSheet.create({
   },
   cardPreview: {
     width: '100%',
+    maxWidth: 340,
+    alignSelf: 'center',
     height: 220,
     borderRadius: 24,
     padding: 24,
@@ -381,5 +515,19 @@ const styles = StyleSheet.create({
   },
   copyButton: {
     padding: 8,
+  },
+  walletBalanceContainer: {
+    alignItems: 'flex-end',
+  },
+  walletBalanceText: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 14,
+    color: '#000',
+    marginBottom: 2,
+  },
+  walletIdrText: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 12,
+    color: '#666',
   },
 });
