@@ -1,0 +1,2 @@
+ALTER TABLE verified_cards
+ADD COLUMN IF NOT EXISTS name TEXT;

@@ -183,7 +183,7 @@ const CardContent = ({ item, isEditing, onDeletePress, currency = 'IDR' }: any) 
 
     {/* Top Row: Name & Balance */}
     <View style={styles.cardTopRow}>
-      <Text style={styles.cardName}>Vloo Card</Text>
+      <Text style={styles.cardName}>{item.name || 'Vloo Card'}</Text>
       <View style={styles.cardBalanceContainer}>
         <Text style={styles.cardBalance}>{formatCurrency(item.balance || 0, currency)}</Text>
       </View>

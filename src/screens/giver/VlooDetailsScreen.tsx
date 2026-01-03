@@ -209,7 +209,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
 
            {/* Top Row: Name & Balance */}
            <View style={styles.cardTopRow}>
-             <Text style={styles.cardName}>Vloo Card</Text>
+             <Text style={styles.cardName}>{vloo.name || 'Vloo Card'}</Text>
              <Text style={styles.cardBalance}>{formatCurrency(getTotalBalance())}</Text>
            </View>
 

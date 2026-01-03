@@ -24,4 +24,5 @@ export interface Card {
   id: string; // NFC UID
   vloo_id: string;
   created_at: string;
+  name?: string;
 }
