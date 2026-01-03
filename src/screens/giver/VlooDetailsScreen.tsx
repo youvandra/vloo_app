@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, SafeAreaView, StatusBar, Alert, Platform } from 'react-native';
-import { ArrowLeft, Edit2, Copy, Eye, MessageSquare, ArrowDown, ArrowUp, ArrowLeftRight, CreditCard } from 'lucide-react-native';
+import { ArrowLeft, Edit2, Copy, Eye, MessageSquare, ArrowDown, ArrowUp, ArrowLeftRight, CreditCard, Settings } from 'lucide-react-native';
+import { useIsFocused } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../lib/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
@@ -17,6 +18,7 @@ import { supabase } from '../../lib/supabase';
 export default function VlooDetailsScreen({ route, navigation }: any) {
   const { vloo } = route.params;
   const [wallets, setWallets] = useState<any[]>([]);
+  const [hasAnyWallets, setHasAnyWallets] = useState(false);
   const [prices, setPrices] = useState<any>({});
   const [walletBalances, setWalletBalances] = useState<{[key: string]: string}>({});
   const [currency, setCurrency] = useState<'IDR' | 'USD'>('IDR');
@@ -24,6 +26,8 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   // Detail Modal State
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     AsyncStorage.getItem('app_currency').then(val => {
@@ -32,10 +36,10 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   }, []);
 
   useEffect(() => {
-    if (vloo?.id) {
+    if (vloo?.id && isFocused) {
       loadWallets();
     }
-  }, [vloo]);
+  }, [vloo, isFocused]);
 
   useEffect(() => {
     if (wallets.length > 0) {
@@ -87,9 +91,12 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
     try {
       const stored = await AsyncStorage.getItem(`vloo_wallets_${vloo.id}`);
       if (stored) {
-        setWallets(JSON.parse(stored));
+        const allWallets = JSON.parse(stored);
+        setHasAnyWallets(allWallets.length > 0);
+        setWallets(allWallets.filter((w: any) => w.isVisible !== false));
       } else {
         setWallets([]);
+        setHasAnyWallets(false);
       }
     } catch (e) {
       console.error('Error loading wallets:', e);
@@ -248,9 +255,18 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {wallets.length > 0 && (
+        {hasAnyWallets && (
           <View style={styles.infoSection}>
-             <Text style={styles.label}>Linked Wallets</Text>
+             <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                <Text style={[styles.label, {marginBottom: 0}]}>Linked Wallets</Text>
+                <TouchableOpacity 
+                  onPress={() => navigation.navigate('LinkedWalletsSettings', { vloo })} 
+                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                >
+                   <Settings size={16} color="#999" />
+                </TouchableOpacity>
+             </View>
+             
              <View style={styles.walletsContainer}>
                {wallets.map((wallet: any, index: number) => {
                  const key = `${wallet.type}_${wallet.address}`;
