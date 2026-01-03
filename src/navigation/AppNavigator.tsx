@@ -7,6 +7,7 @@ import HomeScreen from '../screens/HomeScreen';
 import GiverDashboardScreen from '../screens/giver/DashboardScreen';
 import VlooDetailsScreen from '../screens/giver/VlooDetailsScreen';
 import GiverSuccessScreen from '../screens/giver/SuccessScreen';
+import BuyCardScreen from '../screens/giver/BuyCardScreen';
 import ReceiverScanScreen from '../screens/receiver/ScanScreen';
 import ReceiverViewScreen from '../screens/receiver/ViewScreen';
 import ReceiverClaimScreen from '../screens/receiver/ClaimScreen';
@@ -26,6 +27,7 @@ export default function AppNavigator() {
         />
         <Stack.Screen name="VlooDetails" component={VlooDetailsScreen} />
         <Stack.Screen name="GiverSuccess" component={GiverSuccessScreen} />
+        <Stack.Screen name="BuyCard" component={BuyCardScreen} />
         <Stack.Screen name="ReceiverScan" component={ReceiverScanScreen} />
         <Stack.Screen name="ReceiverView" component={ReceiverViewScreen} />
         <Stack.Screen name="ReceiverClaim" component={ReceiverClaimScreen} />

@@ -12,7 +12,7 @@ import { CardStack } from './components/CardStack';
 import { BottomNavigation } from './components/BottomNavigation';
 import { CreateVlooModal } from './components/modals/dashboard/CreateVlooModal';
 import { ScanVlooModal } from './components/modals/dashboard/ScanVlooModal';
-import { AddVlooOptionsModal } from './components/modals/dashboard/AddVlooOptionsModal';
+
 import { MoreScreen } from './MoreScreen';
 import { SettingsScreen } from './SettingsScreen';
 import { COLORS, FONTS } from '../../lib/theme';
@@ -44,7 +44,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   // Modals
-  const [addOptionsModalVisible, setAddOptionsModalVisible] = useState(false);
+
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [scanModalVisible, setScanModalVisible] = useState(false);
   const [moreScreenView, setMoreScreenView] = useState<'menu' | 'settings'>('menu');
@@ -490,7 +490,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
               <CardStack 
                  vloos={vloos.map(v => ({...v, balance: vlooBalances[v.id] || 0}))}
                  isEditing={isEditing}
-                 onAddPress={() => setAddOptionsModalVisible(true)}
+                 onAddPress={() => setScanModalVisible(true)}
+                 onBuyPress={() => navigation.navigate('BuyCard')}
                  onEditPress={() => setIsEditing(!isEditing)}
                  onCardPress={handleCardPress}
                  onReorder={async (fromIndex, toIndex) => {
@@ -531,22 +532,10 @@ export default function GiverDashboardScreen({ navigation }: any) {
       <BottomNavigation 
         activeTab={activeTab} 
         onTabPress={setActiveTab} 
-        onScanPress={() => setAddOptionsModalVisible(true)}
+        onScanPress={() => setScanModalVisible(true)}
       />
 
-      <AddVlooOptionsModal 
-        visible={addOptionsModalVisible}
-        onClose={() => setAddOptionsModalVisible(false)}
-        onNewCard={() => {
-           setAddOptionsModalVisible(false);
-           // Step 1: Scan Card
-           setTimeout(() => setScanModalVisible(true), 500);
-        }}
-        onImportCard={() => {
-           setAddOptionsModalVisible(false);
-           Alert.alert('Coming Soon', 'Import Card feature will be available soon.');
-        }}
-      />
+
 
       <CreateVlooModal 
         visible={createModalVisible}
@@ -569,7 +558,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
         onClose={() => setScanModalVisible(false)}
         onBack={() => {
            setScanModalVisible(false);
-           setAddOptionsModalVisible(true);
         }}
         onBind={async (cardId) => {
            setScanLoading(true);

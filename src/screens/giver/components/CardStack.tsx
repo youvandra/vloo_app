@@ -23,6 +23,7 @@ interface CardStackProps {
   onCardPress: (vloo: any) => void;
   onReorder?: (fromIndex: number, toIndex: number) => void;
   onDeletePress?: (vloo: any) => void;
+  onBuyPress?: () => void;
   currency?: 'IDR' | 'USD';
 }
 
@@ -211,6 +212,7 @@ export const CardStack = ({
   onCardPress,
   onReorder,
   onDeletePress,
+  onBuyPress,
   currency = 'IDR'
 }: CardStackProps) => {
   
@@ -251,6 +253,20 @@ export const CardStack = ({
             </View>
             <Text style={styles.placeholderText}>Create New Vloo Card</Text>
             <Text style={styles.placeholderSubtext}>Tap to add another recipient</Text>
+            
+            <TouchableOpacity 
+                style={{ marginTop: 20, padding: 8 }}
+                onPress={() => onBuyPress && onBuyPress()}
+            >
+                <Text style={{ 
+                    color: COLORS.primary, 
+                    fontFamily: FONTS.bodyBold, 
+                    fontSize: 14,
+                    textDecorationLine: 'underline'
+                }}>
+                    Don't have a card? Buy one here
+                </Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       );
@@ -300,6 +316,32 @@ export const CardStack = ({
       {/* Cards Stack */}
       <View style={styles.cardStackContainer}>
         {displayData.map((item, index) => renderCardItem(item, index))}
+        
+        {vloos.length === 1 && !isEditing && (
+             <Text style={{ 
+                 textAlign: 'center', 
+                 marginTop: 24, 
+                 color: '#999', 
+                 fontFamily: FONTS.bodyRegular, 
+                 fontSize: 13,
+                 fontStyle: 'italic'
+             }}>
+                 Tap the card to view details
+             </Text>
+         )}
+
+         {isEditing && (
+             <Text style={{ 
+                 textAlign: 'center', 
+                 marginTop: 24, 
+                 color: '#999', 
+                 fontFamily: FONTS.bodyRegular, 
+                 fontSize: 13,
+                 fontStyle: 'italic'
+             }}>
+                 Hold and drag to reorder cards
+             </Text>
+         )}
       </View>
     </View>
   );
