@@ -24,13 +24,8 @@ export const decryptData = (ciphertext: string, passphrase: string): string => {
 export const generateDeterministicPrivateKey = (cardId: string, passphrase: string): string => {
   // Use PBKDF2 (Password-Based Key Derivation Function 2)
   // This is the industry standard for deriving keys from passwords.
-  // We incorporate 'EV3 Desfire' into the salt as requested to bind it to the card technology.
   
-  // Salt: cardId + "EV3 Desfire" (ensures uniqueness per card and binds to technology)
-  // Iterations: 10000 (makes brute-force expensive)
-  // KeySize: 256 bits
-  
-  const salt = `${cardId}:EV3 Desfire`;
+  const salt = `${cardId}`;
   const iterations = 10000;
   const keySize = 256 / 32;
 
@@ -41,4 +36,11 @@ export const generateDeterministicPrivateKey = (cardId: string, passphrase: stri
   });
 
   return derivedKey.toString(CryptoJS.enc.Hex);
+};
+
+export const generateCommitmentHash = (cardId: string, passphrase: string): string => {
+  // Generate a hash to lock the card to this passphrase on the server
+  // This is NOT the private key and cannot be used to derive it.
+  const input = `${cardId}:${passphrase}:VERIFY`;
+  return CryptoJS.SHA256(input).toString(CryptoJS.enc.Hex);
 };

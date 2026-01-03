@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { fetchBalance } from '../../lib/blockcypher';
 import { supabase } from '../../lib/supabase';
 import { createRandomWallet, generateMockBitcoinData, generateMockSolanaData, getWalletFromPrivateKey } from '../../lib/wallet';
-import { encryptData, generateDeterministicPrivateKey } from '../../lib/crypto';
+import { encryptData, generateDeterministicPrivateKey, generateCommitmentHash } from '../../lib/crypto';
 
 // Components
 import { DashboardHeader } from './components/DashboardHeader';
@@ -284,7 +284,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
         // Use ilike for case-insensitive match and maybeSingle to handle not found gracefully
         const { data: existingCard, error: fetchError } = await supabase
             .from('verified_cards')
-            .select('id, id')
+            .select('id, commitment')
             .ilike('id', cardId.trim())
             .maybeSingle();
 
@@ -303,6 +303,24 @@ export default function GiverDashboardScreen({ navigation }: any) {
         const privateKey = generateDeterministicPrivateKey(cardId, pass);
         const wallet = getWalletFromPrivateKey(privateKey);
         const evmAddress = wallet.address;
+
+        // Generate Commitment Hash (to lock the card on server)
+        const commitment = generateCommitmentHash(cardId, pass);
+
+        // Call RPC to register commitment (Securely locks the card)
+        const { data: rpcData, error: rpcError } = await supabase.rpc('register_card_commitment', {
+            p_card_id: existingCard.id,
+            p_commitment: commitment
+        });
+
+        if (rpcError) {
+            console.error('RPC Error:', rpcError);
+            throw new Error('Failed to lock card. Please try again.');
+        }
+
+        if (!rpcData.success) {
+            throw new Error(rpcData.message || 'Card is already bound to another passphrase.');
+        }
 
         // Create Wallet List (EVM compatible chains share address)
         const wallets = [
@@ -559,7 +577,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                // Check if card exists in DB (Read Only)
                const { data: existingCard, error: fetchError } = await supabase
                    .from('verified_cards')
-                   .select('id, id')
+                   .select('id, commitment')
                    .ilike('id', cardId.trim())
                    .maybeSingle();
 
@@ -570,7 +588,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                }
 
                if (!existingCard) {
-                   Alert.alert('Invalid Card', 'This card is not registered in Vloo. Please use a genuine Vloo card.');
+                   Alert.alert('Error', 'This card is not registered in Vloo system.');
                    return;
                }
 
