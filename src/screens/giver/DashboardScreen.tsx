@@ -284,7 +284,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
         // Use ilike for case-insensitive match and maybeSingle to handle not found gracefully
         const { data: existingCard, error: fetchError } = await supabase
             .from('verified_cards')
-            .select('id, commitment')
+            .select('id')
             .ilike('id', cardId.trim())
             .maybeSingle();
 
@@ -577,7 +577,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                // Check if card exists in DB (Read Only)
                const { data: existingCard, error: fetchError } = await supabase
                    .from('verified_cards')
-                   .select('id, commitment')
+                   .select('id')
                    .ilike('id', cardId.trim())
                    .maybeSingle();
 
