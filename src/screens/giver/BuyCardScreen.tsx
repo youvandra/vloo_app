@@ -6,7 +6,7 @@ import { COLORS, FONTS } from '../../lib/theme';
 export default function BuyCardScreen({ navigation }: any) {
   const handleBuy = () => {
     // Replace with actual URL when available
-    Linking.openURL('https://vloo.xyz/buy'); 
+    Linking.openURL('https://www.vloo.cards/buy-card'); 
   };
 
   const features = [

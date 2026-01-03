@@ -46,7 +46,7 @@ export const MoreScreen = ({ onNavigate }: MoreScreenProps) => {
           <MenuItem 
             icon={<CreditCard size={22} color={COLORS.primary} />} 
             label="Buy Vloo Card" 
-            onPress={() => {}} 
+            onPress={() => onNavigate('buy_card')} 
           />
           <MenuItem 
             icon={<Settings size={22} color={COLORS.primary} />} 

@@ -523,7 +523,13 @@ export default function GiverDashboardScreen({ navigation }: any) {
             setLanguage={handleSetLanguage}
           />
         ) : (
-          <MoreScreen onNavigate={(screen) => setMoreScreenView(screen as any)} />
+          <MoreScreen onNavigate={(screen) => {
+            if (screen === 'buy_card') {
+                navigation.navigate('BuyCard');
+            } else {
+                setMoreScreenView(screen as any);
+            }
+          }} />
         )
       ) : (
         <View style={{ flex: 1 }} />

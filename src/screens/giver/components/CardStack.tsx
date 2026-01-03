@@ -252,21 +252,22 @@ export const CardStack = ({
               <Plus size={32} color="#fff" />
             </View>
             <Text style={styles.placeholderText}>Create New Vloo Card</Text>
-            <Text style={styles.placeholderSubtext}>Tap to add another recipient</Text>
             
-            <TouchableOpacity 
-                style={{ marginTop: 20, padding: 8 }}
-                onPress={() => onBuyPress && onBuyPress()}
-            >
-                <Text style={{ 
-                    color: COLORS.primary, 
-                    fontFamily: FONTS.bodyBold, 
-                    fontSize: 14,
-                    textDecorationLine: 'underline'
-                }}>
-                    Don't have a card? Buy one here
-                </Text>
-            </TouchableOpacity>
+            <View style={{ alignItems: 'center' }}>
+                
+                <TouchableOpacity 
+                    style={{ marginTop: 2 }}
+                    onPress={() => onBuyPress && onBuyPress()}
+                >
+                    <Text style={{ 
+                        color: '#888', 
+                        fontFamily: FONTS.bodyRegular, 
+                        fontSize: 13,
+                    }}>
+                        Don't have a card? <Text style={{ color: COLORS.primary, fontFamily: FONTS.bodyBold, textDecorationLine: 'underline' }}>Buy one here</Text>
+                    </Text>
+                </TouchableOpacity>
+            </View>
           </View>
         </TouchableOpacity>
       );
