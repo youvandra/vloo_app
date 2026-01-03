@@ -1,8 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ScrollView } from 'react-native';
-import { X, Calendar, HelpCircle } from 'lucide-react-native';
+import { X, Calendar, HelpCircle, ArrowLeft } from 'lucide-react-native';
 import { COLORS, FONTS as THEME_FONTS } from '../../../../../lib/theme';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
 // Fallback in case import fails (fix for ReferenceError)
 const FONTS = THEME_FONTS || {
@@ -17,27 +16,22 @@ const FONTS = THEME_FONTS || {
 interface CreateVlooModalProps {
   visible: boolean;
   onClose: () => void;
+  onBack?: () => void;
   onNext: () => void;
-  message: string;
-  setMessage: (message: string) => void;
   passphrase: string;
   setPassphrase: (passphrase: string) => void;
-  newVlooUnlockDate: Date | null;
-  setNewVlooUnlockDate: (date: Date | null) => void;
+  isLoading?: boolean;
 }
 
 export const CreateVlooModal = ({
   visible,
   onClose,
+  onBack,
   onNext,
-  message,
-  setMessage,
   passphrase,
   setPassphrase,
-  newVlooUnlockDate,
-  setNewVlooUnlockDate
+  isLoading = false,
 }: CreateVlooModalProps) => {
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -74,26 +68,20 @@ export const CreateVlooModal = ({
           <View style={[styles.modalContent, { height: '100%' }]}>
             <ScrollView contentContainerStyle={styles.modalBody}>
               <View style={styles.modalTitleRow}>
+                {onBack ? (
+                  <TouchableOpacity onPress={onBack} style={styles.closeButton}>
+                    <ArrowLeft size={24} color="#000" />
+                  </TouchableOpacity>
+                ) : <View style={{width: 40}} />}
+                
                 <Text style={styles.modalTitle}>Create New Vloo</Text>
+                
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                   <X size={24} color="#000" />
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.stepIndicator}>Step 1 of 2</Text>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Message *</Text>
-                <TextInput
-                  style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
-                  placeholder="Write a heartfelt message..."
-                  placeholderTextColor="#999"
-                  value={message}
-                  onChangeText={setMessage}
-                  multiline={true}
-                  numberOfLines={4}
-                />
-              </View>
+              <Text style={styles.stepIndicator}>Step 2 of 2</Text>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Passphrase (for key generation) *</Text>
@@ -104,59 +92,19 @@ export const CreateVlooModal = ({
                   value={passphrase}
                   onChangeText={setPassphrase}
                   secureTextEntry={true}
+                  editable={!isLoading}
                 />
               </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Unlock Date *</Text>
-                <TouchableOpacity 
-                  style={styles.datePickerButton}
-                  onPress={() => setShowDatePicker(!showDatePicker)}
-                >
-                  <Text style={[styles.dateText, !newVlooUnlockDate && { color: '#999' }]}>
-                    {newVlooUnlockDate ? newVlooUnlockDate.toLocaleDateString() : 'Set Date'}
-                  </Text>
-                  <Calendar size={20} color="#666" />
-                </TouchableOpacity>
-              </View>
-
-              {showDatePicker && (
-                <View style={Platform.OS === 'ios' && styles.datePickerContainer}>
-                  <DateTimePicker
-                    value={newVlooUnlockDate || new Date()}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={(event, selectedDate) => {
-                      if (Platform.OS === 'android') {
-                        setShowDatePicker(false);
-                      }
-                      if (selectedDate) {
-                        setNewVlooUnlockDate(selectedDate);
-                      }
-                    }}
-                    minimumDate={new Date()}
-                    textColor="#000"
-                  />
-                  {Platform.OS === 'ios' && (
-                    <TouchableOpacity 
-                      style={styles.datePickerDoneButton}
-                      onPress={() => setShowDatePicker(false)}
-                    >
-                      <Text style={styles.datePickerDoneText}>Done</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              )}
 
               <TouchableOpacity 
                 style={[
                   styles.primaryButton, 
-                  (!message || !passphrase || !newVlooUnlockDate) && { opacity: 0.5 }
+                  (!passphrase || isLoading) && { opacity: 0.5 }
                 ]}
                 onPress={onNext}
-                disabled={!message || !passphrase || !newVlooUnlockDate}
+                disabled={!passphrase || isLoading}
               >
-                <Text style={styles.primaryButtonText}>Next</Text>
+                <Text style={styles.primaryButtonText}>{isLoading ? 'Creating...' : 'Create Vloo'}</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -212,10 +160,9 @@ const styles = StyleSheet.create({
   stepIndicator: {
     fontFamily: FONTS.bodySemiBold,
     fontSize: 14,
-    color: COLORS.primary,
+    color: COLORS.accent,
     marginBottom: 24,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    textAlign: 'center',
   },
   inputGroup: {
     marginBottom: 24,

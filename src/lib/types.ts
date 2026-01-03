@@ -16,8 +16,6 @@ export interface Vloo {
   created_at: string;
   encrypted_private_key: EncryptedKeys; // Changed to object
   wallet_address: WalletInfo[]; // Changed to array of objects
-  unlock_date: string; // ISO string
-  message: string;
   status: VlooStatus;
   receiver_name?: string;
 }

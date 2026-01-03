@@ -1,67 +1,36 @@
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity, ScrollView, TextInput, StatusBar, Platform, Clipboard } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, ScrollView, TextInput, StatusBar, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { generateDeterministicPrivateKey } from '../../lib/crypto';
-import { supabase } from '../../lib/supabase';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Button } from '../../components/Button';
-import { ArrowLeft, Lock, Unlock, MessageSquare, AlertCircle, Copy, Key } from 'lucide-react-native';
+import { ArrowLeft, Unlock, Key, Copy, Eye, EyeOff } from 'lucide-react-native';
+import * as Clipboard from 'expo-clipboard';
 
 export default function ReceiverClaimScreen({ route, navigation }: any) {
   const { vloo } = route.params;
-  const [timeLeft, setTimeLeft] = useState('');
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [passphrase, setPassphrase] = useState('');
   const [privateKey, setPrivateKey] = useState<string | null>(null);
+  const [showPassphrase, setShowPassphrase] = useState(false);
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-
-    const calculateTime = () => {
-      const now = new Date();
-      // Handle null unlock_date (unlocked immediately)
-      if (!vloo.unlock_date) {
-        handleUnlock();
-        return;
+  const handleUnlock = () => {
+      if (!passphrase.trim()) {
+          Alert.alert('Error', 'Please enter the passphrase');
+          return;
       }
       
-      const unlockDate = new Date(vloo.unlock_date);
-      const diff = unlockDate.getTime() - now.getTime();
-
-      if (diff <= 0) {
-        handleUnlock();
-        if (timer) clearInterval(timer);
-      } else {
-        const minutes = Math.floor(diff / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
-        setTimeLeft(`${minutes}m ${seconds}s`);
-        setLoading(false);
+      try {
+          const key = generateDeterministicPrivateKey(vloo.id, passphrase);
+          setPrivateKey(key);
+      } catch (e) {
+          Alert.alert('Error', 'Failed to generate key');
       }
-    };
+  };
 
-    const handleUnlock = () => {
-        setTimeLeft('Unlocked!');
-        setIsUnlocked(true);
-        setLoading(false);
-        // Generate Private Key
-        // Note: Passphrase is no longer stored in DB. 
-        // If we need to show private key, we must prompt user for passphrase.
-        if (vloo.passphrase && vloo.id) {
-            const key = generateDeterministicPrivateKey(vloo.id, vloo.passphrase);
-            setPrivateKey(key);
-        }
-    };
-
-    calculateTime();
-    timer = setInterval(calculateTime, 1000);
-
-    return () => clearInterval(timer);
-  }, [vloo.unlock_date, vloo.id, vloo.passphrase]);
-
-  const copyToClipboard = () => {
+  const copyToClipboard = async () => {
       if (privateKey) {
-          Clipboard.setString(privateKey);
+          await Clipboard.setStringAsync(privateKey);
           Alert.alert('Copied', 'Private key copied to clipboard');
       }
   };
@@ -76,45 +45,53 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
             <ArrowLeft color="#000" size={24} />
           </TouchableOpacity>
           <View style={styles.brandBadge}>
-            <Text style={styles.brandBadgeText}>VLOO MESSAGE</Text>
+            <Text style={styles.brandBadgeText}>CLAIM VLOO</Text>
           </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.card}>
              <View style={styles.iconWrapper}>
-               {isUnlocked ? (
                  <Unlock size={48} color={COLORS.primary} />
-               ) : (
-                 <Lock size={48} color={COLORS.error} />
-               )}
              </View>
              
              <Text style={styles.statusTitle}>
-               {isUnlocked ? 'Vloo Unlocked' : 'Vloo Locked'}
+               Claim Your Assets
              </Text>
              
-             {!isUnlocked && (
-               <Text style={styles.timerText}>Unlocks in: {timeLeft}</Text>
-             )}
+             <Text style={styles.description}>
+                Enter the passphrase provided by the giver to unlock your private key.
+             </Text>
 
              <View style={styles.divider} />
 
-             <View style={styles.messageSection}>
-               <Text style={styles.label}>Message</Text>
-               <View style={styles.messageBox}>
-                 {isUnlocked ? (
-                    <Text style={styles.messageText}>{vloo.message || 'No message provided.'}</Text>
-                 ) : (
-                    <Text style={styles.blurredText}>This message is locked until the timer expires.</Text>
-                 )}
-               </View>
-             </View>
-
-             {/* Private Key Section */}
-             {isUnlocked && privateKey && (
-                <View style={styles.privateKeySection}>
-                    <View style={styles.divider} />
+             {!privateKey ? (
+                 <View style={styles.inputSection}>
+                    <Text style={styles.label}>Passphrase</Text>
+                    <View style={styles.passwordContainer}>
+                        <TextInput
+                            style={styles.passwordInput}
+                            placeholder="Enter passphrase"
+                            placeholderTextColor="#999"
+                            value={passphrase}
+                            onChangeText={setPassphrase}
+                            secureTextEntry={!showPassphrase}
+                            autoCapitalize="none"
+                        />
+                        <TouchableOpacity onPress={() => setShowPassphrase(!showPassphrase)} style={styles.eyeButton}>
+                            {showPassphrase ? <EyeOff size={20} color="#666" /> : <Eye size={20} color="#666" />}
+                        </TouchableOpacity>
+                    </View>
+                    
+                    <Button 
+                        title="Unlock Private Key"
+                        onPress={handleUnlock}
+                        variant="primary"
+                        style={{ marginTop: 24 }}
+                    />
+                 </View>
+             ) : (
+                 <View style={styles.privateKeySection}>
                     <Text style={styles.label}>Private Key Account</Text>
                     <TouchableOpacity 
                         style={styles.privateKeyBox}
@@ -132,7 +109,7 @@ export default function ReceiverClaimScreen({ route, navigation }: any) {
                     <Text style={styles.helperText}>
                         Tap to copy. Import this key into your wallet to claim assets.
                     </Text>
-                </View>
+                 </View>
              )}
           </View>
         </ScrollView>
@@ -207,11 +184,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
-  timerText: {
-    fontFamily: 'Courier',
-    fontSize: 18,
-    color: COLORS.error,
-    marginBottom: 16,
+  description: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 8,
+    maxWidth: '90%',
   },
   divider: {
     width: '100%',
@@ -219,8 +198,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     marginVertical: 24,
   },
-  messageSection: {
-    width: '100%',
+  inputSection: {
+      width: '100%',
+  },
+  passwordContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#e0e0e0',
+      borderRadius: 12,
+      backgroundColor: '#f9f9f9',
+      paddingHorizontal: 16,
+  },
+  passwordInput: {
+      flex: 1,
+      height: 50,
+      fontSize: 16,
+      fontFamily: FONTS.bodyRegular,
+      color: '#000',
+  },
+  eyeButton: {
+      padding: 8,
   },
   label: {
     fontFamily: FONTS.bodyBold,
@@ -229,26 +227,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textTransform: 'uppercase',
     letterSpacing: 1,
-  },
-  messageBox: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 16,
-    padding: 20,
-    minHeight: 120,
-  },
-  messageText: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 18,
-    color: '#000',
-    lineHeight: 28,
-  },
-  blurredText: {
-    fontFamily: FONTS.bodyRegular,
-    fontSize: 16,
-    color: '#999',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    padding: 20,
   },
   privateKeySection: {
     width: '100%',

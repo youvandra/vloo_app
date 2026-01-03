@@ -43,9 +43,7 @@ export default function ReceiverScanScreen({ navigation }: any) {
             navigation.navigate('ReceiverClaim', { 
                 vloo: {
                     id: 'demo-id',
-                    status: 'locked',
-                    message: 'Happy Birthday! Here is your gift.',
-                    unlock_date: new Date().toISOString()
+                    status: 'ready',
                 }
             });
             return;
@@ -54,7 +52,7 @@ export default function ReceiverScanScreen({ navigation }: any) {
       }
 
       // Check if card is bound/active
-      if (!cardData.message) {
+      if (!cardData.id) {
           throw new Error('This card has not been set up yet.');
       }
 

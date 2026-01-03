@@ -126,7 +126,7 @@ export const ScanVlooModal = ({
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.stepIndicator}>Step 3 of 3</Text>
+              <Text style={styles.stepIndicator}>Step 1 of 2</Text>
 
               <View style={styles.tabContainer}>
                 <TouchableOpacity 
@@ -175,7 +175,7 @@ export const ScanVlooModal = ({
                         placeholder="e.g. VLOO-1234-5678"
                         placeholderTextColor="#999"
                         value={manualId}
-                        onChangeText={setManualId}
+                        onChangeText={(text) => setManualId(text.toUpperCase())}
                         autoCapitalize="characters"
                     />
                     <Text style={styles.helperText}>
@@ -242,7 +242,9 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   closeButton: {
-    padding: 4,
+    padding: 8,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 999,
   },
   stepIndicator: {
     fontFamily: FONTS.bodySemiBold,

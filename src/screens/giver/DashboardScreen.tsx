@@ -53,10 +53,10 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [selectedVloo, setSelectedVloo] = useState<any>(null);
 
   // Create Vloo State
-  const [message, setMessage] = useState('');
   const [passphrase, setPassphrase] = useState('');
-  const [unlockDate, setUnlockDate] = useState<Date | null>(new Date(Date.now() + 60000));
+  const [pendingCardId, setPendingCardId] = useState('');
   const [bindLoading, setBindLoading] = useState(false);
+  const [scanLoading, setScanLoading] = useState(false);
 
   // Navigation State
   const [activeTab, setActiveTab] = useState('home');
@@ -274,12 +274,33 @@ export default function GiverDashboardScreen({ navigation }: any) {
     }
   };
 
-  const handleCreateVloo = async (cardId: string) => {
+  const handleCreateVloo = async (cardId: string, pass: string) => {
     setBindLoading(true);
 
     try {
+        console.log('Checking card existence for:', cardId);
+        
+        // Check if card exists in DB (Read Only)
+        // Use ilike for case-insensitive match and maybeSingle to handle not found gracefully
+        const { data: existingCard, error: fetchError } = await supabase
+            .from('verified_cards')
+            .select('id, id')
+            .ilike('id', cardId.trim())
+            .maybeSingle();
+
+        if (fetchError) {
+             console.error('Error fetching card:', fetchError);
+             // Distinguish network/permission errors from logic
+             throw new Error('Failed to verify card status. Please check your internet connection.');
+        }
+
+        if (!existingCard) {
+            console.warn('Card not found in DB:', cardId);
+            throw new Error('This card is not registered in Vloo. Please use a genuine Vloo card.');
+        }
+
         // Generate Private Key and Derive Public Keys
-        const privateKey = generateDeterministicPrivateKey(cardId, passphrase);
+        const privateKey = generateDeterministicPrivateKey(cardId, pass);
         const wallet = getWalletFromPrivateKey(privateKey);
         const evmAddress = wallet.address;
 
@@ -294,31 +315,16 @@ export default function GiverDashboardScreen({ navigation }: any) {
           // { type: 'Solana', address: 'Coming Soon' }
         ];
 
-        // Create/Bind Card directly in verified_cards
-        const { error: cardError } = await supabase
-            .from('verified_cards')
-            .upsert([
-                { 
-                  id: cardId, 
-                  message: message,
-                  unlock_date: unlockDate ? unlockDate.toISOString() : null,
-                  color: 'blue' 
-                }
-            ]);
-
-        if (cardError) throw cardError;
-       
         // Save locally for guest/user persistence
         await saveCardIdLocally(cardId);
         
         // Save Derived Wallets Locally
         await AsyncStorage.setItem(`vloo_wallets_${cardId}`, JSON.stringify(wallets));
 
-        setScanModalVisible(false);
+        setCreateModalVisible(false);
         // Reset
-        setMessage('');
         setPassphrase('');
-        setUnlockDate(new Date(Date.now() + 60000));
+        setPendingCardId('');
         
         // Refresh
         fetchVloos(); 
@@ -515,7 +521,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
         onClose={() => setAddOptionsModalVisible(false)}
         onNewCard={() => {
            setAddOptionsModalVisible(false);
-           setTimeout(() => setCreateModalVisible(true), 500);
+           // Step 1: Scan Card
+           setTimeout(() => setScanModalVisible(true), 500);
         }}
         onImportCard={() => {
            setAddOptionsModalVisible(false);
@@ -526,16 +533,17 @@ export default function GiverDashboardScreen({ navigation }: any) {
       <CreateVlooModal 
         visible={createModalVisible}
         onClose={() => setCreateModalVisible(false)}
-        onNext={() => {
+        onBack={() => {
            setCreateModalVisible(false);
            setTimeout(() => setScanModalVisible(true), 500);
         }}
-        message={message}
-        setMessage={setMessage}
+        onNext={() => {
+           // Final Step: Create Vloo
+           handleCreateVloo(pendingCardId, passphrase);
+        }}
         passphrase={passphrase}
         setPassphrase={setPassphrase}
-        newVlooUnlockDate={unlockDate}
-        setNewVlooUnlockDate={setUnlockDate}
+        isLoading={bindLoading}
       />
 
       <ScanVlooModal 
@@ -543,10 +551,43 @@ export default function GiverDashboardScreen({ navigation }: any) {
         onClose={() => setScanModalVisible(false)}
         onBack={() => {
            setScanModalVisible(false);
-           setTimeout(() => setCreateModalVisible(true), 500);
+           setAddOptionsModalVisible(true);
         }}
-        onBind={handleCreateVloo}
-        isBinding={bindLoading}
+        onBind={async (cardId) => {
+           setScanLoading(true);
+           try {
+               // Check if card exists in DB (Read Only)
+               const { data: existingCard, error: fetchError } = await supabase
+                   .from('verified_cards')
+                   .select('id, id')
+                   .ilike('id', cardId.trim())
+                   .maybeSingle();
+
+               if (fetchError) {
+                   console.error('Error verifying card:', fetchError);
+                   Alert.alert('Error', 'Failed to verify card status. Please check your internet connection.');
+                   return;
+               }
+
+               if (!existingCard) {
+                   Alert.alert('Invalid Card', 'This card is not registered in Vloo. Please use a genuine Vloo card.');
+                   return;
+               }
+
+               // Valid Card
+               setPendingCardId(cardId);
+               setScanModalVisible(false);
+               // Step 2: Input Passphrase
+               setTimeout(() => setCreateModalVisible(true), 500);
+
+           } catch (e) {
+               console.error('Error in onBind:', e);
+               Alert.alert('Error', 'An unexpected error occurred.');
+           } finally {
+               setScanLoading(false);
+           }
+        }}
+        isBinding={scanLoading}
       />
       
     </SafeAreaView>

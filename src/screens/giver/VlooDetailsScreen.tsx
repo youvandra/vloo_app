@@ -11,7 +11,6 @@ import SolanaIcon from '../../assets/icons/chains/solana.svg';
 import PolygonIcon from '../../assets/icons/chains/polygon.svg';
 import BnbIcon from '../../assets/icons/chains/bnb.svg';
 import LiskIcon from '../../assets/icons/chains/lisk.svg';
-import { EditVlooModal } from './components/modals/dashboard/EditVlooModal';
 import { WalletDetailModal } from './components/modals/dashboard/WalletDetailModal';
 import { supabase } from '../../lib/supabase';
 
@@ -22,12 +21,6 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   const [walletBalances, setWalletBalances] = useState<{[key: string]: string}>({});
   const [currency, setCurrency] = useState<'IDR' | 'USD'>('IDR');
   
-  // Edit State
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editMessage, setEditMessage] = useState('');
-  const [editUnlockDate, setEditUnlockDate] = useState<Date | null>(new Date());
-  const [editLoading, setEditLoading] = useState(false);
-
   // Detail Modal State
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
@@ -105,45 +98,6 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
 
   const copyToClipboard = async (text: string) => {
     await Clipboard.setStringAsync(text);
-  };
-
-  const handleEditPress = () => {
-    if (vloo) {
-        setEditMessage(vloo.message || '');
-        if (vloo.unlock_date) {
-            setEditUnlockDate(new Date(vloo.unlock_date));
-        } else {
-            setEditUnlockDate(new Date(Date.now() + 60000));
-        }
-        setEditModalVisible(true);
-    }
-  };
-
-  const handleSaveEdit = async () => {
-    if (!vloo?.id) return;
-    setEditLoading(true);
-    try {
-        const { error } = await supabase
-            .from('verified_cards')
-            .update({
-                message: editMessage,
-                unlock_date: editUnlockDate?.toISOString()
-            })
-            .eq('id', vloo.id);
-
-        if (error) throw error;
-
-        // Update local vloo object for immediate feedback
-        vloo.message = editMessage;
-        vloo.unlock_date = editUnlockDate?.toISOString();
-
-        setEditModalVisible(false);
-        Alert.alert('Success', 'Vloo updated successfully');
-    } catch (e: any) {
-        Alert.alert('Error', e.message);
-    } finally {
-        setEditLoading(false);
-    }
   };
 
   const handleDelete = async () => {
@@ -231,8 +185,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   if (!vloo) return null;
 
   const cardColor = vloo.color || COLORS.primary;
-  const isLocked = vloo.unlock_date && new Date(vloo.unlock_date) > new Date();
-  const status = isLocked ? 'LOCKED' : 'READY';
+  const status = 'READY';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -243,9 +196,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
            <ArrowLeft size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Vloo Details</Text>
-        <TouchableOpacity onPress={handleEditPress} style={styles.iconButton}>
-           <Edit2 size={24} color="#000" />
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.body}>
@@ -351,19 +302,6 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
           </View>
         )}
       </ScrollView>
-
-      <EditVlooModal 
-        visible={editModalVisible}
-        onClose={() => setEditModalVisible(false)}
-        onSave={handleSaveEdit}
-        onDelete={handleDelete}
-        vloo={vloo}
-        editVlooMessage={editMessage}
-        setEditVlooMessage={setEditMessage}
-        editVlooDate={editUnlockDate}
-        setEditVlooDate={setEditUnlockDate}
-        isSaving={editLoading}
-      />
 
       <WalletDetailModal 
         visible={detailModalVisible}

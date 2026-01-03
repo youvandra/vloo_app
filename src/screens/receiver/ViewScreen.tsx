@@ -14,10 +14,6 @@ export default function ReceiverViewScreen({ route, navigation }: any) {
   const [balance, setBalance] = useState('0.0');
   const [loading, setLoading] = useState(true);
 
-  const unlockDate = new Date(vloo.unlock_date);
-  const now = new Date();
-  const isLocked = now < unlockDate;
-
   useEffect(() => {
     const fetchBalance = async () => {
       try {
@@ -54,8 +50,6 @@ export default function ReceiverViewScreen({ route, navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.messageLabel}>Message from Giver:</Text>
-      <Text style={styles.message}>"{vloo.message}"</Text>
       
       <View style={styles.card}>
         <Text style={styles.balanceLabel}>Balance</Text>
@@ -84,8 +78,8 @@ export default function ReceiverViewScreen({ route, navigation }: any) {
 
       <View style={styles.statusContainer}>
         <Text style={styles.statusLabel}>Status:</Text>
-        <Text style={[styles.status, { color: isLocked ? 'orange' : 'green' }]}>
-          {isLocked ? `Locked until ${unlockDate.toLocaleDateString()}` : 'Ready to Claim'}
+        <Text style={[styles.status, { color: 'green' }]}>
+          Ready to Claim
         </Text>
       </View>
 
@@ -94,11 +88,9 @@ export default function ReceiverViewScreen({ route, navigation }: any) {
           <Text style={styles.secondaryButtonText}>I'll open this later</Text>
         </TouchableOpacity>
 
-        {!isLocked && (
-          <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('ReceiverClaim', { vloo })}>
-            <Text style={styles.primaryButtonText}>I'm ready to claim</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('ReceiverClaim', { vloo })}>
+          <Text style={styles.primaryButtonText}>I'm ready to claim</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
