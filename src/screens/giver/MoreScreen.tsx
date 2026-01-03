@@ -82,7 +82,7 @@ export const MoreScreen = ({ onNavigate }: MoreScreenProps) => {
           <MenuItem 
             icon={<Info size={22} color={COLORS.primary} />} 
             label="About" 
-            onPress={() => {}} 
+            onPress={() => onNavigate('about')} 
           />
         </View>
         

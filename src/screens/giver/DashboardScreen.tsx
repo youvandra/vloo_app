@@ -325,6 +325,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
         // Create Wallet List (EVM compatible chains share address)
         const wallets = [
           { type: 'Ethereum', address: evmAddress },
+          { type: 'USDT', address: evmAddress, tag: 'ERC-20' },
           { type: 'Polygon', address: evmAddress },
           { type: 'BNB Chain', address: evmAddress },
           { type: 'Lisk', address: evmAddress },
@@ -526,6 +527,8 @@ export default function GiverDashboardScreen({ navigation }: any) {
           <MoreScreen onNavigate={(screen) => {
             if (screen === 'buy_card') {
                 navigation.navigate('BuyCard');
+            } else if (screen === 'about') {
+                navigation.navigate('About');
             } else {
                 setMoreScreenView(screen as any);
             }

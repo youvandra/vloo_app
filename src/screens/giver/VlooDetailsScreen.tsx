@@ -12,6 +12,7 @@ import SolanaIcon from '../../assets/icons/chains/solana.svg';
 import PolygonIcon from '../../assets/icons/chains/polygon.svg';
 import BnbIcon from '../../assets/icons/chains/bnb.svg';
 import LiskIcon from '../../assets/icons/chains/lisk.svg';
+import UsdtIcon from '../../assets/icons/chains/usdt.svg';
 import { WalletDetailModal } from './components/modals/dashboard/WalletDetailModal';
 import { supabase } from '../../lib/supabase';
 
@@ -132,6 +133,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
       if (s === 'POL' || s === 'MATIC') return 'matic-network';
       if (s === 'BNB') return 'binancecoin';
       if (s === 'LSK') return 'lisk';
+      if (s === 'USDT') return 'tether';
       return '';
   };
   
@@ -149,6 +151,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
           else if (type.includes('polygon')) symbol = 'POL';
           else if (type.includes('bnb')) symbol = 'BNB';
           else if (type.includes('lisk')) symbol = 'LSK';
+          else if (type.includes('usdt')) symbol = 'USDT';
       }
       
       const priceId = getPriceId(symbol || '');
@@ -171,6 +174,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
              else if (type.includes('polygon')) symbol = 'POL';
              else if (type.includes('bnb')) symbol = 'BNB';
              else if (type.includes('lisk')) symbol = 'LSK';
+             else if (type.includes('usdt')) symbol = 'USDT';
              
              if (!amountStr) amountStr = '0.00';
         }
@@ -282,6 +286,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
                     else if (type.includes('polygon')) symbol = 'POL';
                     else if (type.includes('bnb')) symbol = 'BNB';
                     else if (type.includes('lisk')) symbol = 'LSK';
+                    else if (type.includes('usdt')) symbol = 'USDT';
                     
                     // If balance string was empty/default, set amount to 0
                     if (!amountStr) amountStr = '0.00';
@@ -302,10 +307,18 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
                       wallet.type === 'Polygon' ? <PolygonIcon width={24} height={24} /> :
                       wallet.type === 'BNB Chain' ? <BnbIcon width={24} height={24} /> :
                       wallet.type === 'Lisk' ? <LiskIcon width={24} height={24} /> :
+                      wallet.type === 'USDT' ? <UsdtIcon width={24} height={24} /> :
                       <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />}
                    </View>
                    <View style={styles.walletInfo}>
-                     <Text style={styles.walletType}>{wallet.type}</Text>
+                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.walletType}>{wallet.type}</Text>
+                        {wallet.tag && (
+                             <View style={{ marginLeft: 6, backgroundColor: '#F2F2F7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                 <Text style={{ fontSize: 10, color: '#666', fontFamily: FONTS.bodySemiBold }}>{wallet.tag}</Text>
+                             </View>
+                         )}
+                     </View>
                      <Text style={styles.walletAddress}>{symbol}</Text>
                    </View>
                    <View style={styles.walletBalanceContainer}>

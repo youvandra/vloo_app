@@ -7,6 +7,7 @@ import HomeScreen from '../screens/HomeScreen';
 import GiverDashboardScreen from '../screens/giver/DashboardScreen';
 import VlooDetailsScreen from '../screens/giver/VlooDetailsScreen';
 import LinkedWalletsSettingsScreen from '../screens/giver/LinkedWalletsSettingsScreen';
+import AboutScreen from '../screens/giver/AboutScreen';
 import GiverSuccessScreen from '../screens/giver/SuccessScreen';
 import BuyCardScreen from '../screens/giver/BuyCardScreen';
 import ReceiverScanScreen from '../screens/receiver/ScanScreen';
@@ -28,6 +29,7 @@ export default function AppNavigator() {
         />
         <Stack.Screen name="VlooDetails" component={VlooDetailsScreen} />
         <Stack.Screen name="LinkedWalletsSettings" component={LinkedWalletsSettingsScreen} />
+        <Stack.Screen name="About" component={AboutScreen} />
         <Stack.Screen name="GiverSuccess" component={GiverSuccessScreen} />
         <Stack.Screen name="BuyCard" component={BuyCardScreen} />
         <Stack.Screen name="ReceiverScan" component={ReceiverScanScreen} />
