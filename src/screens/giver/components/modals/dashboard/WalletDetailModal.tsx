@@ -10,9 +10,10 @@ interface WalletDetailModalProps {
   onClose: () => void;
   wallet: any;
   price: number;
+  currency?: 'IDR' | 'USD';
 }
 
-export const WalletDetailModal = ({ visible, onClose, wallet, price }: WalletDetailModalProps) => {
+export const WalletDetailModal = ({ visible, onClose, wallet, price, currency = 'IDR' }: WalletDetailModalProps) => {
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -34,7 +35,8 @@ export const WalletDetailModal = ({ visible, onClose, wallet, price }: WalletDet
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(price);
+    const locale = currency === 'IDR' ? 'id-ID' : 'en-US';
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: currency }).format(price);
   };
 
   const getSymbol = (type: string) => {
@@ -69,7 +71,10 @@ export const WalletDetailModal = ({ visible, onClose, wallet, price }: WalletDet
           </View>
 
           <View style={styles.header}>
-            <Text style={styles.title}>{wallet.type}</Text>
+            <View>
+              <Text style={styles.title}>{wallet.type}</Text>
+              <Text style={styles.subtitle}>1 {getSymbol(wallet.type)} ≈ {formatPrice(price)}</Text>
+            </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <X size={24} color="#000" />
             </TouchableOpacity>
@@ -85,11 +90,6 @@ export const WalletDetailModal = ({ visible, onClose, wallet, price }: WalletDet
               <Text style={styles.addressText}>{wallet.address}</Text>
               <Copy size={16} color={COLORS.primary} />
             </TouchableOpacity>
-          </View>
-
-          <View style={styles.priceContainer}>
-            <Text style={styles.priceLabel}>Current Price</Text>
-            <Text style={styles.priceText}>1 {getSymbol(wallet.type)} ≈ {formatPrice(price)}</Text>
           </View>
         </View>
       </View>
@@ -133,6 +133,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.displayBold,
     fontSize: 20,
     color: '#000',
+  },
+  subtitle: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
   },
   closeButton: {
     padding: 4,

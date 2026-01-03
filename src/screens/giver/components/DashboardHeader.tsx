@@ -5,14 +5,18 @@ import { COLORS, FONTS } from '../../../lib/theme';
 
 interface DashboardHeaderProps {
   balance?: string;
+  secondaryBalance?: string;
 }
 
-export const DashboardHeader = ({ balance = '$0.00' }: DashboardHeaderProps) => {
+export const DashboardHeader = ({ balance = '$0.00', secondaryBalance }: DashboardHeaderProps) => {
   return (
     <View style={styles.header}>
       <View>
         <Text style={styles.label}>Total Balance</Text>
         <Text style={styles.balance}>{balance}</Text>
+        {secondaryBalance && (
+          <Text style={styles.secondaryBalance}>{secondaryBalance}</Text>
+        )}
       </View>
       <View style={styles.headerActions}>
         <TouchableOpacity style={styles.headerButton}>
@@ -42,6 +46,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.displayBold,
     fontSize: 32,
     color: '#000',
+  },
+  secondaryBalance: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 14,
+    color: '#999',
+    marginTop: 2,
   },
   headerActions: {
     flexDirection: 'row',

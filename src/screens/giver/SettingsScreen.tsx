@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
-import { ChevronLeft, Fingerprint } from 'lucide-react-native';
+import { ChevronLeft, Fingerprint, Banknote, Globe } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../lib/theme';
 
 interface SettingsScreenProps {
@@ -8,13 +8,21 @@ interface SettingsScreenProps {
   faceIdEnabled: boolean;
   faceIdSupported: boolean;
   onToggleFaceId: () => void;
+  currency: 'IDR' | 'USD';
+  setCurrency: (curr: 'IDR' | 'USD') => void;
+  language: 'en' | 'id';
+  setLanguage: (lang: 'en' | 'id') => void;
 }
 
 export const SettingsScreen = ({
   onBack,
   faceIdEnabled,
   faceIdSupported,
-  onToggleFaceId
+  onToggleFaceId,
+  currency,
+  setCurrency,
+  language,
+  setLanguage
 }: SettingsScreenProps) => {
   return (
     <SafeAreaView style={styles.container}>
@@ -30,8 +38,45 @@ export const SettingsScreen = ({
 
       <ScrollView contentContainerStyle={styles.content}>
         
+        {/* Preferences Section */}
+        <Text style={styles.sectionTitle}>Preferences</Text>
+
+        {/* Currency */}
+        <TouchableOpacity 
+          style={styles.settingItem} 
+          onPress={() => setCurrency(currency === 'IDR' ? 'USD' : 'IDR')}
+          activeOpacity={0.7}
+        >
+          <View style={styles.settingLeft}>
+            <View style={[styles.iconBox, { backgroundColor: '#E0F7FA' }]}>
+              <Banknote size={20} color={COLORS.primary} />
+            </View>
+            <Text style={styles.settingLabel}>Currency</Text>
+          </View>
+          <View style={styles.settingRight}>
+             <Text style={styles.valueText}>{currency === 'IDR' ? 'Rupiah (IDR)' : 'Dollar (USD)'}</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Language */}
+        <TouchableOpacity 
+          style={styles.settingItem} 
+          onPress={() => setLanguage(language === 'en' ? 'id' : 'en')}
+          activeOpacity={0.7}
+        >
+          <View style={styles.settingLeft}>
+            <View style={[styles.iconBox, { backgroundColor: '#FFF3E0' }]}>
+              <Globe size={20} color={COLORS.primary} />
+            </View>
+            <Text style={styles.settingLabel}>Language</Text>
+          </View>
+           <View style={styles.settingRight}>
+             <Text style={styles.valueText}>{language === 'en' ? 'English' : 'Indonesia'}</Text>
+          </View>
+        </TouchableOpacity>
+
         {/* Security Section */}
-        <Text style={styles.sectionTitle}>Security</Text>
+        <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Security</Text>
         
         <TouchableOpacity 
           style={styles.settingItem} 
@@ -102,6 +147,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  settingRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  valueText: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 14,
+    color: '#8E8E93',
   },
   iconBox: {
     width: 40,

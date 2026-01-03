@@ -23,7 +23,13 @@ interface CardStackProps {
   onCardPress: (vloo: any) => void;
   onReorder?: (fromIndex: number, toIndex: number) => void;
   onDeletePress?: (vloo: any) => void;
+  currency?: 'IDR' | 'USD';
 }
+
+const formatCurrency = (amount: number, currency: 'IDR' | 'USD') => {
+  const locale = currency === 'IDR' ? 'id-ID' : 'en-US';
+  return new Intl.NumberFormat(locale, { style: 'currency', currency: currency }).format(amount);
+};
 
 const DraggableCard = ({ 
   item, 
@@ -34,7 +40,8 @@ const DraggableCard = ({
   onReorder,
   onDeletePress,
   activeDragIndex,
-  activeDragTranslation
+  activeDragTranslation,
+  currency = 'IDR'
 }: any) => {
   const cardColor = item.color || COLORS.primary;
   const CARD_HEIGHT = 220;
@@ -142,7 +149,7 @@ const DraggableCard = ({
         activeOpacity={0.9}
         onPress={() => onCardPress(item)}
       >
-        <CardContent item={item} isEditing={false} />
+        <CardContent item={item} isEditing={false} currency={currency} />
       </TouchableOpacity>
     );
   }
@@ -160,13 +167,13 @@ const DraggableCard = ({
           animatedStyle
         ]}
       >
-        <CardContent item={item} isEditing={isEditing} onDeletePress={onDeletePress} />
+        <CardContent item={item} isEditing={isEditing} onDeletePress={onDeletePress} currency={currency} />
       </Animated.View>
     </GestureDetector>
   );
 };
 
-const CardContent = ({ item, isEditing, onDeletePress }: any) => (
+const CardContent = ({ item, isEditing, onDeletePress, currency = 'IDR' }: any) => (
   <>
     {/* Decorative Circles */}
     <View style={[styles.circle, styles.circle1]} />
@@ -177,7 +184,7 @@ const CardContent = ({ item, isEditing, onDeletePress }: any) => (
     <View style={styles.cardTopRow}>
       <Text style={styles.cardName}>Vloo Card</Text>
       <View style={styles.cardBalanceContainer}>
-        <Text style={styles.cardBalance}>$0.00</Text>
+        <Text style={styles.cardBalance}>{formatCurrency(item.balance || 0, currency)}</Text>
       </View>
     </View>
 
@@ -203,7 +210,8 @@ export const CardStack = ({
   onEditPress,
   onCardPress,
   onReorder,
-  onDeletePress
+  onDeletePress,
+  currency = 'IDR'
 }: CardStackProps) => {
   
   const displayData = useMemo(() => {
@@ -260,6 +268,7 @@ export const CardStack = ({
         onDeletePress={onDeletePress}
         activeDragIndex={activeDragIndex}
         activeDragTranslation={activeDragTranslation}
+        currency={currency}
       />
     );
   };

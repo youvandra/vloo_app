@@ -67,11 +67,27 @@ export default function GiverDashboardScreen({ navigation }: any) {
   const [faceIdSupported, setFaceIdSupported] = useState(false);
   const [faceIdLoading, setFaceIdLoading] = useState(false);
 
+  // App Settings
+  const [currency, setCurrency] = useState<'IDR' | 'USD'>('IDR');
+  const [language, setLanguage] = useState<'en' | 'id'>('en');
+  
+  // Balance State
+  const [vlooBalances, setVlooBalances] = useState<{[key: string]: number}>({});
+  const [totalBalance, setTotalBalance] = useState(0);
+  const [totalBalanceSecondary, setTotalBalanceSecondary] = useState(0);
+
   useEffect(() => {
     (async () => {
       try {
-        const saved = await AsyncStorage.getItem('face_id_enabled');
-        setFaceIdEnabled(saved === 'true');
+        const savedFaceId = await AsyncStorage.getItem('face_id_enabled');
+        setFaceIdEnabled(savedFaceId === 'true');
+
+        const savedCurrency = await AsyncStorage.getItem('app_currency');
+        if (savedCurrency) setCurrency(savedCurrency as 'IDR' | 'USD');
+
+        const savedLanguage = await AsyncStorage.getItem('app_language');
+        if (savedLanguage) setLanguage(savedLanguage as 'en' | 'id');
+
         let supported = false;
         try {
           const LocalAuthentication = require('expo-local-authentication');
@@ -86,7 +102,110 @@ export default function GiverDashboardScreen({ navigation }: any) {
     })();
   }, []);
 
+  useEffect(() => {
+    if (vloos.length > 0) {
+      updateBalances();
+    }
+  }, [vloos, currency]);
+
+  const getCoinIdFromType = (type: string) => {
+    if (!type) return '';
+    const lower = type.toLowerCase();
+    if (lower.includes('bitcoin')) return 'bitcoin';
+    if (lower.includes('ethereum')) return 'ethereum';
+    if (lower.includes('solana')) return 'solana';
+    if (lower.includes('polygon') || lower.includes('matic')) return 'matic-network';
+    if (lower.includes('bnb')) return 'binancecoin';
+    if (lower.includes('lisk')) return 'lisk';
+    return '';
+  };
+
+  const updateBalances = async () => {
+    let newVlooBalances: {[key: string]: number} = {};
+    let newTotalBalance = 0;
+    let newTotalBalanceSec = 0;
+    
+    const coinIds = new Set<string>();
+    const allWallets: {vlooId: string, address: string, type: string}[] = [];
+
+    for (const vloo of vloos) {
+        try {
+            const stored = await AsyncStorage.getItem(`vloo_wallets_${vloo.id}`);
+            if (stored) {
+                const wallets = JSON.parse(stored);
+                wallets.forEach((w: any) => {
+                    allWallets.push({vlooId: vloo.id, address: w.address, type: w.type});
+                    const coinId = getCoinIdFromType(w.type);
+                    if (coinId) coinIds.add(coinId);
+                });
+            }
+        } catch (e) {}
+    }
+
+    let prices: any = {};
+    if (coinIds.size > 0) {
+        try {
+            const ids = Array.from(coinIds).join(',');
+            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,idr`);
+            prices = await response.json();
+        } catch (e) {
+            console.error('Error fetching prices:', e);
+        }
+    }
+    
+    // Process wallets in parallel to speed up
+    await Promise.all(allWallets.map(async (w) => {
+        try {
+            const balanceStr = await fetchBalance(w.address, w.type);
+            const [amountStr] = balanceStr.split(' ');
+            const amount = parseFloat(amountStr) || 0;
+            
+            const coinId = getCoinIdFromType(w.type);
+            const priceUSD = prices[coinId]?.['usd'] || 0;
+            const priceIDR = prices[coinId]?.['idr'] || 0;
+            
+            const price = currency === 'IDR' ? priceIDR : priceUSD;
+            const priceSec = currency === 'IDR' ? priceUSD : priceIDR;
+            
+            const value = amount * price;
+            const valueSec = amount * priceSec;
+            
+            newVlooBalances[w.vlooId] = (newVlooBalances[w.vlooId] || 0) + value;
+            newTotalBalance += value;
+            newTotalBalanceSec += valueSec;
+        } catch (e) {
+             console.error('Error fetching balance for wallet:', e);
+        }
+    }));
+    
+    setVlooBalances(newVlooBalances);
+    setTotalBalance(newTotalBalance);
+    setTotalBalanceSecondary(newTotalBalanceSec);
+  };
+
+  const formatCurrency = (amount: number) => {
+    const locale = currency === 'IDR' ? 'id-ID' : 'en-US';
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: currency }).format(amount);
+  };
+
+  const formatSecondaryCurrency = (amount: number) => {
+    const secCurrency = currency === 'IDR' ? 'USD' : 'IDR';
+    const locale = secCurrency === 'IDR' ? 'id-ID' : 'en-US';
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: secCurrency }).format(amount);
+  };
+
   // --- Handlers ---
+
+  const handleSetCurrency = async (curr: 'IDR' | 'USD') => {
+      setCurrency(curr);
+      await AsyncStorage.setItem('app_currency', curr);
+  };
+
+  const handleSetLanguage = async (lang: 'en' | 'id') => {
+      setLanguage(lang);
+      await AsyncStorage.setItem('app_language', lang);
+  };
+
 
   const handleWalletPress = (wallet: any) => {
     // Deprecated wallet press logic
@@ -330,7 +449,10 @@ export default function GiverDashboardScreen({ navigation }: any) {
       
       {activeTab === 'home' ? (
         <>
-          <DashboardHeader balance="$0.00" />
+          <DashboardHeader 
+            balance={formatCurrency(totalBalance)} 
+            secondaryBalance={formatSecondaryCurrency(totalBalanceSecondary)}
+          />
           
           {loading ? (
             renderSkeleton()
@@ -342,7 +464,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
               scrollEnabled={!isEditing}
             >
               <CardStack 
-                 vloos={vloos}
+                 vloos={vloos.map(v => ({...v, balance: vlooBalances[v.id] || 0}))}
                  isEditing={isEditing}
                  onAddPress={() => setAddOptionsModalVisible(true)}
                  onEditPress={() => setIsEditing(!isEditing)}
@@ -358,6 +480,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
                     await AsyncStorage.setItem('my_card_ids', JSON.stringify(newOrderIds));
                  }}
                  onDeletePress={handleDeleteCard}
+                 currency={currency}
               />
             </ScrollView>
           )}
@@ -369,6 +492,10 @@ export default function GiverDashboardScreen({ navigation }: any) {
             faceIdEnabled={faceIdEnabled}
             faceIdSupported={faceIdSupported}
             onToggleFaceId={handleToggleFaceId}
+            currency={currency}
+            setCurrency={handleSetCurrency}
+            language={language}
+            setLanguage={handleSetLanguage}
           />
         ) : (
           <MoreScreen onNavigate={(screen) => setMoreScreenView(screen as any)} />

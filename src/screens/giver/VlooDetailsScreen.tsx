@@ -20,6 +20,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   const [wallets, setWallets] = useState<any[]>([]);
   const [prices, setPrices] = useState<any>({});
   const [walletBalances, setWalletBalances] = useState<{[key: string]: string}>({});
+  const [currency, setCurrency] = useState<'IDR' | 'USD'>('IDR');
   
   // Edit State
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -32,6 +33,12 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
 
   useEffect(() => {
+    AsyncStorage.getItem('app_currency').then(val => {
+       if(val) setCurrency(val as 'IDR' | 'USD');
+    });
+  }, []);
+
+  useEffect(() => {
     if (vloo?.id) {
       loadWallets();
     }
@@ -42,7 +49,8 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
       // Fetch Balances
       wallets.forEach(async (w) => {
         const bal = await fetchBalance(w.address, w.type);
-        setWalletBalances(prev => ({...prev, [w.address]: bal}));
+        const key = `${w.type}_${w.address}`;
+        setWalletBalances(prev => ({...prev, [key]: bal}));
       });
 
       // Fetch Prices separately for each coin type found
@@ -54,7 +62,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
          }
       });
     }
-  }, [wallets]);
+  }, [wallets, currency]); // Add currency dependency to refetch if it changes
 
   const getCoinIdFromType = (type: string) => {
     if (!type) return '';
@@ -70,8 +78,9 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
 
   const fetchCoinPrice = async (coinId: string) => {
     try {
-      console.log(`Fetching price for: ${coinId}`);
-      const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=idr`);
+      const curr = currency.toLowerCase();
+      console.log(`Fetching price for: ${coinId} in ${curr}`);
+      const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=${curr}`);
       const data = await response.json();
       console.log(`Price for ${coinId}:`, data);
       setPrices((prev: any) => ({ ...prev, ...data }));
@@ -79,6 +88,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
       console.error(`Error fetching price for ${coinId}:`, e);
     }
   };
+
 
   const loadWallets = async () => {
     try {
@@ -141,8 +151,9 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
       Alert.alert('Delete', 'Delete functionality coming soon.');
   };
 
-  const formatIDR = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);
+  const formatCurrency = (amount: number) => {
+    const locale = currency === 'IDR' ? 'id-ID' : 'en-US';
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: currency }).format(amount);
   };
   
   const formatAddress = (address: string) => {
@@ -165,7 +176,8 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   
   const getWalletPrice = (wallet: any) => {
       if (!wallet) return 0;
-      const balanceStr = walletBalances[wallet.address] || '';
+      const key = `${wallet.type}_${wallet.address}`;
+      const balanceStr = walletBalances[key] || '';
       let symbol = balanceStr.split(' ')[1];
       
       if (!symbol) {
@@ -179,7 +191,36 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
       }
       
       const priceId = getPriceId(symbol || '');
-      return prices[priceId]?.idr || 0;
+      const curr = currency.toLowerCase();
+      return prices[priceId]?.[curr] || 0;
+  };
+
+  const getTotalBalance = () => {
+    let total = 0;
+    wallets.forEach(wallet => {
+        const key = `${wallet.type}_${wallet.address}`;
+        const balanceStr = walletBalances[key] || '';
+        let [amountStr, symbol] = balanceStr.split(' ');
+        
+        if (!symbol) {
+             const type = wallet.type.toLowerCase();
+             if (type.includes('bitcoin')) symbol = 'BTC';
+             else if (type.includes('ethereum')) symbol = 'ETH';
+             else if (type.includes('solana')) symbol = 'SOL';
+             else if (type.includes('polygon')) symbol = 'POL';
+             else if (type.includes('bnb')) symbol = 'BNB';
+             else if (type.includes('lisk')) symbol = 'LSK';
+             
+             if (!amountStr) amountStr = '0.00';
+        }
+
+        const amount = parseFloat(amountStr) || 0;
+        const priceId = getPriceId(symbol);
+        const curr = currency.toLowerCase();
+        const price = prices[priceId]?.[curr] || 0;
+        total += amount * price;
+    });
+    return total;
   };
 
   const handleWalletPress = (wallet: any) => {
@@ -218,7 +259,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
            {/* Top Row: Name & Balance */}
            <View style={styles.cardTopRow}>
              <Text style={styles.cardName}>Vloo Card</Text>
-             <Text style={styles.cardBalance}>$0.00</Text>
+             <Text style={styles.cardBalance}>{formatCurrency(getTotalBalance())}</Text>
            </View>
 
            {/* Bottom Left: Big Logo Text */}
@@ -261,7 +302,8 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
              <Text style={styles.label}>Linked Wallets</Text>
              <View style={styles.walletsContainer}>
                {wallets.map((wallet: any, index: number) => {
-                 const balanceStr = walletBalances[wallet.address] || '';
+                 const key = `${wallet.type}_${wallet.address}`;
+                 const balanceStr = walletBalances[key] || '';
                  let [amountStr, symbol] = balanceStr.split(' ');
                  
                  // If symbol missing from balance (e.g. initial load or empty), derive from type
@@ -280,8 +322,9 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
 
                  const amount = parseFloat(amountStr) || 0;
                  const priceId = getPriceId(symbol);
-                 const price = prices[priceId]?.idr || 0;
-                 const idrValue = amount * price;
+                 const curr = currency.toLowerCase();
+                 const price = prices[priceId]?.[curr] || 0;
+                 const value = amount * price;
 
                  return (
                  <TouchableOpacity key={index} style={styles.walletRow} onPress={() => handleWalletPress(wallet)}>
@@ -300,7 +343,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
                    </View>
                    <View style={styles.walletBalanceContainer}>
                      <Text style={styles.walletBalanceText}>{amountStr}</Text>
-                     <Text style={styles.walletIdrText}>{formatIDR(idrValue)}</Text>
+                     <Text style={styles.walletIdrText}>{formatCurrency(value)}</Text>
                    </View>
                  </TouchableOpacity>
                )})}
@@ -327,6 +370,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
         onClose={() => setDetailModalVisible(false)}
         wallet={selectedWallet}
         price={getWalletPrice(selectedWallet)}
+        currency={currency}
       />
     </SafeAreaView>
   );
