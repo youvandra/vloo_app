@@ -7,7 +7,8 @@ import { COLORS, FONTS } from '../lib/theme';
 import { Button } from '../components/Button';
 import { supabase } from '../lib/supabase';
 import { HeroCard } from '../components/HeroCard';
-import { Plus, Scan } from 'lucide-react-native';
+import { LayoutDashboard } from 'lucide-react-native';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -74,19 +75,11 @@ export default function HomeScreen({ navigation }: any) {
           {/* Bottom Actions */}
           <View style={styles.actionSection}>
             <Button
-              title="Create Access"
+              title="Go to App"
               onPress={handleGiverPress}
               variant="primary"
-              leftIcon={<Plus size={20} color="#fff" />}
+              leftIcon={<LayoutDashboard size={20} color="#fff" />}
               style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
-            />
-            
-            <Button
-              title="Scan to Receive"
-              onPress={() => navigation.navigate('ReceiverScan')}
-              variant="primary"
-              leftIcon={<Scan size={20} color="#fff" />}
-              style={[styles.actionButton, { backgroundColor: '#000' }]}
             />
           </View>
         </ScrollView>
