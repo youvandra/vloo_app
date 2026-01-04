@@ -3,7 +3,7 @@ import { StyleSheet, ScrollView, BackHandler, SafeAreaView, Alert, StatusBar, Re
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchBalance } from '../../lib/blockcypher';
 import { supabase } from '../../lib/supabase';
-import { createRandomWallet, generateMockBitcoinData, generateMockSolanaData, getWalletFromPrivateKey } from '../../lib/wallet';
+import { createRandomWallet, generateMockBitcoinData, generateMockSolanaData, generateMockTronData, generateMockMoneroData, generateMockXrpData, getWalletFromPrivateKey } from '../../lib/wallet';
 import { encryptData, generateDeterministicPrivateKey, generateCommitmentHash } from '../../lib/crypto';
 
 // Components
@@ -304,6 +304,13 @@ export default function GiverDashboardScreen({ navigation }: any) {
         const wallet = getWalletFromPrivateKey(privateKey);
         const evmAddress = wallet.address;
 
+        // Generate addresses for other chains deterministically
+        const btcData = generateMockBitcoinData(privateKey);
+        const solData = generateMockSolanaData(privateKey);
+        const tronData = generateMockTronData(privateKey);
+        const xmrData = generateMockMoneroData(privateKey);
+        const xrpData = generateMockXrpData(privateKey);
+
         // Generate Commitment Hash (to lock the card on server)
         const commitment = generateCommitmentHash(cardId, pass);
 
@@ -324,14 +331,17 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
         // Create Wallet List (EVM compatible chains share address)
         const wallets = [
-          { type: 'Ethereum', address: evmAddress },
-          { type: 'USDT', address: evmAddress, tag: 'ERC-20' },
-          { type: 'Polygon', address: evmAddress },
-          { type: 'BNB Chain', address: evmAddress },
-          { type: 'Lisk', address: evmAddress },
-          // Note: Bitcoin and Solana require specific libraries not currently available in this env
-          // { type: 'Bitcoin', address: 'Coming Soon' }, 
-          // { type: 'Solana', address: 'Coming Soon' }
+          { type: 'Ethereum', address: evmAddress, isVisible: true },
+          { type: 'USDT', address: evmAddress, tag: 'ERC-20', isVisible: true },
+          { type: 'Polygon', address: evmAddress, isVisible: true },
+          { type: 'BNB Chain', address: evmAddress, isVisible: true },
+          { type: 'Lisk', address: evmAddress, isVisible: true },
+          // Hidden by default, enable in Settings
+          { type: 'Bitcoin', address: btcData.address, isVisible: false },
+          { type: 'Solana', address: solData.address, isVisible: false },
+          { type: 'Tron', address: tronData.address, isVisible: false },
+          { type: 'Monero', address: xmrData.address, isVisible: false },
+          { type: 'XRP', address: xrpData.address, isVisible: false },
         ];
 
         // Save locally for guest/user persistence

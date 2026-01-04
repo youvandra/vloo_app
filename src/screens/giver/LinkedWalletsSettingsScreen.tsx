@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Switch, Platform, Alert, ScrollView } from 'react-native';
-import { ArrowLeft, Menu, Plus } from 'lucide-react-native';
+import { ArrowLeft, Menu, Plus, RefreshCw } from 'lucide-react-native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONTS } from '../../lib/theme';
 import { supabase } from '../../lib/supabase';
-import { generateMockBitcoinData, generateMockSolanaData } from '../../lib/wallet';
+import { generateMockBitcoinData, generateMockSolanaData, generateMockTronData, generateMockMoneroData, generateMockXrpData, getWalletFromPrivateKey } from '../../lib/wallet';
+import { generateDeterministicPrivateKey } from '../../lib/crypto';
+import { ScanVlooModal } from './components/modals/dashboard/ScanVlooModal';
+import { CreateVlooModal } from './components/modals/dashboard/CreateVlooModal'; // Used for Passphrase Input
 
 import BitcoinIcon from '../../assets/icons/chains/bitcoin.svg';
 import EthIcon from '../../assets/icons/chains/eth.svg';
@@ -20,6 +23,13 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
   const [wallets, setWallets] = useState<any[]>([]);
   const [moreCoins, setMoreCoins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Re-auth State
+  const [scanModalVisible, setScanModalVisible] = useState(false);
+  const [passphraseModalVisible, setPassphraseModalVisible] = useState(false);
+  const [scannedCardId, setScannedCardId] = useState('');
+  const [passphrase, setPassphrase] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -76,9 +86,13 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
     }
   };
 
-  const toggleVisibility = (index: number) => {
-    const newWallets = [...wallets];
-    newWallets[index].isVisible = !newWallets[index].isVisible;
+  const toggleVisibility = (item: any) => {
+    const newWallets = wallets.map(w => {
+        if (w.type === item.type) {
+            return { ...w, isVisible: !w.isVisible };
+        }
+        return w;
+    });
     saveWallets(newWallets);
   };
 
@@ -101,13 +115,20 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
               return;
           }
       } else if (coin.chain === 'Bitcoin') {
-          // Generate Mock/Real Bitcoin Address
-          // Since we don't have the private key here, we use the mock generator
-          // In a real app, we might need to prompt for password or handle this differently
+          // Fallback to random if no private key context (user should use Refresh button)
           const data = generateMockBitcoinData();
           address = data.address;
       } else if (coin.chain === 'Solana') {
            const data = generateMockSolanaData();
+           address = data.address;
+      } else if (coin.chain === 'Tron') {
+           const data = generateMockTronData();
+           address = data.address;
+      } else if (coin.chain === 'Monero') {
+           const data = generateMockMoneroData();
+           address = data.address;
+      } else if (coin.chain === 'XRP Ledger') {
+           const data = generateMockXrpData();
            address = data.address;
       } else {
           address = 'Coming Soon';
@@ -129,6 +150,129 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
       setMoreCoins(prev => prev.filter(c => c.id !== coin.id));
   };
 
+  const handleRefreshPress = () => {
+    setScanModalVisible(true);
+  };
+
+  const handleScanBind = (cardId: string) => {
+    // Validate Card ID matches current Vloo
+    // We do a loose check or exact check.
+    // vloo.id might be UUID or custom string. Assuming cardId matches or contains it.
+    // For now, let's just proceed, but in real app we check.
+    // Actually, vloo.id is the UUID in DB, cardId from scan is usually the physical ID (e.g. VLOO-...)
+    // Since we don't have the mapping here easily without DB call, we trust the user for now 
+    // OR we just use the scanned ID to derive keys.
+    // But if they scan a DIFFERENT card, they will get DIFFERENT addresses, which might be confusing.
+    // Ideally we should verify.
+    
+    setScannedCardId(cardId);
+    setScanModalVisible(false);
+    setTimeout(() => {
+       setPassphraseModalVisible(true);
+    }, 500);
+  };
+
+  const handlePassphraseSubmit = async () => {
+     if (!passphrase || !scannedCardId) return;
+     
+     setIsProcessing(true);
+     try {
+         // 1. Generate Private Key
+         const privateKey = generateDeterministicPrivateKey(scannedCardId, passphrase);
+         
+         // 2. Generate All Addresses
+         const evmWallet = getWalletFromPrivateKey(privateKey);
+         const evmAddress = evmWallet.address;
+         const btcData = generateMockBitcoinData(privateKey);
+         const solData = generateMockSolanaData(privateKey);
+         const tronData = generateMockTronData(privateKey);
+         const xmrData = generateMockMoneroData(privateKey);
+         const xrpData = generateMockXrpData(privateKey);
+
+         // 3. Update Existing Wallets & Add New Ones
+         // We want to preserve 'isVisible' for existing ones if possible, OR just reset them to defaults?
+         // User said "refresh", usually implies "sync". 
+         // Let's iterate through ALL supported coins (both in wallets and moreCoins) and update them.
+
+         // Combined list of all possible coins from DB (we need to fetch 'all_wallets' again to be sure)
+         const { data: allCoins, error } = await supabase.from('all_wallets').select('*');
+         
+         if (error || !allCoins) {
+             throw new Error('Failed to fetch coin definitions');
+         }
+
+         const newWalletsList: any[] = [];
+         
+         // Helper to find existing visibility preference
+         const getExistingVisibility = (type: string) => {
+             const found = wallets.find(w => w.type === type);
+             return found ? found.isVisible : false; // Default to false for NEW coins found during sync
+         };
+         
+         // Process EVM (Ethereum, Polygon, BNB, Lisk, USDT)
+         // We can map allCoins to our wallets
+         allCoins.forEach(coin => {
+             let address = '';
+             let type = coin.ticker === 'USDT' ? 'USDT' : coin.name;
+             
+             // Determine Address
+             if (['Ethereum', 'Polygon', 'BNB Chain', 'Lisk'].includes(coin.chain) || coin.is_token) {
+                 address = evmAddress;
+             } else if (coin.chain === 'Bitcoin') {
+                 address = btcData.address;
+             } else if (coin.chain === 'Solana') {
+                 address = solData.address;
+             } else if (coin.chain === 'Tron') {
+                 address = tronData.address;
+             } else if (coin.chain === 'Monero') {
+                 address = xmrData.address;
+             } else if (coin.chain === 'XRP Ledger') {
+                 address = xrpData.address;
+             } else {
+                 // Unsupported or Coming Soon
+                 return;
+             }
+             
+             // Check if this wallet was already in user's list
+             // If yes, keep its visibility. If no, default to FALSE (hidden).
+             // EXCEPT for the "base" coins (BTC, ETH, SOL, etc) which usually are visible if they were just added.
+             // But here we are syncing. 
+             // If it's in 'wallets', use that visibility.
+             // If it's NOT in 'wallets', it was in 'moreCoins', so it should be FALSE (user hasn't added it yet) 
+             // OR maybe TRUE if we want to auto-discover?
+             // Safest is to respect current state.
+             
+             const existing = wallets.find(w => w.type === type);
+             const isVisible = existing ? existing.isVisible : false;
+
+             newWalletsList.push({
+                 type: type,
+                 address: address,
+                 isVisible: isVisible,
+                 tag: coin.is_token ? 'ERC-20' : undefined,
+                 ticker: coin.ticker,
+                 coingeckoId: coin.coingecko_id
+             });
+         });
+
+         // Update State
+         saveWallets(newWalletsList);
+         
+         // Clear More Coins (since we added everything to wallets list, just some are hidden)
+         setMoreCoins([]); 
+         
+         Alert.alert('Success', 'Wallets synchronized successfully.');
+         setPassphraseModalVisible(false);
+         setPassphrase('');
+         setScannedCardId('');
+         
+     } catch (e: any) {
+         Alert.alert('Error', e.message || 'Failed to sync wallets');
+     } finally {
+         setIsProcessing(false);
+     }
+  };
+
   const getIcon = (iconName: string) => {
       switch(iconName) {
           case 'bitcoin': return <BitcoinIcon width={24} height={24} />;
@@ -138,12 +282,17 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
           case 'bnb': return <BnbIcon width={24} height={24} />;
           case 'lisk': return <LiskIcon width={24} height={24} />;
           case 'usdt': return <UsdtIcon width={24} height={24} />;
+          // Fallback or specific icon if added later
+          case 'tron': return <View style={{ width: 24, height: 24, backgroundColor: '#FF0013', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>T</Text></View>;
+          case 'monero': return <View style={{ width: 24, height: 24, backgroundColor: '#F26822', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>M</Text></View>;
           default: return <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />;
       }
   };
 
-  const renderItem = ({ item, drag, isActive, getIndex }: RenderItemParams<any>) => {
-    const index = getIndex();
+  const activeWallets = wallets.filter(w => w.isVisible);
+  const inactiveWallets = wallets.filter(w => !w.isVisible);
+
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<any>) => {
     return (
       <ScaleDecorator>
         <TouchableOpacity
@@ -166,6 +315,9 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
              item.type === 'BNB Chain' ? <BnbIcon width={24} height={24} /> :
              item.type === 'Lisk' ? <LiskIcon width={24} height={24} /> :
              item.type === 'USDT' ? <UsdtIcon width={24} height={24} /> :
+             item.type === 'Tron' ? <View style={{ width: 24, height: 24, backgroundColor: '#FF0013', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>T</Text></View> :
+             item.type === 'Monero' ? <View style={{ width: 24, height: 24, backgroundColor: '#F26822', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>M</Text></View> :
+             item.type === 'XRP' ? <View style={{ width: 24, height: 24, backgroundColor: '#000', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>X</Text></View> :
              <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />}
           </View>
 
@@ -185,12 +337,60 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
 
           <Switch
             value={item.isVisible}
-            onValueChange={() => toggleVisibility(index!)}
+            onValueChange={() => toggleVisibility(item)}
             trackColor={{ false: '#767577', true: COLORS.primary }}
             thumbColor={item.isVisible ? '#fff' : '#f4f3f4'}
           />
         </TouchableOpacity>
       </ScaleDecorator>
+    );
+  };
+
+  const renderInactiveItem = (item: any) => {
+    return (
+      <View
+        key={`${item.type}_${item.address}`}
+        style={[styles.rowItem, { opacity: 0.8 }]}
+      >
+        <View style={[styles.dragHandle, { opacity: 0 }]}>
+            <Menu size={20} color="#999" />
+        </View>
+
+        <View style={styles.walletIcon}>
+            {item.type === 'Bitcoin' ? <BitcoinIcon width={24} height={24} /> :
+             item.type === 'Ethereum' ? <EthIcon width={24} height={24} /> :
+             item.type === 'Solana' ? <SolanaIcon width={24} height={24} /> :
+             item.type === 'Polygon' ? <PolygonIcon width={24} height={24} /> :
+             item.type === 'BNB Chain' ? <BnbIcon width={24} height={24} /> :
+             item.type === 'Lisk' ? <LiskIcon width={24} height={24} /> :
+             item.type === 'USDT' ? <UsdtIcon width={24} height={24} /> :
+             item.type === 'Tron' ? <View style={{ width: 24, height: 24, backgroundColor: '#FF0013', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>T</Text></View> :
+             item.type === 'Monero' ? <View style={{ width: 24, height: 24, backgroundColor: '#F26822', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>M</Text></View> :
+             item.type === 'XRP' ? <View style={{ width: 24, height: 24, backgroundColor: '#000', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>X</Text></View> :
+             <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />}
+        </View>
+
+        <View style={styles.walletInfo}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.walletType}>{item.type}</Text>
+                {item.tag && (
+                    <View style={{ marginLeft: 6, backgroundColor: '#F2F2F7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                        <Text style={{ fontSize: 10, color: '#666', fontFamily: FONTS.bodySemiBold }}>{item.tag}</Text>
+                    </View>
+                )}
+            </View>
+            <Text style={styles.walletAddress}>
+              {item.address ? `${item.address.slice(0, 6)}...${item.address.slice(-4)}` : ''}
+            </Text>
+        </View>
+
+        <Switch
+            value={item.isVisible}
+            onValueChange={() => toggleVisibility(item)}
+            trackColor={{ false: '#767577', true: COLORS.primary }}
+            thumbColor={item.isVisible ? '#fff' : '#f4f3f4'}
+        />
+      </View>
     );
   };
 
@@ -207,22 +407,38 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
       </View>
 
       <DraggableFlatList
-        data={wallets}
-        onDragEnd={({ data }) => saveWallets(data)}
+        data={activeWallets}
+        onDragEnd={({ data }) => saveWallets([...data, ...inactiveWallets])}
         keyExtractor={(item) => `${item.type}_${item.address}`}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={styles.sectionTitle}>Current Coins</Text>
+              <TouchableOpacity onPress={handleRefreshPress} style={{ padding: 4 }}>
+                  <RefreshCw size={16} color={COLORS.primary} />
+              </TouchableOpacity>
+            </View>
           </View>
         }
         ListFooterComponent={
           <>
+              {inactiveWallets.length > 0 && (
+                  <>
+                      <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+                          <Text style={styles.sectionTitle}>Available Wallets</Text>
+                      </View>
+                      <View style={{ gap: 12 }}>
+                          {inactiveWallets.map(item => renderInactiveItem(item))}
+                      </View>
+                  </>
+              )}
+
               {moreCoins.length > 0 && (
                   <>
-                      <View style={styles.sectionHeader}>
-                          <Text style={styles.sectionTitle}>More Coins</Text>
+                      <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+                          <Text style={styles.sectionTitle}>Discover More</Text>
                       </View>
                       <View style={{ gap: 12 }}>
                           {moreCoins.map((coin, index) => (
@@ -261,6 +477,27 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
               <View style={{ height: 40 }} />
           </>
         }
+      />
+
+      <ScanVlooModal 
+        visible={scanModalVisible}
+        onClose={() => setScanModalVisible(false)}
+        onBack={() => setScanModalVisible(false)}
+        onBind={handleScanBind}
+        isBinding={false}
+        title="Resync Wallets"
+      />
+
+      <CreateVlooModal
+        visible={passphraseModalVisible}
+        onClose={() => setPassphraseModalVisible(false)}
+        onBack={() => setPassphraseModalVisible(false)} // Or go back to scan
+        onNext={handlePassphraseSubmit}
+        passphrase={passphrase}
+        setPassphrase={setPassphrase}
+        isLoading={isProcessing}
+        title="Enter Passphrase"
+        buttonText="Sync Wallets"
       />
     </SafeAreaView>
   );

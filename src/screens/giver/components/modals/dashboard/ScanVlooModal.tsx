@@ -20,6 +20,7 @@ interface ScanVlooModalProps {
   onBack: () => void;
   onBind: (cardId: string) => void;
   isBinding: boolean;
+  title?: string;
 }
 
 export const ScanVlooModal = ({
@@ -27,7 +28,8 @@ export const ScanVlooModal = ({
   onClose,
   onBack,
   onBind,
-  isBinding
+  isBinding,
+  title = "Bind Card"
 }: ScanVlooModalProps) => {
   const [manualId, setManualId] = useState('');
   const [mode, setMode] = useState<'scan' | 'manual'>('scan');
@@ -120,7 +122,7 @@ export const ScanVlooModal = ({
                 <TouchableOpacity onPress={onBack} style={styles.closeButton}>
                   <ArrowLeft size={24} color="#000" />
                 </TouchableOpacity>
-                <Text style={styles.modalTitle}>Bind Card</Text>
+                <Text style={styles.modalTitle}>{title}</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                   <X size={24} color="#000" />
                 </TouchableOpacity>

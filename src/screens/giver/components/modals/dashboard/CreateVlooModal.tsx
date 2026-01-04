@@ -21,6 +21,8 @@ interface CreateVlooModalProps {
   passphrase: string;
   setPassphrase: (passphrase: string) => void;
   isLoading?: boolean;
+  title?: string;
+  buttonText?: string;
 }
 
 export const CreateVlooModal = ({
@@ -31,6 +33,8 @@ export const CreateVlooModal = ({
   passphrase,
   setPassphrase,
   isLoading = false,
+  title = "Create New Vloo",
+  buttonText = "Create Vloo"
 }: CreateVlooModalProps) => {
 
   const panResponder = useRef(
@@ -74,7 +78,7 @@ export const CreateVlooModal = ({
                   </TouchableOpacity>
                 ) : <View style={{width: 40}} />}
                 
-                <Text style={styles.modalTitle}>Create New Vloo</Text>
+                <Text style={styles.modalTitle}>{title}</Text>
                 
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                   <X size={24} color="#000" />
@@ -104,7 +108,7 @@ export const CreateVlooModal = ({
                 onPress={onNext}
                 disabled={!passphrase || isLoading}
               >
-                <Text style={styles.primaryButtonText}>{isLoading ? 'Creating...' : 'Create Vloo'}</Text>
+                <Text style={styles.primaryButtonText}>{isLoading ? 'Processing...' : buttonText}</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
