@@ -10,6 +10,7 @@ import LinkedWalletsSettingsScreen from '../screens/giver/LinkedWalletsSettingsS
 import AboutScreen from '../screens/giver/AboutScreen';
 import GiverSuccessScreen from '../screens/giver/SuccessScreen';
 import BuyCardScreen from '../screens/giver/BuyCardScreen';
+import ReceiveScreen from '../screens/giver/ReceiveScreen';
 
 const Stack = createStackNavigator();
 
@@ -28,6 +29,7 @@ export default function AppNavigator() {
         <Stack.Screen name="About" component={AboutScreen} />
         <Stack.Screen name="GiverSuccess" component={GiverSuccessScreen} />
         <Stack.Screen name="BuyCard" component={BuyCardScreen} />
+        <Stack.Screen name="Receive" component={ReceiveScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

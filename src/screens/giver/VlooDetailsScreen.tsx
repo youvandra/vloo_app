@@ -283,7 +283,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
 
         {/* Action Buttons */}
         <View style={styles.actionButtonsContainer}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => Alert.alert('Receive', 'Coming Soon')}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Receive', { vloo })}>
             <View style={styles.actionIconContainer}>
               <ArrowDown size={24} color={COLORS.primary} />
             </View>
