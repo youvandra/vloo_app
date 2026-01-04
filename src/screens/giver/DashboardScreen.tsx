@@ -332,18 +332,18 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
         // Create Wallet List (EVM compatible chains share address)
         const wallets = [
-          { type: 'Ethereum', address: evmAddress, isVisible: true },
-          { type: 'USDT', address: evmAddress, tag: 'ERC-20', isVisible: true },
-          { type: 'Polygon', address: evmAddress, isVisible: true },
-          { type: 'BNB Chain', address: evmAddress, isVisible: true },
-          { type: 'Lisk', address: evmAddress, isVisible: true },
+          { type: 'Ethereum', ticker: 'ETH', address: evmAddress, isVisible: true },
+          { type: 'USDT', ticker: 'USDT', address: evmAddress, tag: 'ERC-20', isVisible: true },
+          { type: 'Polygon', ticker: 'POL', address: evmAddress, isVisible: true },
+          { type: 'BNB Chain', ticker: 'BNB', address: evmAddress, isVisible: true },
+          { type: 'Lisk', ticker: 'LSK', address: evmAddress, isVisible: true },
           // Hidden by default, enable in Settings
-          { type: 'Bitcoin', address: btcData.address, isVisible: false },
-          { type: 'Solana', address: solData.address, isVisible: false },
-          { type: 'Tron', address: tronData.address, isVisible: false },
-          { type: 'Monero', address: xmrData.address, isVisible: false },
-          { type: 'XRP', address: xrpData.address, isVisible: false },
-          { type: 'Hedera', address: hbarData.address, isVisible: false },
+          { type: 'Bitcoin', ticker: 'BTC', address: btcData.address, isVisible: false },
+          { type: 'Solana', ticker: 'SOL', address: solData.address, isVisible: false },
+          { type: 'Tron', ticker: 'TRX', address: tronData.address, isVisible: false },
+          { type: 'Monero', ticker: 'XMR', address: xmrData.address, isVisible: false },
+          { type: 'XRP', ticker: 'XRP', address: xrpData.address, isVisible: false },
+          { type: 'Hedera', ticker: 'HBAR', address: hbarData.address, isVisible: false },
         ];
 
         // Save locally for guest/user persistence

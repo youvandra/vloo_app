@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Switch, Platform, Alert, ScrollView } from 'react-native';
-import { ArrowLeft, Menu, Plus, RefreshCw } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Switch, Platform, Alert, ScrollView, Image, TextInput } from 'react-native';
+import { ArrowLeft, Menu, Plus, RefreshCw, Search } from 'lucide-react-native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONTS } from '../../lib/theme';
@@ -22,6 +22,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
   const { vloo } = route.params;
   const [wallets, setWallets] = useState<any[]>([]);
   const [moreCoins, setMoreCoins] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Re-auth State
@@ -58,17 +59,69 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
       if (error) {
         console.error('Error fetching all coins:', error);
       } else if (allCoins) {
-        // Filter out coins that are already in userWallets
-        // We match by ticker or type to be safe
-        const available = allCoins.filter(coin => {
-             // Check if user already has this coin (by ticker or name/type)
-             const exists = userWallets.some(w => 
-                 w.type.toLowerCase() === coin.name.toLowerCase() || 
-                 (w.type === 'USDT' && coin.ticker === 'USDT') // Specific check for USDT/Tokens
+        // Merge icons into userWallets if missing
+        let updatedUserWallets = userWallets.map(w => {
+             const coin = allCoins.find(c => 
+                 c.name === w.type || 
+                 (w.type === 'USDT' && c.ticker === 'USDT') ||
+                 c.ticker === w.ticker
              );
-             return !exists;
+             return {
+                 ...w,
+                 icon: coin?.icon || w.icon
+             };
         });
-        setMoreCoins(available);
+
+        // Check for Base EVM Wallet
+        const evmWallet = updatedUserWallets.find(w => 
+            w.type === 'Ethereum' || w.type === 'Polygon' || w.type === 'BNB Chain' || w.type === 'Lisk' || w.type === 'Base' ||
+            allCoins.find(c => c.name === w.type && (c.chain === 'Ethereum' || c.chain === 'Polygon' || c.chain === 'BNB Chain' || c.chain === 'Lisk' || c.chain === 'Base'))
+        );
+
+        const evmAddress = evmWallet?.address;
+
+        // Categorize coins
+        const availableToAdd: any[] = [];
+        const discoverMore: any[] = [];
+
+        allCoins.forEach(coin => {
+             // Check if user already has this coin
+             const exists = updatedUserWallets.some(w => 
+                 w.type.toLowerCase() === coin.name.toLowerCase() || 
+                 (w.type === 'USDT' && coin.ticker === 'USDT')
+             );
+
+             if (exists) return;
+
+             // If not exists, check if we can auto-add to "Available" (inactive)
+             // Criteria: It's an EVM chain/token AND we have an EVM address
+             const isEvm = ['Ethereum', 'Polygon', 'BNB Chain', 'Lisk', 'Base'].includes(coin.chain) || coin.is_token;
+             
+             if (isEvm && evmAddress) {
+                 // Add to user wallets as INACTIVE
+                 updatedUserWallets.push({
+                     type: coin.ticker === 'USDT' ? 'USDT' : coin.name,
+                     address: evmAddress,
+                     isVisible: false, // Default hidden
+                     tag: coin.is_token ? 'ERC-20' : undefined,
+                     ticker: coin.ticker,
+                     coingeckoId: coin.coingecko_id,
+                     icon: coin.icon
+                 });
+             } else {
+                 // Requires Sync/Generation
+                 discoverMore.push(coin);
+             }
+        });
+        
+        // Update state
+        setWallets(updatedUserWallets);
+        setMoreCoins(discoverMore);
+        
+        // Persist the auto-added inactive wallets
+        if (updatedUserWallets.length > userWallets.length) {
+            AsyncStorage.setItem(`vloo_wallets_${vloo.id}`, JSON.stringify(updatedUserWallets));
+        }
       }
     } catch (e) {
       console.error('Error loading data:', e);
@@ -103,10 +156,10 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
 
       // 1. Check if it's an EVM chain or token -> reuse existing EVM address
       const evmWallet = wallets.find(w => 
-          w.type === 'Ethereum' || w.type === 'Polygon' || w.type === 'BNB Chain'
+          w.type === 'Ethereum' || w.type === 'Polygon' || w.type === 'BNB Chain' || w.type === 'Lisk' || w.type === 'Base'
       );
 
-      if (coin.chain === 'Ethereum' || coin.chain === 'Polygon' || coin.chain === 'BNB Chain' || coin.chain === 'Lisk') {
+      if (coin.chain === 'Ethereum' || coin.chain === 'Polygon' || coin.chain === 'BNB Chain' || coin.chain === 'Lisk' || coin.chain === 'Base') {
           if (evmWallet) {
               address = evmWallet.address;
           } else {
@@ -131,6 +184,8 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
            const data = generateMockXrpData();
            address = data.address;
       } else if (coin.chain === 'Hedera') {
+           // Fallback for manual add without sync (random)
+           // ideally user should sync.
            const data = generateMockHederaData();
            address = data.address;
       } else {
@@ -143,7 +198,8 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
           isVisible: true,
           tag: tag,
           ticker: coin.ticker,
-          coingeckoId: coin.coingecko_id
+          coingeckoId: coin.coingecko_id,
+          icon: coin.icon
       };
 
       const updatedWallets = [...wallets, newWallet];
@@ -220,7 +276,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
              let type = coin.ticker === 'USDT' ? 'USDT' : coin.name;
              
              // Determine Address
-             if (['Ethereum', 'Polygon', 'BNB Chain', 'Lisk'].includes(coin.chain) || coin.is_token) {
+             if (['Ethereum', 'Polygon', 'BNB Chain', 'Lisk', 'Base'].includes(coin.chain) || coin.is_token) {
                  address = evmAddress;
              } else if (coin.chain === 'Bitcoin') {
                  address = btcData.address;
@@ -233,8 +289,13 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
              } else if (coin.chain === 'XRP Ledger') {
                   address = xrpData.address;
               } else if (coin.chain === 'Hedera') {
-                  address = hbarData.address;
-              } else {
+                 // Hedera uses unique Account IDs (0.0.xxxxx), which CANNOT be derived purely from a private key 
+                 // without interacting with the network to CREATE the account first.
+                 // However, for this mock implementation where we "sync" from a single seed/key,
+                 // we MUST ensure that the SAME seed produces the SAME Mock Hedera ID.
+                 // We pass the privateKey (which is deterministic from card+passphrase) to generateMockHederaData
+                 address = hbarData.address;
+             } else {
                   // Unsupported or Coming Soon
                   return;
               }
@@ -257,7 +318,8 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
                  isVisible: isVisible,
                  tag: coin.is_token ? 'ERC-20' : undefined,
                  ticker: coin.ticker,
-                 coingeckoId: coin.coingecko_id
+                 coingeckoId: coin.coingecko_id,
+                 icon: coin.icon
              });
          });
 
@@ -279,8 +341,14 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
      }
   };
 
-  const getIcon = (iconName: string) => {
-      switch(iconName) {
+  const getIcon = (iconName?: string) => {
+      if (!iconName) return <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />;
+
+      if (iconName.startsWith('http') || iconName.startsWith('https')) {
+          return <Image source={{ uri: iconName }} style={{ width: 24, height: 24, borderRadius: 12 }} />;
+      }
+
+      switch(iconName.toLowerCase()) {
           case 'bitcoin': return <BitcoinIcon width={24} height={24} />;
           case 'ethereum': return <EthIcon width={24} height={24} />;
           case 'solana': return <SolanaIcon width={24} height={24} />;
@@ -288,15 +356,37 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
           case 'bnb': return <BnbIcon width={24} height={24} />;
           case 'lisk': return <LiskIcon width={24} height={24} />;
           case 'usdt': return <UsdtIcon width={24} height={24} />;
-          // Fallback or specific icon if added later
           case 'tron': return <View style={{ width: 24, height: 24, backgroundColor: '#FF0013', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>T</Text></View>;
           case 'monero': return <View style={{ width: 24, height: 24, backgroundColor: '#F26822', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>M</Text></View>;
+          case 'xrp': return <View style={{ width: 24, height: 24, backgroundColor: '#000', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>X</Text></View>;
+          case 'hedera': return <View style={{ width: 24, height: 24, backgroundColor: '#222', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>H</Text></View>;
           default: return <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />;
       }
   };
 
-  const activeWallets = wallets.filter(w => w.isVisible);
-  const inactiveWallets = wallets.filter(w => !w.isVisible);
+  const filteredActiveWallets = wallets.filter(w => {
+      if (!w.isVisible) return false;
+      if (!searchQuery) return true;
+      return w.type.toLowerCase().includes(searchQuery.toLowerCase()) || 
+             w.ticker?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const filteredInactiveWallets = wallets.filter(w => {
+      if (w.isVisible) return false;
+      if (!searchQuery) return true;
+      return w.type.toLowerCase().includes(searchQuery.toLowerCase()) || 
+             w.ticker?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const filteredMoreCoins = moreCoins.filter(c => {
+      if (!searchQuery) return true;
+      return c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+             c.ticker?.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const activeWallets = filteredActiveWallets;
+  const inactiveWallets = filteredInactiveWallets;
+  const moreCoinsList = filteredMoreCoins;
 
   const renderItem = ({ item, drag, isActive }: RenderItemParams<any>) => {
     return (
@@ -314,18 +404,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
           </TouchableOpacity>
 
           <View style={styles.walletIcon}>
-            {item.type === 'Bitcoin' ? <BitcoinIcon width={24} height={24} /> :
-             item.type === 'Ethereum' ? <EthIcon width={24} height={24} /> :
-             item.type === 'Solana' ? <SolanaIcon width={24} height={24} /> :
-             item.type === 'Polygon' ? <PolygonIcon width={24} height={24} /> :
-             item.type === 'BNB Chain' ? <BnbIcon width={24} height={24} /> :
-             item.type === 'Lisk' ? <LiskIcon width={24} height={24} /> :
-             item.type === 'USDT' ? <UsdtIcon width={24} height={24} /> :
-             item.type === 'Tron' ? <View style={{ width: 24, height: 24, backgroundColor: '#FF0013', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>T</Text></View> :
-             item.type === 'Monero' ? <View style={{ width: 24, height: 24, backgroundColor: '#F26822', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>M</Text></View> :
-             item.type === 'XRP' ? <View style={{ width: 24, height: 24, backgroundColor: '#000', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>X</Text></View> :
-             item.type === 'Hedera' ? <View style={{ width: 24, height: 24, backgroundColor: '#222', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>H</Text></View> :
-             <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />}
+            {getIcon(item.icon || item.type)}
           </View>
 
           <View style={styles.walletInfo}>
@@ -364,18 +443,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
         </View>
 
         <View style={styles.walletIcon}>
-            {item.type === 'Bitcoin' ? <BitcoinIcon width={24} height={24} /> :
-             item.type === 'Ethereum' ? <EthIcon width={24} height={24} /> :
-             item.type === 'Solana' ? <SolanaIcon width={24} height={24} /> :
-             item.type === 'Polygon' ? <PolygonIcon width={24} height={24} /> :
-             item.type === 'BNB Chain' ? <BnbIcon width={24} height={24} /> :
-             item.type === 'Lisk' ? <LiskIcon width={24} height={24} /> :
-             item.type === 'USDT' ? <UsdtIcon width={24} height={24} /> :
-             item.type === 'Tron' ? <View style={{ width: 24, height: 24, backgroundColor: '#FF0013', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>T</Text></View> :
-             item.type === 'Monero' ? <View style={{ width: 24, height: 24, backgroundColor: '#F26822', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>M</Text></View> :
-             item.type === 'XRP' ? <View style={{ width: 24, height: 24, backgroundColor: '#000', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>X</Text></View> :
-             item.type === 'Hedera' ? <View style={{ width: 24, height: 24, backgroundColor: '#222', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>H</Text></View> :
-             <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />}
+            {getIcon(item.icon || item.type)}
         </View>
 
         <View style={styles.walletInfo}>
@@ -411,7 +479,21 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
            <ArrowLeft size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Linked Wallets</Text>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity 
+            onPress={handleRefreshPress} 
+            style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                gap: 6, 
+                backgroundColor: COLORS.primary, 
+                paddingHorizontal: 12, 
+                paddingVertical: 8, 
+                borderRadius: 20 
+            }}
+        >
+           <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' }}>Sync</Text>
+           <RefreshCw size={16} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <DraggableFlatList
@@ -421,12 +503,20 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
-          <View style={styles.sectionHeader}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View>
+            <View style={styles.searchContainer}>
+                <Search size={20} color="#999" style={styles.searchIcon} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search coins..."
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholderTextColor="#999"
+                />
+            </View>
+
+            <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Current Coins</Text>
-              <TouchableOpacity onPress={handleRefreshPress} style={{ padding: 4 }}>
-                  <RefreshCw size={16} color={COLORS.primary} />
-              </TouchableOpacity>
             </View>
           </View>
         }
@@ -445,12 +535,15 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
 
               {moreCoins.length > 0 && (
                   <>
-                      <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+                      <View style={[styles.sectionHeader, { marginTop: 24, flexDirection: 'row', alignItems: 'center' }]}>
                           <Text style={styles.sectionTitle}>Discover More</Text>
+                          <View style={{ marginLeft: 8, backgroundColor: '#FFF5E6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                              <Text style={{ fontSize: 10, color: COLORS.primary, fontFamily: FONTS.bodySemiBold }}>Please sync to add</Text>
+                          </View>
                       </View>
                       <View style={{ gap: 12 }}>
                           {moreCoins.map((coin, index) => (
-                              <TouchableOpacity key={coin.id} style={styles.rowItem} onPress={() => handleAddCoin(coin)}>
+                              <View key={coin.id} style={[styles.rowItem, { opacity: 0.6 }]}>
                                   <View style={[styles.dragHandle, { opacity: 0 }]}>
                                       <Menu size={20} color="#999" />
                                   </View>
@@ -472,11 +565,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
                                           {coin.chain}
                                       </Text>
                                   </View>
-
-                                  <View style={styles.addButton}>
-                                      <Plus size={20} color={COLORS.primary} />
-                                  </View>
-                              </TouchableOpacity>
+                              </View>
                           ))}
                       </View>
                   </>
@@ -540,6 +629,25 @@ const styles = StyleSheet.create({
   listContent: {
     padding: 24,
     gap: 12,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F2F2F7',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 24,
+    height: 48,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: '100%',
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 16,
+    color: '#000',
   },
   rowItem: {
     flexDirection: 'row',

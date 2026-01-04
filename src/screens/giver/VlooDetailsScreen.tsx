@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, SafeAreaView, StatusBar, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ScrollView, Alert, ActivityIndicator, Platform, Image } from 'react-native';
 import { ArrowLeft, Edit2, Copy, Eye, MessageSquare, ArrowDown, ArrowUp, ArrowLeftRight, CreditCard, Settings } from 'lucide-react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../lib/theme';
@@ -96,7 +96,24 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
     try {
       const stored = await AsyncStorage.getItem(`vloo_wallets_${vloo.id}`);
       if (stored) {
-        const allWallets = JSON.parse(stored);
+        let allWallets = JSON.parse(stored);
+
+        // Fetch all_wallets to merge icons
+        const { data: allCoins } = await supabase.from('all_wallets').select('*');
+        if (allCoins) {
+            allWallets = allWallets.map((w: any) => {
+                const coin = allCoins.find(c => 
+                    c.name === w.type || 
+                    (w.type === 'USDT' && c.ticker === 'USDT') ||
+                    c.ticker === w.ticker
+                );
+                return {
+                    ...w,
+                    icon: coin?.icon || w.icon
+                };
+            });
+        }
+
         setHasAnyWallets(allWallets.length > 0);
         setWallets(allWallets.filter((w: any) => w.isVisible !== false));
       } else {
@@ -206,6 +223,29 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
     setDetailModalVisible(true);
   };
 
+  const getIcon = (iconName?: string) => {
+      if (!iconName) return <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />;
+
+      if (iconName.startsWith('http') || iconName.startsWith('https')) {
+          return <Image source={{ uri: iconName }} style={{ width: 24, height: 24, borderRadius: 12 }} />;
+      }
+
+      switch(iconName.toLowerCase()) {
+          case 'bitcoin': return <BitcoinIcon width={24} height={24} />;
+          case 'ethereum': return <EthIcon width={24} height={24} />;
+          case 'solana': return <SolanaIcon width={24} height={24} />;
+          case 'polygon': return <PolygonIcon width={24} height={24} />;
+          case 'bnb': return <BnbIcon width={24} height={24} />;
+          case 'lisk': return <LiskIcon width={24} height={24} />;
+          case 'usdt': return <UsdtIcon width={24} height={24} />;
+          case 'tron': return <View style={{ width: 24, height: 24, backgroundColor: '#FF0013', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>T</Text></View>;
+          case 'monero': return <View style={{ width: 24, height: 24, backgroundColor: '#F26822', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>M</Text></View>;
+          case 'xrp': return <View style={{ width: 24, height: 24, backgroundColor: '#000', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>X</Text></View>;
+          case 'hedera': return <View style={{ width: 24, height: 24, backgroundColor: '#222', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>H</Text></View>;
+          default: return <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />;
+      }
+  };
+
   if (!vloo) return null;
 
   const cardColor = vloo.color || COLORS.primary;
@@ -292,14 +332,22 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
                  
                  // If symbol missing from balance (e.g. initial load or empty), derive from type
                  if (!symbol) {
-                    const type = wallet.type.toLowerCase();
-                    if (type.includes('bitcoin')) symbol = 'BTC';
-                    else if (type.includes('ethereum')) symbol = 'ETH';
-                    else if (type.includes('solana')) symbol = 'SOL';
-                    else if (type.includes('polygon')) symbol = 'POL';
-                    else if (type.includes('bnb')) symbol = 'BNB';
-                    else if (type.includes('lisk')) symbol = 'LSK';
-                    else if (type.includes('usdt')) symbol = 'USDT';
+                    if (wallet.ticker) {
+                        symbol = wallet.ticker;
+                    } else {
+                        const type = wallet.type.toLowerCase();
+                        if (type.includes('bitcoin')) symbol = 'BTC';
+                        else if (type.includes('ethereum')) symbol = 'ETH';
+                        else if (type.includes('solana')) symbol = 'SOL';
+                        else if (type.includes('polygon')) symbol = 'POL';
+                        else if (type.includes('bnb')) symbol = 'BNB';
+                        else if (type.includes('lisk')) symbol = 'LSK';
+                        else if (type.includes('usdt')) symbol = 'USDT';
+                        else if (type.includes('tron')) symbol = 'TRX';
+                        else if (type.includes('monero')) symbol = 'XMR';
+                        else if (type.includes('xrp')) symbol = 'XRP';
+                        else if (type.includes('hedera')) symbol = 'HBAR';
+                    }
                     
                     // If balance string was empty/default, set amount to 0
                     if (!amountStr) amountStr = '0.00';
@@ -314,14 +362,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
                  return (
                  <TouchableOpacity key={index} style={styles.walletRow} onPress={() => handleWalletPress(wallet)}>
                    <View style={styles.walletIcon}>
-                     {wallet.type === 'Bitcoin' ? <BitcoinIcon width={24} height={24} /> :
-                      wallet.type === 'Ethereum' ? <EthIcon width={24} height={24} /> :
-                      wallet.type === 'Solana' ? <SolanaIcon width={24} height={24} /> :
-                      wallet.type === 'Polygon' ? <PolygonIcon width={24} height={24} /> :
-                      wallet.type === 'BNB Chain' ? <BnbIcon width={24} height={24} /> :
-                      wallet.type === 'Lisk' ? <LiskIcon width={24} height={24} /> :
-                      wallet.type === 'USDT' ? <UsdtIcon width={24} height={24} /> :
-                      <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />}
+                     {getIcon(wallet.icon || wallet.type)}
                    </View>
                    <View style={styles.walletInfo}>
                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
