@@ -11,6 +11,8 @@ import AboutScreen from '../screens/giver/AboutScreen';
 import GiverSuccessScreen from '../screens/giver/SuccessScreen';
 import BuyCardScreen from '../screens/giver/BuyCardScreen';
 import ReceiveScreen from '../screens/giver/ReceiveScreen';
+import SendScreen from '../screens/giver/SendScreen';
+import TransferScreen from '../screens/giver/TransferScreen';
 
 const Stack = createStackNavigator();
 
@@ -30,6 +32,8 @@ export default function AppNavigator() {
         <Stack.Screen name="GiverSuccess" component={GiverSuccessScreen} />
         <Stack.Screen name="BuyCard" component={BuyCardScreen} />
         <Stack.Screen name="Receive" component={ReceiveScreen} />
+        <Stack.Screen name="Send" component={SendScreen} />
+        <Stack.Screen name="Transfer" component={TransferScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
