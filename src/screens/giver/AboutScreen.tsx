@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   copyrightText: {
-    fontFamily: FONTS.textRegular,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 12,
     color: '#999',
   },

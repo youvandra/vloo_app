@@ -12,6 +12,8 @@
     "@ethersproject/shims": "^5.8.0",
     "@expo-google-fonts/be-vietnam-pro": "^0.4.1",
     "@expo-google-fonts/museomoderno": "^0.4.2",
+    "@hashgraph/sdk": "^2.78.0",
+    "@hiero-ledger/sdk": "^2.78.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-navigation/native": "^7.1.26",

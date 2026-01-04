@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator, StyleSheet, Animated } from 'react-native';
 import { Settings, RotateCw } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../../lib/theme';
+import { Skeleton } from '../../../components/Skeleton';
 import BitcoinIcon from '../../../assets/icons/chains/bitcoin.svg';
 import EthIcon from '../../../assets/icons/chains/eth.svg';
 import SolanaIcon from '../../../assets/icons/chains/solana.svg';
@@ -18,42 +19,6 @@ interface WalletListProps {
   balances: Record<string, string>;
   onAddPress: () => void;
 }
-
-const Skeleton = ({ width, height, style }: { width: number | string, height: number, style?: any }) => {
-  const opacity = useRef(new Animated.Value(0.3)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, {
-          toValue: 0.7,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0.3,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
-
-  return (
-    <Animated.View
-      style={[
-        {
-          width: width,
-          height: height,
-          backgroundColor: '#E1E9EE',
-          borderRadius: 4,
-          opacity: opacity,
-        },
-        style,
-      ]}
-    />
-  );
-};
 
 export const WalletList = ({ 
   wallets, 

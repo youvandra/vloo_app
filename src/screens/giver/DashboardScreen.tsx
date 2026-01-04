@@ -16,6 +16,7 @@ import { ScanVlooModal } from './components/modals/dashboard/ScanVlooModal';
 import { MoreScreen } from './MoreScreen';
 import { SettingsScreen } from './SettingsScreen';
 import { COLORS, FONTS } from '../../lib/theme';
+import { Skeleton } from '../../components/Skeleton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Fingerprint } from 'lucide-react-native';
 
@@ -117,6 +118,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
     if (lower.includes('polygon') || lower.includes('matic')) return 'matic-network';
     if (lower.includes('bnb')) return 'binancecoin';
     if (lower.includes('lisk')) return 'lisk';
+    if (lower.includes('hedera') || lower.includes('hbar')) return 'hedera-hashgraph';
     return '';
   };
 
@@ -455,23 +457,27 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
   const renderSkeleton = () => {
     return (
-      <View style={{ flex: 1 }}>
-        <View style={styles.skeletonCardStack}>
-          <View style={styles.skeletonCard} />
+      <View style={{ flex: 1, paddingHorizontal: 24 }}>
+        <View style={[styles.skeletonCardStack, { backgroundColor: 'transparent', height: 'auto', marginBottom: 24 }]}>
+           <Skeleton width="100%" height={220} style={{ borderRadius: 24 }} />
         </View>
 
-        <View style={styles.skeletonWalletHeader}>
-          <View style={styles.skeletonTitle} />
-          <View style={styles.skeletonToggle} />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <Skeleton width={120} height={24} />
+          <Skeleton width={40} height={24} />
         </View>
 
         <View>
           {[1, 2, 3].map((key) => (
-            <View key={key} style={styles.skeletonWalletItem}>
-              <View style={styles.skeletonWalletIcon} />
-              <View style={{ flex: 1 }}>
-                <View style={styles.skeletonWalletText1} />
-                <View style={styles.skeletonWalletText2} />
+            <View key={key} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, padding: 16, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#f0f0f0' }}>
+              <Skeleton width={40} height={40} style={{ borderRadius: 20 }} />
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Skeleton width={80} height={16} style={{ marginBottom: 6 }} />
+                <Skeleton width={120} height={12} />
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                 <Skeleton width={60} height={16} style={{ marginBottom: 6 }} />
+                 <Skeleton width={40} height={12} />
               </View>
             </View>
           ))}
@@ -631,60 +637,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 24,
     marginTop: 24,
-  },
-  skeletonCard: {
-    width: '100%',
-    height: 400,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 24,
-    marginHorizontal: 24,
-  },
-  skeletonWalletHeader: {
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    marginBottom: 16,
-    paddingHorizontal: 24,
-  },
-  skeletonTitle: {
-    width: 120,
-    height: 24,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-  },
-  skeletonToggle: {
-    width: 140,
-    height: 32,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 16,
-  },
-  skeletonWalletItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 16,
-    marginBottom: 12,
-    marginHorizontal: 24,
-  },
-  skeletonWalletIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#eee',
-    marginRight: 16,
-  },
-  skeletonWalletText1: {
-    width: '40%',
-    height: 16,
-    backgroundColor: '#eee',
-    borderRadius: 4,
-    marginBottom: 6,
-  },
-  skeletonWalletText2: {
-    width: '20%',
-    height: 12,
-    backgroundColor: '#eee',
-    borderRadius: 4,
   },
 });

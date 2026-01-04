@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   fromLabel: {
-    fontFamily: FONTS.text,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 12,
     color: '#666',
     marginBottom: 4,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   walletAddress: {
-    fontFamily: FONTS.text,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 12,
     color: '#999',
   },
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   label: {
-    fontFamily: FONTS.textMedium,
+    fontFamily: FONTS.bodySemiBold,
     fontSize: 14,
     color: '#000',
     marginBottom: 8,
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontFamily: FONTS.text,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 16,
     color: '#000',
     height: '100%',
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     flex: 1,
-    fontFamily: FONTS.text,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 13,
     color: '#856404',
     lineHeight: 18,

@@ -121,6 +121,7 @@ export default function SendScreen({ route, navigation }: any) {
     if (lower.includes('polygon') || lower.includes('matic')) return 'matic-network';
     if (lower.includes('bnb')) return 'binancecoin';
     if (lower.includes('lisk')) return 'lisk';
+    if (lower.includes('hedera') || lower.includes('hbar')) return 'hedera-hashgraph';
     return '';
   };
 
@@ -327,7 +328,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   coinTag: {
-    fontFamily: FONTS.textMedium,
+    fontFamily: FONTS.bodySemiBold,
     fontSize: 14,
     color: '#666',
     backgroundColor: '#f0f0f0',
@@ -341,7 +342,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   balanceLabel: {
-    fontFamily: FONTS.text,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 14,
     color: '#666',
     marginBottom: 4,
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   fiatText: {
-    fontFamily: FONTS.textMedium,
+    fontFamily: FONTS.bodySemiBold,
     fontSize: 16,
     color: '#666',
     marginTop: 4,
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   addressLabel: {
-    fontFamily: FONTS.textMedium,
+    fontFamily: FONTS.bodySemiBold,
     fontSize: 14,
     color: '#666',
     marginBottom: 8,
@@ -378,7 +379,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addressText: {
-    fontFamily: FONTS.text,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 14,
     color: '#000',
   },
@@ -399,7 +400,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   helperText: {
-    fontFamily: FONTS.text,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 13,
     color: '#999',
     textAlign: 'center',

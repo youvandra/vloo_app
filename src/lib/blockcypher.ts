@@ -1,4 +1,6 @@
 
+import { fetchHederaBalance } from './hedera';
+
 const TOKEN = process.env.EXPO_PUBLIC_BLOCKCYPHER_TOKEN || '7fd9adfa1e3f47dc8f864dbd44956ca4';
 const BASE_URL = 'https://api.blockcypher.com/v1';
 
@@ -107,6 +109,10 @@ export const fetchBalance = async (address: string, chainType: string): Promise<
         console.error('Error fetching Lisk Sepolia balance:', e);
         return '0.00 LSK';
     }
+  } else if (normalizedType === 'hedera' || normalizedType === 'hbar') {
+    return await fetchHederaBalance(address, false);
+  } else if (normalizedType === 'hedera testnet' || normalizedType === 'hbar testnet') {
+    return await fetchHederaBalance(address, true);
   } else {
     // Unsupported by BlockCypher or this integration
     symbol = getSymbol(chainType);

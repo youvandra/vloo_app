@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
-import { View, Text, Modal, TouchableWithoutFeedback, StyleSheet, TouchableOpacity, PanResponder } from 'react-native';
-import { X, Copy } from 'lucide-react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, Modal, TouchableWithoutFeedback, StyleSheet, TouchableOpacity, PanResponder, Alert } from 'react-native';
+import { X, Copy, Eye, EyeOff, Key } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
 import * as Clipboard from 'expo-clipboard';
 import { COLORS, FONTS } from '../../../../../lib/theme';
@@ -14,6 +14,14 @@ interface WalletDetailModalProps {
 }
 
 export const WalletDetailModal = ({ visible, onClose, wallet, price, currency = 'IDR' }: WalletDetailModalProps) => {
+  const [isPrivateKeyVisible, setIsPrivateKeyVisible] = useState(false);
+
+  useEffect(() => {
+      if (visible) {
+          setIsPrivateKeyVisible(false);
+      }
+  }, [visible]);
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -32,6 +40,13 @@ export const WalletDetailModal = ({ visible, onClose, wallet, price, currency = 
 
   const copyToClipboard = async () => {
     await Clipboard.setStringAsync(wallet.address);
+  };
+
+  const copyPrivateKey = async () => {
+      if (wallet.privateKey) {
+          await Clipboard.setStringAsync(wallet.privateKey);
+          Alert.alert('Copied', 'Private Key copied to clipboard. Keep it safe!');
+      }
   };
 
   const formatPrice = (price: number) => {
@@ -91,6 +106,29 @@ export const WalletDetailModal = ({ visible, onClose, wallet, price, currency = 
               <Copy size={16} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
+
+          {wallet.privateKey && (
+              <View style={[styles.addressContainer, { backgroundColor: '#FFF5F5', borderColor: '#FFEBEE', borderWidth: 1 }]}>
+                <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8}}>
+                    <Text style={[styles.addressLabel, { color: '#C62828' }]}>Private Key</Text>
+                    <TouchableOpacity onPress={() => setIsPrivateKeyVisible(!isPrivateKeyVisible)} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                        {isPrivateKeyVisible ? <EyeOff size={16} color="#C62828" /> : <Eye size={16} color="#C62828" />}
+                    </TouchableOpacity>
+                </View>
+                
+                {isPrivateKeyVisible ? (
+                    <TouchableOpacity style={styles.addressRow} onPress={copyPrivateKey}>
+                      <Text style={[styles.addressText, { color: '#C62828' }]}>{wallet.privateKey}</Text>
+                      <Copy size={16} color="#C62828" />
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity style={styles.addressRow} onPress={() => setIsPrivateKeyVisible(true)}>
+                      <Text style={[styles.addressText, { color: '#C62828' }]}>••••••••••••••••••••••••••••••</Text>
+                      <Key size={16} color="#C62828" />
+                    </TouchableOpacity>
+                )}
+              </View>
+          )}
         </View>
       </View>
     </Modal>

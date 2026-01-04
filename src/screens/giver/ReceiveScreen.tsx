@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   coinTag: {
-    fontFamily: FONTS.textMedium,
+    fontFamily: FONTS.bodySemiBold,
     fontSize: 14,
     color: '#666',
     backgroundColor: '#f0f0f0',
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   addressLabel: {
-    fontFamily: FONTS.textMedium,
+    fontFamily: FONTS.bodySemiBold,
     fontSize: 14,
     color: '#666',
     marginBottom: 8,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   },
   addressText: {
     flex: 1,
-    fontFamily: FONTS.text,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 14,
     color: '#000',
     textAlign: 'center',
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   helperText: {
-    fontFamily: FONTS.text,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 13,
     color: '#999',
     textAlign: 'center',

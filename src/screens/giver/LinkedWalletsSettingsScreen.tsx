@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Swit
 import { ArrowLeft, Menu, Plus, RefreshCw, Search } from 'lucide-react-native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Skeleton } from '../../components/Skeleton';
 import { COLORS, FONTS } from '../../lib/theme';
 import { supabase } from '../../lib/supabase';
 import { generateMockBitcoinData, generateMockSolanaData, generateMockTronData, generateMockMoneroData, generateMockXrpData, generateMockHederaData, getWalletFromPrivateKey } from '../../lib/wallet';
@@ -469,6 +470,36 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
       </View>
     );
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
+               <ArrowLeft size={24} color="#000" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Linked Wallets</Text>
+            <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.listContent}>
+             <Skeleton width="100%" height={48} style={{ borderRadius: 12, marginBottom: 24 }} />
+             <Skeleton width={120} height={20} style={{ marginBottom: 12 }} />
+             {[1, 2, 3, 4].map(i => (
+                 <View key={i} style={styles.rowItem}>
+                     <Skeleton width={20} height={20} style={{ borderRadius: 10, marginRight: 12 }} />
+                     <Skeleton width={40} height={40} style={{ borderRadius: 20 }} />
+                     <View style={{ flex: 1, marginLeft: 12 }}>
+                         <Skeleton width={100} height={16} style={{ marginBottom: 6 }} />
+                         <Skeleton width={150} height={12} />
+                     </View>
+                     <Skeleton width={40} height={24} style={{ borderRadius: 12 }} />
+                 </View>
+             ))}
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

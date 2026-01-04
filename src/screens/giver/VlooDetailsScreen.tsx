@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ScrollView, Alert, ActivityIndicator, Platform, Image } from 'react-native';
-import { ArrowLeft, Edit2, Copy, Eye, MessageSquare, ArrowDown, ArrowUp, ArrowLeftRight, CreditCard, Settings } from 'lucide-react-native';
+import { ArrowLeft, ArrowDown, ArrowUp, ArrowLeftRight, CreditCard, Settings } from 'lucide-react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../lib/theme';
+import { Skeleton } from '../../components/Skeleton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import { fetchBalance } from '../../lib/blockcypher';
@@ -29,7 +30,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   
   const isFocused = useIsFocused();
-
+  
   useEffect(() => {
     AsyncStorage.getItem('app_currency').then(val => {
        if(val) setCurrency(val as 'IDR' | 'USD');
@@ -75,6 +76,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
     if (lower.includes('polygon') || lower.includes('matic')) return 'matic-network';
     if (lower.includes('bnb')) return 'binancecoin';
     if (lower.includes('lisk')) return 'lisk';
+    if (lower.includes('hedera') || lower.includes('hbar')) return 'hedera-hashgraph';
     return '';
   };
 
@@ -155,6 +157,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
       if (s === 'BNB') return 'binancecoin';
       if (s === 'LSK') return 'lisk';
       if (s === 'USDT') return 'tether';
+      if (s === 'HBAR') return 'hedera-hashgraph';
       return '';
   };
   
@@ -176,6 +179,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
               else if (type.includes('bnb')) symbol = 'BNB';
               else if (type.includes('lisk')) symbol = 'LSK';
               else if (type.includes('usdt')) symbol = 'USDT';
+              else if (type.includes('hedera') || type.includes('hbar')) symbol = 'HBAR';
           }
           
           priceId = getPriceId(symbol || '');
@@ -204,6 +208,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
                  else if (type.includes('bnb')) symbol = 'BNB';
                  else if (type.includes('lisk')) symbol = 'LSK';
                  else if (type.includes('usdt')) symbol = 'USDT';
+                 else if (type.includes('hedera') || type.includes('hbar')) symbol = 'HBAR';
                  
                  if (!amountStr) amountStr = '0.00';
              }
@@ -359,6 +364,9 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
                  const price = prices[priceId]?.[curr] || 0;
                  const value = amount * price;
 
+                 // Check if balance is loaded
+                 const isBalanceLoaded = walletBalances[key] !== undefined;
+
                  return (
                  <TouchableOpacity key={index} style={styles.walletRow} onPress={() => handleWalletPress(wallet)}>
                    <View style={styles.walletIcon}>
@@ -376,8 +384,17 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
                      <Text style={styles.walletAddress}>{symbol}</Text>
                    </View>
                    <View style={styles.walletBalanceContainer}>
-                     <Text style={styles.walletBalanceText}>{amountStr}</Text>
-                     <Text style={styles.walletIdrText}>{formatCurrency(value)}</Text>
+                     {isBalanceLoaded ? (
+                         <>
+                             <Text style={styles.walletBalanceText}>{amountStr}</Text>
+                             <Text style={styles.walletIdrText}>{formatCurrency(value)}</Text>
+                         </>
+                     ) : (
+                         <View style={{ alignItems: 'flex-end' }}>
+                             <Skeleton width={60} height={16} style={{ marginBottom: 4 }} />
+                             <Skeleton width={40} height={12} />
+                         </View>
+                     )}
                    </View>
                  </TouchableOpacity>
                )})}
