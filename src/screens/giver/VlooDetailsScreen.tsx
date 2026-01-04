@@ -52,13 +52,17 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
       });
 
       // Fetch Prices separately for each coin type found
-      const uniqueTypes = new Set(wallets.map(w => w.type));
-      uniqueTypes.forEach(type => {
-         const coinId = getCoinIdFromType(type);
-         if (coinId) {
-             fetchCoinPrice(coinId);
-         }
+      const uniqueIds = new Set<string>();
+      wallets.forEach(w => {
+          if (w.coingeckoId) {
+              uniqueIds.add(w.coingeckoId);
+          } else {
+              const id = getCoinIdFromType(w.type);
+              if (id) uniqueIds.add(id);
+          }
       });
+
+      uniqueIds.forEach(id => fetchCoinPrice(id));
     }
   }, [wallets, currency]); // Add currency dependency to refetch if it changes
 
@@ -143,18 +147,23 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
       const balanceStr = walletBalances[key] || '';
       let symbol = balanceStr.split(' ')[1];
       
-      if (!symbol) {
-          const type = wallet.type.toLowerCase();
-          if (type.includes('bitcoin')) symbol = 'BTC';
-          else if (type.includes('ethereum')) symbol = 'ETH';
-          else if (type.includes('solana')) symbol = 'SOL';
-          else if (type.includes('polygon')) symbol = 'POL';
-          else if (type.includes('bnb')) symbol = 'BNB';
-          else if (type.includes('lisk')) symbol = 'LSK';
-          else if (type.includes('usdt')) symbol = 'USDT';
+      let priceId = wallet.coingeckoId;
+
+      if (!priceId) {
+          if (!symbol) {
+              const type = wallet.type.toLowerCase();
+              if (type.includes('bitcoin')) symbol = 'BTC';
+              else if (type.includes('ethereum')) symbol = 'ETH';
+              else if (type.includes('solana')) symbol = 'SOL';
+              else if (type.includes('polygon')) symbol = 'POL';
+              else if (type.includes('bnb')) symbol = 'BNB';
+              else if (type.includes('lisk')) symbol = 'LSK';
+              else if (type.includes('usdt')) symbol = 'USDT';
+          }
+          
+          priceId = getPriceId(symbol || '');
       }
       
-      const priceId = getPriceId(symbol || '');
       const curr = currency.toLowerCase();
       return prices[priceId]?.[curr] || 0;
   };
@@ -166,21 +175,25 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
         const balanceStr = walletBalances[key] || '';
         let [amountStr, symbol] = balanceStr.split(' ');
         
-        if (!symbol) {
-             const type = wallet.type.toLowerCase();
-             if (type.includes('bitcoin')) symbol = 'BTC';
-             else if (type.includes('ethereum')) symbol = 'ETH';
-             else if (type.includes('solana')) symbol = 'SOL';
-             else if (type.includes('polygon')) symbol = 'POL';
-             else if (type.includes('bnb')) symbol = 'BNB';
-             else if (type.includes('lisk')) symbol = 'LSK';
-             else if (type.includes('usdt')) symbol = 'USDT';
-             
-             if (!amountStr) amountStr = '0.00';
+        let priceId = wallet.coingeckoId;
+
+        if (!priceId) {
+             if (!symbol) {
+                 const type = wallet.type.toLowerCase();
+                 if (type.includes('bitcoin')) symbol = 'BTC';
+                 else if (type.includes('ethereum')) symbol = 'ETH';
+                 else if (type.includes('solana')) symbol = 'SOL';
+                 else if (type.includes('polygon')) symbol = 'POL';
+                 else if (type.includes('bnb')) symbol = 'BNB';
+                 else if (type.includes('lisk')) symbol = 'LSK';
+                 else if (type.includes('usdt')) symbol = 'USDT';
+                 
+                 if (!amountStr) amountStr = '0.00';
+             }
+             priceId = getPriceId(symbol);
         }
 
         const amount = parseFloat(amountStr) || 0;
-        const priceId = getPriceId(symbol);
         const curr = currency.toLowerCase();
         const price = prices[priceId]?.[curr] || 0;
         total += amount * price;
