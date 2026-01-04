@@ -6,7 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Skeleton } from '../../components/Skeleton';
 import { COLORS, FONTS } from '../../lib/theme';
 import { supabase } from '../../lib/supabase';
-import { generateMockBitcoinData, generateMockSolanaData, generateMockTronData, generateMockMoneroData, generateMockXrpData, generateMockHederaData, getWalletFromPrivateKey } from '../../lib/wallet';
+import { generateBitcoinWallet, generateSolanaWallet, generateTronWallet, generateMoneroWallet, generateXrpWallet, generateHederaWallet, getWalletFromPrivateKey } from '../../lib/wallet';
+import { getHederaAccountId } from '../../lib/hedera';
 import { generateDeterministicPrivateKey } from '../../lib/crypto';
 import { ScanVlooModal } from './components/modals/dashboard/ScanVlooModal';
 import { CreateVlooModal } from './components/modals/dashboard/CreateVlooModal'; // Used for Passphrase Input
@@ -51,6 +52,44 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
         }));
       }
       setWallets(userWallets);
+
+      // FIX: Check for stale Hedera Alias IDs (0.0.longhex) and replace with EVM address or proper 0.0.xxx
+      const hederaWalletIndex = userWallets.findIndex((w: any) => w.type === 'Hedera' || w.ticker === 'HBAR');
+      if (hederaWalletIndex !== -1) {
+          const hederaWallet = userWallets[hederaWalletIndex];
+          // Check if it looks like an alias (starts with 0.0. and is long, > 20 chars usually means hex suffix)
+          if (hederaWallet.address && hederaWallet.address.startsWith('0.0.') && hederaWallet.address.length > 20) {
+             const evmWallet = userWallets.find((w: any) => w.type === 'Ethereum');
+             const evmAddress = evmWallet?.address;
+             
+             if (evmAddress) {
+                 // Try to resolve proper ID
+                 let newAddress = null;
+                 const mainnetId = await getHederaAccountId(evmAddress, false);
+                 if (mainnetId) {
+                     newAddress = mainnetId;
+                 } else {
+                     const testnetId = await getHederaAccountId(evmAddress, true);
+                     if (testnetId) {
+                         newAddress = testnetId;
+                     }
+                 }
+                 
+                 // If not found, revert to EVM address (0x...) to avoid confusion
+                 if (!newAddress) {
+                     newAddress = evmAddress;
+                 }
+                 
+                 if (newAddress !== hederaWallet.address) {
+                     console.log('Fixing Hedera Address:', hederaWallet.address, '->', newAddress);
+                     userWallets[hederaWalletIndex] = { ...hederaWallet, address: newAddress };
+                     // Update storage immediately so subsequent loads are correct
+                     await AsyncStorage.setItem(`vloo_wallets_${vloo.id}`, JSON.stringify(userWallets));
+                     setWallets([...userWallets]); // Update state
+                 }
+             }
+          }
+      }
 
       // 2. Fetch All Available Coins from DB
       const { data: allCoins, error } = await supabase
@@ -150,7 +189,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
     saveWallets(newWallets);
   };
 
-  const handleAddCoin = (coin: any) => {
+  const handleAddCoin = async (coin: any) => {
       // Logic to generate address for the new coin
       let address = '';
       let tag = coin.is_token ? 'ERC-20' : undefined; // Defaulting to ERC-20 for tokens for now
@@ -170,24 +209,24 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
           }
       } else if (coin.chain === 'Bitcoin') {
           // Fallback to random if no private key context (user should use Refresh button)
-          const data = generateMockBitcoinData();
+          const data = generateBitcoinWallet();
           address = data.address;
       } else if (coin.chain === 'Solana') {
-           const data = generateMockSolanaData();
+           const data = generateSolanaWallet();
            address = data.address;
       } else if (coin.chain === 'Tron') {
-           const data = generateMockTronData();
+           const data = generateTronWallet();
            address = data.address;
       } else if (coin.chain === 'Monero') {
-           const data = generateMockMoneroData();
+           const data = generateMoneroWallet();
            address = data.address;
       } else if (coin.chain === 'XRP Ledger') {
-           const data = generateMockXrpData();
+           const data = generateXrpWallet();
            address = data.address;
       } else if (coin.chain === 'Hedera') {
            // Fallback for manual add without sync (random)
            // ideally user should sync.
-           const data = generateMockHederaData();
+           const data = await generateHederaWallet();
            address = data.address;
       } else {
           address = 'Coming Soon';
@@ -243,12 +282,12 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
          // 2. Generate All Addresses
          const evmWallet = getWalletFromPrivateKey(privateKey);
          const evmAddress = evmWallet.address;
-         const btcData = generateMockBitcoinData(privateKey);
-         const solData = generateMockSolanaData(privateKey);
-         const tronData = generateMockTronData(privateKey);
-         const xmrData = generateMockMoneroData(privateKey);
-         const xrpData = generateMockXrpData(privateKey);
-         const hbarData = generateMockHederaData(privateKey);
+         const btcData = generateBitcoinWallet(privateKey);
+         const solData = generateSolanaWallet(privateKey);
+         const tronData = generateTronWallet(privateKey);
+         const xmrData = generateMoneroWallet(privateKey);
+         const xrpData = generateXrpWallet(privateKey);
+         const hbarData = await generateHederaWallet(privateKey);
 
          // 3. Update Existing Wallets & Add New Ones
          // We want to preserve 'isVisible' for existing ones if possible, OR just reset them to defaults?

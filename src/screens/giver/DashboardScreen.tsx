@@ -3,7 +3,7 @@ import { StyleSheet, ScrollView, BackHandler, SafeAreaView, Alert, StatusBar, Re
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchBalance } from '../../lib/blockcypher';
 import { supabase } from '../../lib/supabase';
-import { createRandomWallet, generateMockBitcoinData, generateMockSolanaData, generateMockTronData, generateMockMoneroData, generateMockXrpData, generateMockHederaData, getWalletFromPrivateKey } from '../../lib/wallet';
+import { createRandomWallet, generateBitcoinWallet, generateSolanaWallet, generateTronWallet, generateMoneroWallet, generateXrpWallet, generateHederaWallet, getWalletFromPrivateKey } from '../../lib/wallet';
 import { encryptData, generateDeterministicPrivateKey, generateCommitmentHash } from '../../lib/crypto';
 
 // Components
@@ -307,12 +307,12 @@ export default function GiverDashboardScreen({ navigation }: any) {
         const evmAddress = wallet.address;
 
         // Generate addresses for other chains deterministically
-        const btcData = generateMockBitcoinData(privateKey);
-        const solData = generateMockSolanaData(privateKey);
-        const tronData = generateMockTronData(privateKey);
-        const xmrData = generateMockMoneroData(privateKey);
-        const xrpData = generateMockXrpData(privateKey);
-        const hbarData = generateMockHederaData(privateKey);
+        const btcData = generateBitcoinWallet(privateKey);
+        const solData = generateSolanaWallet(privateKey);
+        const tronData = generateTronWallet(privateKey);
+        const xmrData = generateMoneroWallet(privateKey);
+        const xrpData = generateXrpWallet(privateKey);
+        const hbarData = await generateHederaWallet(privateKey);
 
         // Generate Commitment Hash (to lock the card on server)
         const commitment = generateCommitmentHash(cardId, pass);

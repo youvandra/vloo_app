@@ -16,6 +16,7 @@ import LiskIcon from '../../assets/icons/chains/lisk.svg';
 import UsdtIcon from '../../assets/icons/chains/usdt.svg';
 import { WalletDetailModal } from './components/modals/dashboard/WalletDetailModal';
 import { supabase } from '../../lib/supabase';
+import { getHederaAccountId } from '../../lib/hedera';
 
 export default function VlooDetailsScreen({ route, navigation }: any) {
   const { vloo } = route.params;
@@ -99,6 +100,34 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
       const stored = await AsyncStorage.getItem(`vloo_wallets_${vloo.id}`);
       if (stored) {
         let allWallets = JSON.parse(stored);
+
+        // FIX: Check for stale Hedera Alias IDs
+        const hederaWalletIndex = allWallets.findIndex((w: any) => w.type === 'Hedera' || w.ticker === 'HBAR');
+        if (hederaWalletIndex !== -1) {
+            const hederaWallet = allWallets[hederaWalletIndex];
+            if (hederaWallet.address && hederaWallet.address.startsWith('0.0.') && hederaWallet.address.length > 20) {
+                 const evmWallet = allWallets.find((w: any) => w.type === 'Ethereum');
+                 const evmAddress = evmWallet?.address;
+                 
+                 if (evmAddress) {
+                     let newAddress = null;
+                     const mainnetId = await getHederaAccountId(evmAddress, false);
+                     if (mainnetId) newAddress = mainnetId;
+                     else {
+                         const testnetId = await getHederaAccountId(evmAddress, true);
+                         if (testnetId) newAddress = testnetId;
+                     }
+                     
+                     if (!newAddress) newAddress = evmAddress;
+                     
+                     if (newAddress !== hederaWallet.address) {
+                         console.log('Auto-fixing Hedera Address in VlooDetails:', hederaWallet.address, '->', newAddress);
+                         allWallets[hederaWalletIndex] = { ...hederaWallet, address: newAddress };
+                         await AsyncStorage.setItem(`vloo_wallets_${vloo.id}`, JSON.stringify(allWallets));
+                     }
+                 }
+            }
+        }
 
         // Fetch all_wallets to merge icons
         const { data: allCoins } = await supabase.from('all_wallets').select('*');

@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   menuLabel: {
-    fontFamily: FONTS.textMedium,
+    fontFamily: FONTS.bodySemiBold,
     fontSize: 16,
     color: '#000',
   },
