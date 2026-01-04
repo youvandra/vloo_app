@@ -71,6 +71,23 @@ export const generateMockXrpData = (seed?: string) => {
   return { address, privateKey };
 };
 
+// Mock Hedera Address Generator
+export const generateMockHederaData = (seed?: string) => {
+  // Hedera addresses are typically like 0.0.123456
+  // We will generate the account number part deterministically
+  const accountNum = seed 
+    ? parseInt(getDeterministicString(seed, 6, '0123456789', 'hedera_acc'), 10) 
+    : Math.floor(Math.random() * 900000) + 100000;
+    
+  let address = `0.0.${accountNum}`;
+  
+  // Mock private key (Hex - 64 chars or 96 for ED25519, let's stick to 64 hex for consistency)
+  const hexChars = '0123456789abcdef';
+  let privateKey = getDeterministicString(seed, 64, hexChars, 'hedera_key');
+  
+  return { address, privateKey };
+};
+
 // Mock Monero Address Generator
 export const generateMockMoneroData = (seed?: string) => {
   const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';

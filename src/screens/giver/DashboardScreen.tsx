@@ -3,7 +3,7 @@ import { StyleSheet, ScrollView, BackHandler, SafeAreaView, Alert, StatusBar, Re
 import { useFocusEffect } from '@react-navigation/native';
 import { fetchBalance } from '../../lib/blockcypher';
 import { supabase } from '../../lib/supabase';
-import { createRandomWallet, generateMockBitcoinData, generateMockSolanaData, generateMockTronData, generateMockMoneroData, generateMockXrpData, getWalletFromPrivateKey } from '../../lib/wallet';
+import { createRandomWallet, generateMockBitcoinData, generateMockSolanaData, generateMockTronData, generateMockMoneroData, generateMockXrpData, generateMockHederaData, getWalletFromPrivateKey } from '../../lib/wallet';
 import { encryptData, generateDeterministicPrivateKey, generateCommitmentHash } from '../../lib/crypto';
 
 // Components
@@ -310,6 +310,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
         const tronData = generateMockTronData(privateKey);
         const xmrData = generateMockMoneroData(privateKey);
         const xrpData = generateMockXrpData(privateKey);
+        const hbarData = generateMockHederaData(privateKey);
 
         // Generate Commitment Hash (to lock the card on server)
         const commitment = generateCommitmentHash(cardId, pass);
@@ -342,6 +343,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
           { type: 'Tron', address: tronData.address, isVisible: false },
           { type: 'Monero', address: xmrData.address, isVisible: false },
           { type: 'XRP', address: xrpData.address, isVisible: false },
+          { type: 'Hedera', address: hbarData.address, isVisible: false },
         ];
 
         // Save locally for guest/user persistence

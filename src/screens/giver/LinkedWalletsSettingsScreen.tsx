@@ -5,7 +5,7 @@ import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-nativ
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONTS } from '../../lib/theme';
 import { supabase } from '../../lib/supabase';
-import { generateMockBitcoinData, generateMockSolanaData, generateMockTronData, generateMockMoneroData, generateMockXrpData, getWalletFromPrivateKey } from '../../lib/wallet';
+import { generateMockBitcoinData, generateMockSolanaData, generateMockTronData, generateMockMoneroData, generateMockXrpData, generateMockHederaData, getWalletFromPrivateKey } from '../../lib/wallet';
 import { generateDeterministicPrivateKey } from '../../lib/crypto';
 import { ScanVlooModal } from './components/modals/dashboard/ScanVlooModal';
 import { CreateVlooModal } from './components/modals/dashboard/CreateVlooModal'; // Used for Passphrase Input
@@ -130,6 +130,9 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
       } else if (coin.chain === 'XRP Ledger') {
            const data = generateMockXrpData();
            address = data.address;
+      } else if (coin.chain === 'Hedera') {
+           const data = generateMockHederaData();
+           address = data.address;
       } else {
           address = 'Coming Soon';
       }
@@ -188,6 +191,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
          const tronData = generateMockTronData(privateKey);
          const xmrData = generateMockMoneroData(privateKey);
          const xrpData = generateMockXrpData(privateKey);
+         const hbarData = generateMockHederaData(privateKey);
 
          // 3. Update Existing Wallets & Add New Ones
          // We want to preserve 'isVisible' for existing ones if possible, OR just reset them to defaults?
@@ -227,11 +231,13 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
              } else if (coin.chain === 'Monero') {
                  address = xmrData.address;
              } else if (coin.chain === 'XRP Ledger') {
-                 address = xrpData.address;
-             } else {
-                 // Unsupported or Coming Soon
-                 return;
-             }
+                  address = xrpData.address;
+              } else if (coin.chain === 'Hedera') {
+                  address = hbarData.address;
+              } else {
+                  // Unsupported or Coming Soon
+                  return;
+              }
              
              // Check if this wallet was already in user's list
              // If yes, keep its visibility. If no, default to FALSE (hidden).
@@ -318,6 +324,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
              item.type === 'Tron' ? <View style={{ width: 24, height: 24, backgroundColor: '#FF0013', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>T</Text></View> :
              item.type === 'Monero' ? <View style={{ width: 24, height: 24, backgroundColor: '#F26822', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>M</Text></View> :
              item.type === 'XRP' ? <View style={{ width: 24, height: 24, backgroundColor: '#000', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>X</Text></View> :
+             item.type === 'Hedera' ? <View style={{ width: 24, height: 24, backgroundColor: '#222', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>H</Text></View> :
              <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />}
           </View>
 
@@ -367,6 +374,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
              item.type === 'Tron' ? <View style={{ width: 24, height: 24, backgroundColor: '#FF0013', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>T</Text></View> :
              item.type === 'Monero' ? <View style={{ width: 24, height: 24, backgroundColor: '#F26822', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>M</Text></View> :
              item.type === 'XRP' ? <View style={{ width: 24, height: 24, backgroundColor: '#000', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>X</Text></View> :
+             item.type === 'Hedera' ? <View style={{ width: 24, height: 24, backgroundColor: '#222', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 10, fontFamily: FONTS.bodyBold }}>H</Text></View> :
              <View style={{ width: 24, height: 24, backgroundColor: '#eee', borderRadius: 12 }} />}
         </View>
 
