@@ -47,7 +47,9 @@ export default function SendScreen({ route, navigation }: any) {
       const { data: allCoins } = await supabase.from('all_wallets').select('*');
       
       if (allCoins) {
-        userWallets = userWallets.map(w => {
+        userWallets = userWallets
+            .filter(w => w.isVisible) // Only show visible wallets
+            .map(w => {
             const coin = allCoins.find(c => 
                 c.name === w.type || 
                 (w.type === 'USDT' && c.ticker === 'USDT') ||
@@ -59,6 +61,9 @@ export default function SendScreen({ route, navigation }: any) {
                 coingeckoId: coin?.coingecko_id || w.coingeckoId
             };
         });
+      } else {
+          // If no coin data from DB, just filter visible
+          userWallets = userWallets.filter(w => w.isVisible);
       }
 
       setWallets(userWallets);
