@@ -88,4 +88,21 @@ export const getMneeTxStatus = async (ticketId: string) => {
     }
 };
 
+/**
+ * Get recent transaction history for an address
+ * @param address The wallet address
+ * @returns History object containing address, history array, and nextScore
+ */
+export const getMneeHistory = async (address: string) => {
+    try {
+        console.log(`Fetching MNEE history for ${address}`);
+        const history = await mnee.recentTxHistory(address);
+        console.log('MNEE History:', history);
+        return history;
+    } catch (error) {
+        console.error('Error fetching MNEE history:', error);
+        throw error;
+    }
+};
+
 export default mnee;

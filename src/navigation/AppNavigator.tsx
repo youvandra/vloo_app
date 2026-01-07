@@ -13,6 +13,8 @@ import BuyCardScreen from '../screens/giver/BuyCardScreen';
 import ReceiveScreen from '../screens/giver/ReceiveScreen';
 import SendScreen from '../screens/giver/SendScreen';
 import TransferScreen from '../screens/giver/TransferScreen';
+import HistoryScreen from '../screens/giver/HistoryScreen';
+import HistoryDetailsScreen from '../screens/giver/HistoryDetailsScreen';
 
 const Stack = createStackNavigator();
 
@@ -34,6 +36,8 @@ export default function AppNavigator() {
         <Stack.Screen name="Receive" component={ReceiveScreen} />
         <Stack.Screen name="Send" component={SendScreen} />
         <Stack.Screen name="Transfer" component={TransferScreen} />
+        <Stack.Screen name="History" component={HistoryScreen} />
+        <Stack.Screen name="HistoryDetails" component={HistoryDetailsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

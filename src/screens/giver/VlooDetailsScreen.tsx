@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ScrollView, Alert, ActivityIndicator, Platform, Image } from 'react-native';
-import { ArrowLeft, ArrowDown, ArrowUp, ArrowLeftRight, CreditCard, Settings } from 'lucide-react-native';
+import { ArrowLeft, ArrowDown, ArrowUp, ArrowLeftRight, CreditCard, Settings, History } from 'lucide-react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Skeleton } from '../../components/Skeleton';
@@ -29,7 +29,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   // Detail Modal State
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
-  
+
   const isFocused = useIsFocused();
   
   useEffect(() => {
@@ -295,6 +295,18 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
       }
   };
 
+  const handleHistoryPress = () => {
+    const mneeWallet = wallets.find(w => w.type === 'MNEE' || w.ticker === 'MNEE');
+    if (mneeWallet) {
+        navigation.navigate('History', { 
+            address: mneeWallet.address, 
+            coinType: mneeWallet.ticker || mneeWallet.type || 'MNEE' 
+        });
+    } else {
+        Alert.alert('History', 'Transaction history is currently only available for MNEE wallets.');
+    }
+  };
+
   if (!vloo) return null;
 
   const cardColor = vloo.color || COLORS.primary;
@@ -309,7 +321,9 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
            <ArrowLeft size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Vloo Details</Text>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity onPress={handleHistoryPress} style={styles.iconButton}>
+           <History size={24} color="#000" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.body}>
