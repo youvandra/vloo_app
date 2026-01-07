@@ -49,4 +49,43 @@ export const checkMneeConfig = async () => {
     }
 };
 
+export interface MneeRecipient {
+    address: string;
+    amount: number;
+}
+
+/**
+ * Transfer MNEE to recipients
+ * @param recipients Array of recipients with address and amount
+ * @param wif Sender's WIF key
+ * @returns Transfer response containing ticketId
+ */
+export const transferMnee = async (recipients: MneeRecipient[], wif: string) => {
+    try {
+        console.log('Initiating MNEE transfer...', recipients);
+        const response = await mnee.transfer(recipients, wif);
+        console.log('MNEE Transfer response:', response);
+        return response;
+    } catch (error) {
+        console.error('Error transferring MNEE:', error);
+        throw error;
+    }
+};
+
+/**
+ * Get status of an MNEE transaction
+ * @param ticketId The ticket ID returned from transfer
+ * @returns Transaction status
+ */
+export const getMneeTxStatus = async (ticketId: string) => {
+    try {
+        const status = await mnee.getTxStatus(ticketId);
+        console.log('MNEE Tx Status:', status);
+        return status;
+    } catch (error) {
+        console.error('Error fetching MNEE tx status:', error);
+        throw error;
+    }
+};
+
 export default mnee;

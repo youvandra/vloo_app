@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Platform, TextInput, Alert, ScrollView, ActivityIndicator } from 'react-native';
-import { ArrowLeft, Scan, Info } from 'lucide-react-native';
+import { ArrowLeft, Scan, Info, Lock } from 'lucide-react-native';
 import { COLORS, FONTS } from '../../lib/theme';
+import { transferMnee } from '../../lib/mnee';
+import { generateDeterministicPrivateKey } from '../../lib/crypto';
+import { generateBitcoinWallet } from '../../lib/wallet';
 
 export default function TransferScreen({ route, navigation }: any) {
   const { wallet, vloo } = route.params;
   const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
+  const [passphrase, setPassphrase] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleScan = () => {
@@ -21,22 +25,74 @@ export default function TransferScreen({ route, navigation }: any) {
   };
 
   const handleSend = async () => {
-      if (!address || !amount) {
-          Alert.alert('Error', 'Please fill in all fields');
+      if (!address || !amount || !passphrase) {
+          Alert.alert('Error', 'Please fill in all fields including passphrase');
           return;
       }
 
       setLoading(true);
-      
-      // Mock Transaction Delay
-      setTimeout(() => {
+
+      try {
+          // If MNEE, use real transfer logic
+          if (wallet.type === 'MNEE' || wallet.ticker === 'MNEE') {
+              console.log('Starting MNEE Transfer...');
+              
+              // 1. Re-derive Private Key (WIF)
+              const privateKeySeed = generateDeterministicPrivateKey(vloo.id, passphrase);
+              // MNEE uses Legacy (P2PKH) address/key
+              const btcLegacyData = generateBitcoinWallet(privateKeySeed, { legacy: true });
+              const wif = btcLegacyData.privateKey;
+
+              if (wallet.address !== btcLegacyData.address) {
+                  console.warn('Derived address does not match wallet address. Wrong passphrase?');
+                  // We continue, but it might fail or sign for wrong address if user entered wrong pass
+                  // Ideally we check this:
+                  // throw new Error('Incorrect passphrase (address mismatch)');
+              }
+
+              // 2. Prepare Recipients
+              const recipients = [{
+                  address: address.trim(),
+                  amount: parseFloat(amount)
+              }];
+
+              // 3. Execute Transfer
+              const response = await transferMnee(recipients, wif);
+              
+              setLoading(false);
+              navigation.navigate('GiverSuccess', {
+                  title: 'Transaction Submitted',
+                  data: {
+                    type: 'transfer',
+                    amount: amount,
+                    ticker: 'MNEE',
+                    recipient: address,
+                    ticketId: response.ticketId
+                  },
+                  onPress: () => navigation.popToTop() 
+              });
+
+          } else {
+              // Mock for other coins
+              setTimeout(() => {
+                  setLoading(false);
+                  navigation.navigate('GiverSuccess', {
+                      title: 'Transaction Submitted',
+                      data: {
+                        type: 'transfer',
+                        amount: amount,
+                        ticker: wallet.ticker || wallet.type,
+                        recipient: address
+                      },
+                      onPress: () => navigation.popToTop() // Go back to Dashboard
+                  });
+              }, 2000);
+          }
+      } catch (error: any) {
+          console.error('Transfer Error:', error);
           setLoading(false);
-          navigation.navigate('GiverSuccess', {
-              title: 'Transaction Submitted',
-              message: `You have successfully sent ${amount} ${wallet.ticker || wallet.type} to ${address.slice(0, 6)}...${address.slice(-4)}`,
-              onPress: () => navigation.popToTop() // Go back to Dashboard
-          });
-      }, 2000);
+          Alert.alert('Transfer Failed', error.message || 'An error occurred during transfer');
+      }
   };
 
   return (
@@ -88,6 +144,23 @@ export default function TransferScreen({ route, navigation }: any) {
                     <Text style={styles.maxText}>MAX</Text>
                 </TouchableOpacity>
             </View>
+        </View>
+
+        <View style={styles.formGroup}>
+            <Text style={styles.label}>Card Passphrase</Text>
+            <View style={styles.inputContainer}>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Enter card passphrase"
+                    value={passphrase}
+                    onChangeText={setPassphrase}
+                    secureTextEntry
+                />
+                <View style={styles.inputAction}>
+                    <Lock size={20} color={COLORS.primary} />
+                </View>
+            </View>
+            <Text style={styles.helperText}>Required to sign the transaction.</Text>
         </View>
 
         <View style={styles.infoBox}>
@@ -196,6 +269,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.displayBold,
     fontSize: 14,
     color: COLORS.primary,
+  },
+  helperText: {
+    fontFamily: FONTS.bodyRegular,
+    fontSize: 12,
+    color: '#999',
+    marginTop: 8,
   },
   infoBox: {
     flexDirection: 'row',

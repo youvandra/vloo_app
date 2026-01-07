@@ -14,6 +14,7 @@ import PolygonIcon from '../../assets/icons/chains/polygon.svg';
 import BnbIcon from '../../assets/icons/chains/bnb.svg';
 import LiskIcon from '../../assets/icons/chains/lisk.svg';
 import UsdtIcon from '../../assets/icons/chains/usdt.svg';
+import MneeIcon from '../../assets/icons/chains/mnee.svg';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 48; // 24px padding on each side
@@ -94,6 +95,7 @@ export default function ReceiveScreen({ route, navigation }: any) {
         case 'bnb': return <BnbIcon {...iconProps} />;
         case 'lisk': return <LiskIcon {...iconProps} />;
         case 'usdt': return <UsdtIcon {...iconProps} />;
+        case 'mnee': return <MneeIcon {...iconProps} />;
         case 'tron': return <View style={[styles.customIcon, { backgroundColor: '#FF0013' }]}><Text style={styles.customIconText}>T</Text></View>;
         case 'monero': return <View style={[styles.customIcon, { backgroundColor: '#F26822' }]}><Text style={styles.customIconText}>M</Text></View>;
         case 'xrp': return <View style={[styles.customIcon, { backgroundColor: '#000' }]}><Text style={styles.customIconText}>X</Text></View>;
