@@ -89,23 +89,44 @@ export default function SendScreen({ route, navigation }: any) {
 
       // Fetch Prices
       const uniqueIds = new Set<string>();
+      let fetchMnee = false;
+
       walletsToFetch.forEach(w => {
           if (w.coingeckoId) {
               uniqueIds.add(w.coingeckoId);
           } else {
               const id = getCoinIdFromType(w.type);
-              if (id) uniqueIds.add(id);
+              if (id === 'mnee') {
+                  fetchMnee = true;
+              } else if (id) {
+                  uniqueIds.add(id);
+              }
           }
       });
+
+      const curr = currency.toLowerCase();
+
+      // Fetch MNEE
+      if (fetchMnee) {
+          try {
+              const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf&vs_currencies=${curr}`);
+              const data = await response.json();
+              const priceData = data['0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf'];
+              if (priceData) {
+                  setPrices((prev: any) => ({ ...prev, 'mnee': priceData }));
+              }
+          } catch (e) {
+              console.error('Error fetching MNEE price:', e);
+          }
+      }
 
       if (uniqueIds.size > 0) {
           const ids = Array.from(uniqueIds).join(',');
           try {
-              const curr = currency.toLowerCase(); // This might be stale if used immediately, but effect will re-trigger if currency changes
               // Using hardcoded 'usd,idr' to get both for now to simplify
               const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,idr`);
               const data = await response.json();
-              setPrices(data);
+              setPrices((prev: any) => ({ ...prev, ...data }));
           } catch (e) {
               console.error('Error fetching prices:', e);
           }
@@ -122,6 +143,7 @@ export default function SendScreen({ route, navigation }: any) {
     if (lower.includes('bnb')) return 'binancecoin';
     if (lower.includes('lisk')) return 'lisk';
     if (lower.includes('hedera') || lower.includes('hbar')) return 'hedera-hashgraph';
+    if (lower.includes('mnee')) return 'mnee';
     return '';
   };
 

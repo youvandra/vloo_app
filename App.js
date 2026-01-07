@@ -2,6 +2,8 @@
 import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values';
+import { Buffer } from 'buffer';
+global.Buffer = Buffer;
 import '@ethersproject/shims';
 import 'react-native-url-polyfill/auto';
 import React, { useEffect, useCallback } from 'react';

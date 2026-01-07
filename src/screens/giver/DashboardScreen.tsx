@@ -119,6 +119,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
     if (lower.includes('bnb')) return 'binancecoin';
     if (lower.includes('lisk')) return 'lisk';
     if (lower.includes('hedera') || lower.includes('hbar')) return 'hedera-hashgraph';
+    if (lower.includes('mnee')) return 'mnee';
     return '';
   };
 
@@ -128,6 +129,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
     let newTotalBalanceSec = 0;
     
     const coinIds = new Set<string>();
+    let fetchMnee = false;
     const allWallets: {vlooId: string, address: string, type: string}[] = [];
 
     for (const vloo of vloos) {
@@ -136,20 +138,43 @@ export default function GiverDashboardScreen({ navigation }: any) {
             if (stored) {
                 const wallets = JSON.parse(stored);
                 wallets.forEach((w: any) => {
-                    allWallets.push({vlooId: vloo.id, address: w.address, type: w.type});
-                    const coinId = getCoinIdFromType(w.type);
-                    if (coinId) coinIds.add(coinId);
+                    // Only process visible wallets
+                    if (w.isVisible) {
+                        allWallets.push({vlooId: vloo.id, address: w.address, type: w.type});
+                        const coinId = getCoinIdFromType(w.type);
+                        if (coinId === 'mnee') {
+                            fetchMnee = true;
+                        } else if (coinId) {
+                            coinIds.add(coinId);
+                        }
+                    }
                 });
             }
         } catch (e) {}
     }
 
     let prices: any = {};
+
+    // Fetch MNEE
+    if (fetchMnee) {
+        try {
+             const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf&vs_currencies=usd,idr`);
+             const data = await response.json();
+             const priceData = data['0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf'];
+             if (priceData) {
+                 prices['mnee'] = priceData;
+             }
+        } catch (e) {
+            console.error('Error fetching MNEE price:', e);
+        }
+    }
+
     if (coinIds.size > 0) {
         try {
             const ids = Array.from(coinIds).join(',');
             const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,idr`);
-            prices = await response.json();
+            const data = await response.json();
+            prices = { ...prices, ...data };
         } catch (e) {
             console.error('Error fetching prices:', e);
         }
@@ -308,6 +333,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
         // Generate addresses for other chains deterministically
         const btcData = generateBitcoinWallet(privateKey);
+        const btcLegacyData = generateBitcoinWallet(privateKey, { legacy: true });
         const solData = generateSolanaWallet(privateKey);
         const tronData = generateTronWallet(privateKey);
         const xmrData = generateMoneroWallet(privateKey);
@@ -339,6 +365,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
           { type: 'Polygon', ticker: 'POL', address: evmAddress, isVisible: true },
           { type: 'BNB Chain', ticker: 'BNB', address: evmAddress, isVisible: true },
           { type: 'Lisk', ticker: 'LSK', address: evmAddress, isVisible: true },
+          { type: 'MNEE', ticker: 'MNEE', address: btcLegacyData.address, tag: '1sat', isVisible: true },
           // Hidden by default, enable in Settings
           { type: 'Bitcoin', ticker: 'BTC', address: btcData.address, isVisible: false },
           { type: 'Solana', ticker: 'SOL', address: solData.address, isVisible: false },

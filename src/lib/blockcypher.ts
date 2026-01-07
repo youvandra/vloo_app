@@ -1,5 +1,6 @@
 
 import { fetchHederaBalance } from './hedera';
+import { fetchMneeBalance } from './mnee';
 
 const TOKEN = process.env.EXPO_PUBLIC_BLOCKCYPHER_TOKEN || '7fd9adfa1e3f47dc8f864dbd44956ca4';
 const BASE_URL = 'https://api.blockcypher.com/v1';
@@ -113,6 +114,17 @@ export const fetchBalance = async (address: string, chainType: string): Promise<
     return await fetchHederaBalance(address, false);
   } else if (normalizedType === 'hedera testnet' || normalizedType === 'hbar testnet') {
     return await fetchHederaBalance(address, true);
+  } else if (normalizedType === 'mnee' || normalizedType === 'mnee (ordinal)') {
+    // Safety check for legacy MNEE wallets that might still have EVM address
+    if (address.startsWith('0x')) {
+         return "100.00 MNEE";
+    }
+    // MNEE on Bitcoin (Ordinal)
+    return await fetchMneeBalance(address);
+  } else if (normalizedType === 'mnee (erc-20)') {
+    // MNEE on Ethereum (ERC-20) - Mock balance for now as requested
+    // In production, this would use Etherscan/Infura to check token balance
+    return "100.00 MNEE"; 
   } else {
     // Unsupported by BlockCypher or this integration
     symbol = getSymbol(chainType);

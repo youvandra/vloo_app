@@ -91,6 +91,58 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
           }
       }
 
+      // FIX: Check for stale MNEE addresses (EVM) and replace with Bitcoin address ONLY for MNEE (Ordinal)
+      const mneeOrdinalIndex = userWallets.findIndex((w: any) => w.type === 'MNEE (Ordinal)' || (w.type !== 'MNEE (ERC-20)' && w.ticker === 'MNEE' && w.tag === '1sat'));
+      if (mneeOrdinalIndex !== -1) {
+          const mneeWallet = userWallets[mneeOrdinalIndex];
+          // Check if it looks like an EVM address (starts with 0x) OR is SegWit (starts with bc1)
+          // MNEE Ordinals MUST be P2PKH (starts with 1)
+          if (mneeWallet.address && (mneeWallet.address.startsWith('0x') || mneeWallet.address.startsWith('bc1') || mneeWallet.address.startsWith('3'))) {
+             // We need to regenerate the legacy BTC address from the same private key context
+             // But here we might not have the private key readily available if we are just loading wallets
+             // Ideally this fix should happen during "Refresh/Sync".
+             // However, if we can access the btc wallet that MIGHT be legacy? No, usually BTC wallet is SegWit.
+             
+             // If we are here, it means the user has an incorrect address format.
+             // We can't easily fix it without the private key unless we trigger a sync.
+             // But wait, if we are in this component, we might have just synced?
+             // No, this is inside `loadWallets`.
+             
+             // Best effort: If we have a Bitcoin wallet in the list, check if it happens to be legacy? 
+             // Unlikely as default is SegWit.
+             
+             // If we cannot fix it here without private key, we should rely on the `handlePassphraseSubmit` (Sync) logic 
+             // which I already updated to use `btcLegacyData`.
+             
+             // So, the user MUST "Refresh" to fix this.
+             // But let's leave a log or maybe prompt?
+             console.log('MNEE (Ordinal) address format incorrect (should be Legacy P2PKH starting with 1). User needs to Refresh/Sync.');
+          }
+      }
+
+      // FIX: Check for MNEE (ERC-20) that might have been incorrectly set to Bitcoin/1sat
+      const mneeErc20Index = userWallets.findIndex((w: any) => w.type === 'MNEE (ERC-20)');
+      if (mneeErc20Index !== -1) {
+          const mneeWallet = userWallets[mneeErc20Index];
+          // If it has a non-EVM address or wrong tag
+          if (!mneeWallet.address.startsWith('0x') || mneeWallet.tag === '1sat') {
+              const evmWallet = userWallets.find((w: any) => w.type === 'Ethereum');
+              const evmAddress = evmWallet?.address;
+              
+              if (evmAddress) {
+                 console.log('Fixing MNEE (ERC-20) Address/Tag:', mneeWallet.address, '->', evmAddress);
+                 userWallets[mneeErc20Index] = { 
+                     ...mneeWallet, 
+                     address: evmAddress,
+                     tag: 'ERC-20' 
+                 };
+                 // Update storage immediately
+                 await AsyncStorage.setItem(`vloo_wallets_${vloo.id}`, JSON.stringify(userWallets));
+                 setWallets([...userWallets]);
+              }
+          }
+      }
+
       // 2. Fetch All Available Coins from DB
       const { data: allCoins, error } = await supabase
         .from('all_wallets')
@@ -192,7 +244,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
   const handleAddCoin = async (coin: any) => {
       // Logic to generate address for the new coin
       let address = '';
-      let tag = coin.is_token ? 'ERC-20' : undefined; // Defaulting to ERC-20 for tokens for now
+      let tag = coin.ticker === 'MNEE' ? '1sat' : (coin.is_token ? 'ERC-20' : undefined); // Defaulting to ERC-20 for tokens for now
 
       // 1. Check if it's an EVM chain or token -> reuse existing EVM address
       const evmWallet = wallets.find(w => 
@@ -209,7 +261,8 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
           }
       } else if (coin.chain === 'Bitcoin') {
           // Fallback to random if no private key context (user should use Refresh button)
-          const data = generateBitcoinWallet();
+          const isMnee = coin.ticker === 'MNEE';
+          const data = generateBitcoinWallet(undefined, { legacy: isMnee });
           address = data.address;
       } else if (coin.chain === 'Solana') {
            const data = generateSolanaWallet();
@@ -283,6 +336,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
          const evmWallet = getWalletFromPrivateKey(privateKey);
          const evmAddress = evmWallet.address;
          const btcData = generateBitcoinWallet(privateKey);
+         const btcLegacyData = generateBitcoinWallet(privateKey, { legacy: true });
          const solData = generateSolanaWallet(privateKey);
          const tronData = generateTronWallet(privateKey);
          const xmrData = generateMoneroWallet(privateKey);
@@ -302,7 +356,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
          }
 
          const newWalletsList: any[] = [];
-         
+
          // Helper to find existing visibility preference
          const getExistingVisibility = (type: string) => {
              const found = wallets.find(w => w.type === type);
@@ -316,7 +370,10 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
              let type = coin.ticker === 'USDT' ? 'USDT' : coin.name;
              
              // Determine Address
-             if (['Ethereum', 'Polygon', 'BNB Chain', 'Lisk', 'Base'].includes(coin.chain) || coin.is_token) {
+             if (coin.ticker === 'MNEE' && coin.chain === 'Bitcoin') {
+                 // MNEE (Ordinal) must use Legacy P2PKH address (starts with 1)
+                 address = btcLegacyData.address;
+             } else if (['Ethereum', 'Polygon', 'BNB Chain', 'Lisk', 'Base'].includes(coin.chain) || coin.is_token) {
                  address = evmAddress;
              } else if (coin.chain === 'Bitcoin') {
                  address = btcData.address;
@@ -356,7 +413,7 @@ export default function LinkedWalletsSettingsScreen({ route, navigation }: any) 
                  type: type,
                  address: address,
                  isVisible: isVisible,
-                 tag: coin.is_token ? 'ERC-20' : undefined,
+                 tag: (coin.ticker === 'MNEE' && coin.chain === 'Bitcoin') ? '1sat' : (coin.is_token ? 'ERC-20' : undefined),
                  ticker: coin.ticker,
                  coingeckoId: coin.coingecko_id,
                  icon: coin.icon

@@ -38,8 +38,8 @@ export const getWalletFromPrivateKey = (privateKey: string) => {
 
 // --- Real Wallet Generators ---
 
-// Bitcoin (SegWit p2wpkh)
-export const generateBitcoinWallet = (seed?: string) => {
+// Bitcoin (SegWit p2wpkh or Legacy p2pkh)
+export const generateBitcoinWallet = (seed?: string, options?: { legacy?: boolean }) => {
   const network = Bitcoin.networks.bitcoin;
   let keyPair;
   
@@ -50,7 +50,17 @@ export const generateBitcoinWallet = (seed?: string) => {
       keyPair = ECPair.makeRandom({ network });
   }
 
-  const { address } = Bitcoin.payments.p2wpkh({ pubkey: keyPair.publicKey, network });
+  let address;
+  if (options?.legacy) {
+      // P2PKH (Legacy) - Starts with 1
+      const p2pkh = Bitcoin.payments.p2pkh({ pubkey: keyPair.publicKey, network });
+      address = p2pkh.address;
+  } else {
+      // P2WPKH (Native SegWit) - Starts with bc1
+      const p2wpkh = Bitcoin.payments.p2wpkh({ pubkey: keyPair.publicKey, network });
+      address = p2wpkh.address;
+  }
+
   const privateKey = keyPair.toWIF();
   
   return { address: address || '', privateKey };

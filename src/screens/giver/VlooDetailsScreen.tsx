@@ -78,6 +78,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
     if (lower.includes('bnb')) return 'binancecoin';
     if (lower.includes('lisk')) return 'lisk';
     if (lower.includes('hedera') || lower.includes('hbar')) return 'hedera-hashgraph';
+    if (lower.includes('mnee')) return 'mnee';
     return '';
   };
 
@@ -85,6 +86,17 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
     try {
       const curr = currency.toLowerCase();
       console.log(`Fetching price for: ${coinId} in ${curr}`);
+
+      if (coinId === 'mnee') {
+          const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf&vs_currencies=${curr}`);
+          const data = await response.json();
+          const priceData = data['0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf'];
+          if (priceData) {
+              setPrices((prev: any) => ({ ...prev, 'mnee': priceData }));
+          }
+          return;
+      }
+
       const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=${curr}`);
       const data = await response.json();
       console.log(`Price for ${coinId}:`, data);
@@ -187,6 +199,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
       if (s === 'LSK') return 'lisk';
       if (s === 'USDT') return 'tether';
       if (s === 'HBAR') return 'hedera-hashgraph';
+      if (s === 'MNEE') return 'mnee';
       return '';
   };
   
@@ -209,6 +222,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
               else if (type.includes('lisk')) symbol = 'LSK';
               else if (type.includes('usdt')) symbol = 'USDT';
               else if (type.includes('hedera') || type.includes('hbar')) symbol = 'HBAR';
+              else if (type.includes('mnee')) symbol = 'MNEE';
           }
           
           priceId = getPriceId(symbol || '');
@@ -238,6 +252,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
                  else if (type.includes('lisk')) symbol = 'LSK';
                  else if (type.includes('usdt')) symbol = 'USDT';
                  else if (type.includes('hedera') || type.includes('hbar')) symbol = 'HBAR';
+                 else if (type.includes('mnee')) symbol = 'MNEE';
                  
                  if (!amountStr) amountStr = '0.00';
              }
