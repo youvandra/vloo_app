@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     width: '40%',
   },
   txStatus: {
-    fontFamily: FONTS.bodyMedium,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 12,
     color: '#666',
     textTransform: 'capitalize',
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   emptyText: {
-    fontFamily: FONTS.bodyMedium,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 16,
     color: '#999',
     marginTop: 16,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   unsupportedText: {
-    fontFamily: FONTS.bodyMedium,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 16,
     color: '#666',
   },

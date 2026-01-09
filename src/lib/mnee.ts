@@ -1,7 +1,7 @@
 import Mnee from '@mnee/ts-sdk';
 
 // TODO: Move API Key to environment variables
-const MNEE_API_KEY = process.env.EXPO_PUBLIC_MNEE_API_KEY || '9ab1ca00af991b1745fb8f21e4a480f1';
+const MNEE_API_KEY = process.env.EXPO_PUBLIC_MNEE_API_KEY || '658c12a9d4b9580f419a620e36b8dcaf';
 const MNEE_ENV = (process.env.EXPO_PUBLIC_MNEE_ENV as 'sandbox' | 'production') || 'sandbox';
 
 const config = {
@@ -62,12 +62,26 @@ export interface MneeRecipient {
  */
 export const transferMnee = async (recipients: MneeRecipient[], wif: string) => {
     try {
-        console.log('Initiating MNEE transfer...', recipients);
+        console.log('Initiating MNEE transfer...');
+        console.log('Recipients:', JSON.stringify(recipients, null, 2));
+        
+        // Validate amounts
+        recipients.forEach((r, index) => {
+            if (typeof r.amount !== 'number' || r.amount <= 0) {
+                console.error(`Invalid amount for recipient ${index}:`, r.amount);
+            }
+        });
+
         const response = await mnee.transfer(recipients, wif);
         console.log('MNEE Transfer response:', response);
         return response;
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error transferring MNEE:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        if (error.response) {
+            console.error('Error response status:', error.response.status);
+            console.error('Error response data:', JSON.stringify(error.response.data, null, 2));
+        }
         throw error;
     }
 };

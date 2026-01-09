@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   label: {
-    fontFamily: FONTS.bodyMedium,
+    fontFamily: FONTS.bodyRegular,
     fontSize: 14,
     color: '#666',
     marginBottom: 4,
