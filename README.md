@@ -1,17 +1,56 @@
-# Vloo MVP App
+# VLOO — Card-Based Wallet & Gifting App for Everyday MNEE Payments
 
-Vloo is a multi-chain wallet and gifting application built with React Native and Expo. It allows users to manage digital assets, create "Vloos" (digital gift cards/wallets), and transfer funds across various blockchain networks including Bitcoin, Ethereum, Solana, and the MNEE network.
+## Project Overview
 
-## 🚀 Features
+VLOO is a **multi-chain, non-custodial wallet and gifting application** designed to make crypto usable for everyday payments by non-crypto users.
 
-- **Multi-Chain Support**: Manage wallets for Bitcoin, Ethereum, Solana, Polygon, BSC, and more.
-- **MNEE Integration**: Specialized support for MNEE token transfers and history.
-- **Vloo Gifting**: Create and manage digital gift cards ("Vloos").
-- **Transfer & Scheduling**:
-  - Direct transfers to single or multiple recipients.
-  - **Scheduled Transfers**: Schedule MNEE transfers for a future date/time.
-- **Secure Architecture**: Uses deterministic private key generation and secure storage.
-- **Modern UI**: Built with a clean, responsive design using custom themes and Lucide icons.
+While most crypto wallets focus on asset storage, trading, or DeFi, VLOO focuses on **real-world usage**:
+- daily payments
+- salary distribution
+- gifting
+- scheduled transfers
+- trustless value transfer without custodians
+
+VLOO combines:
+- a **mobile wallet application** (React Native / Expo)
+- **deterministic wallet generation**
+- **MNEE as the primary payment asset**
+- and a future-ready **card-based access model**
+
+The result is a crypto wallet that feels closer to a **digital payment app** than a traditional blockchain wallet.
+
+---
+
+## Purpose
+
+The biggest barrier to crypto adoption is not blockchain scalability or cryptography — it is **usability**.
+
+In emerging markets, most users interact with crypto only through:
+- centralized exchanges
+- speculative trading
+- passive holding
+
+Crypto rarely functions as an **everyday payment tool**, even though it was designed for trustless peer-to-peer transactions.
+
+This happens because of two structural problems:
+
+### 1. Most crypto assets are unsuitable for daily payments
+Popular assets like Bitcoin and Ethereum are:
+- volatile
+- dependent on gas fees
+- slow or unpredictable in settlement
+- impractical for small, frequent transactions
+
+### 2. Wallet UX is hostile to non-crypto users
+Non-technical users are blocked by:
+- 12/24-word seed phrases
+- private key management
+- manual backups
+- irreversible loss due to simple mistakes
+
+For most people, this complexity is a deal-breaker.
+
+---
 
 ## 🛠 Tech Stack
 
