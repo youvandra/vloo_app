@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback, PanResponder, TextInput, Platform, StyleSheet, KeyboardAvoidingView, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { X, ArrowLeft, ScanLine, Keyboard } from 'lucide-react-native';
-// import NfcManager, { NfcTech } from 'react-native-nfc-manager';
+import NfcManager, { NfcTech } from 'react-native-nfc-manager';
 import { COLORS, FONTS as THEME_FONTS } from '../../../../../lib/theme';
 
 // Fallback theme
@@ -49,31 +49,20 @@ export const ScanVlooModal = ({
   ).current;
 
   useEffect(() => {
-    // const initNfc = async () => {
-    //   const supported = await NfcManager.isSupported();
-    //   if (supported) {
-    //     await NfcManager.start();
-    //   }
-    // };
-    // initNfc();
+    const initNfc = async () => {
+      const supported = await NfcManager.isSupported();
+      if (supported) {
+        await NfcManager.start();
+      }
+    };
+    initNfc();
 
-    // return () => {
-    //   NfcManager.cancelTechnologyRequest().catch(() => 0);
-    // };
+    return () => {
+      NfcManager.cancelTechnologyRequest().catch(() => 0);
+    };
   }, []);
 
   const handleScan = async () => {
-    // Simulation for Expo Go
-    console.log('Simulating NFC Scan...');
-    
-    setTimeout(() => {
-        // Simulate finding a tag
-        const simulatedTagId = 'VLOO-SIM-1234'; // Simulated ID
-        onBind(simulatedTagId);
-        Alert.alert('Scan Simulated', `Simulated NFC Tag Found: ${simulatedTagId}`);
-    }, 2000);
-
-    /*
     try {
       await NfcManager.requestTechnology(NfcTech.NfcA);
       const tag = await NfcManager.getTag();
@@ -88,7 +77,6 @@ export const ScanVlooModal = ({
     } finally {
       NfcManager.cancelTechnologyRequest().catch(() => 0);
     }
-    */
   };
 
   const handleManualSubmit = () => {

@@ -67,7 +67,7 @@ export default function HomeScreen({ navigation }: any) {
                 <Text style={styles.headlineHighlight}>Crypto Access.</Text>
               </Text>
               <Text style={styles.subheadline}>
-                The easiest way to manage, send, and receive digital assets with a single scan.
+                A simple way to manage your crypto wallet for daily payments
               </Text>
             </View>
           </View>
