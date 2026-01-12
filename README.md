@@ -138,6 +138,10 @@ npm start
 - Press `w` to run on Web.
 - Scan the QR code with the **Expo Go** app on your physical device.
 
+## Judges Test
+ID: 2
+Passphrase: 2
+
 ## 🗓 Scheduled Transfers
 
 The app supports scheduling MNEE transfers. This feature allows users to:
