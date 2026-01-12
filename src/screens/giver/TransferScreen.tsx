@@ -299,7 +299,7 @@ export default function TransferScreen({ route, navigation }: any) {
                             style={styles.input}
                             placeholder="0.00"
                             value={recipient.amount}
-                            onChangeText={(text) => updateRecipient(index, 'amount', text)}
+                            onChangeText={(text) => updateRecipient(index, 'amount', text.replace(',', '.'))}
                             keyboardType="numeric"
                         />
                         <TouchableOpacity onPress={() => handleMax(index)} style={styles.inputAction}>

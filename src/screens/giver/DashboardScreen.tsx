@@ -15,6 +15,7 @@ import { ScanVlooModal } from './components/modals/dashboard/ScanVlooModal';
 
 import { MoreScreen } from './MoreScreen';
 import { SettingsScreen } from './SettingsScreen';
+import { usePrices } from '../../context/PriceContext';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Skeleton } from '../../components/Skeleton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -38,6 +39,7 @@ const getWalletAddresses = (data: any) => {
 };
 
 export default function GiverDashboardScreen({ navigation }: any) {
+  const { prices, refreshPrices } = usePrices();
   const [vloos, setVloos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -128,8 +130,6 @@ export default function GiverDashboardScreen({ navigation }: any) {
     let newTotalBalance = 0;
     let newTotalBalanceSec = 0;
     
-    const coinIds = new Set<string>();
-    let fetchMnee = false;
     const allWallets: {vlooId: string, address: string, type: string}[] = [];
 
     for (const vloo of vloos) {
@@ -141,43 +141,10 @@ export default function GiverDashboardScreen({ navigation }: any) {
                     // Only process visible wallets
                     if (w.isVisible) {
                         allWallets.push({vlooId: vloo.id, address: w.address, type: w.type});
-                        const coinId = getCoinIdFromType(w.type);
-                        if (coinId === 'mnee') {
-                            fetchMnee = true;
-                        } else if (coinId) {
-                            coinIds.add(coinId);
-                        }
                     }
                 });
             }
         } catch (e) {}
-    }
-
-    let prices: any = {};
-
-    // Fetch MNEE
-    if (fetchMnee) {
-        try {
-             const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf&vs_currencies=usd,idr`);
-             const data = await response.json();
-             const priceData = data['0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf'];
-             if (priceData) {
-                 prices['mnee'] = priceData;
-             }
-        } catch (e) {
-            console.error('Error fetching MNEE price:', e);
-        }
-    }
-
-    if (coinIds.size > 0) {
-        try {
-            const ids = Array.from(coinIds).join(',');
-            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,idr`);
-            const data = await response.json();
-            prices = { ...prices, ...data };
-        } catch (e) {
-            console.error('Error fetching prices:', e);
-        }
     }
     
     // Process wallets in parallel to speed up
@@ -453,6 +420,7 @@ export default function GiverDashboardScreen({ navigation }: any) {
 
   const onRefresh = () => {
     setRefreshing(true);
+    refreshPrices();
     fetchVloos();
   };
 

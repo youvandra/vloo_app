@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ScrollView, Alert, ActivityIndicator, Platform, Image } from 'react-native';
 import { ArrowLeft, ArrowDown, ArrowUp, ArrowLeftRight, CreditCard, Settings, History } from 'lucide-react-native';
 import { useIsFocused } from '@react-navigation/native';
+import { usePrices } from '../../context/PriceContext';
 import { COLORS, FONTS } from '../../lib/theme';
 import { Skeleton } from '../../components/Skeleton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -22,7 +23,7 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
   const { vloo } = route.params;
   const [wallets, setWallets] = useState<any[]>([]);
   const [hasAnyWallets, setHasAnyWallets] = useState(false);
-  const [prices, setPrices] = useState<any>({});
+  const { prices } = usePrices();
   const [walletBalances, setWalletBalances] = useState<{[key: string]: string}>({});
   const [currency, setCurrency] = useState<'IDR' | 'USD'>('IDR');
   
@@ -52,60 +53,8 @@ export default function VlooDetailsScreen({ route, navigation }: any) {
         const key = `${w.type}_${w.address}`;
         setWalletBalances(prev => ({...prev, [key]: bal}));
       });
-
-      // Fetch Prices separately for each coin type found
-      const uniqueIds = new Set<string>();
-      wallets.forEach(w => {
-          if (w.coingeckoId) {
-              uniqueIds.add(w.coingeckoId);
-          } else {
-              const id = getCoinIdFromType(w.type);
-              if (id) uniqueIds.add(id);
-          }
-      });
-
-      uniqueIds.forEach(id => fetchCoinPrice(id));
     }
-  }, [wallets, currency]); // Add currency dependency to refetch if it changes
-
-  const getCoinIdFromType = (type: string) => {
-    if (!type) return '';
-    const lower = type.toLowerCase();
-    if (lower.includes('bitcoin')) return 'bitcoin';
-    if (lower.includes('ethereum')) return 'ethereum';
-    if (lower.includes('solana')) return 'solana';
-    if (lower.includes('polygon') || lower.includes('matic')) return 'matic-network';
-    if (lower.includes('bnb')) return 'binancecoin';
-    if (lower.includes('lisk')) return 'lisk';
-    if (lower.includes('hedera') || lower.includes('hbar')) return 'hedera-hashgraph';
-    if (lower.includes('mnee')) return 'mnee';
-    return '';
-  };
-
-  const fetchCoinPrice = async (coinId: string) => {
-    try {
-      const curr = currency.toLowerCase();
-      console.log(`Fetching price for: ${coinId} in ${curr}`);
-
-      if (coinId === 'mnee') {
-          const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf&vs_currencies=${curr}`);
-          const data = await response.json();
-          const priceData = data['0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf'];
-          if (priceData) {
-              setPrices((prev: any) => ({ ...prev, 'mnee': priceData }));
-          }
-          return;
-      }
-
-      const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=${curr}`);
-      const data = await response.json();
-      console.log(`Price for ${coinId}:`, data);
-      setPrices((prev: any) => ({ ...prev, ...data }));
-    } catch (e) {
-      console.error(`Error fetching price for ${coinId}:`, e);
-    }
-  };
-
+  }, [wallets]); // Add currency dependency to refetch if it changes
 
   const loadWallets = async () => {
     try {

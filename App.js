@@ -24,6 +24,7 @@ import {
 } from '@expo-google-fonts/be-vietnam-pro';
 
 import AppNavigator from './src/navigation/AppNavigator';
+import { PriceProvider } from './src/context/PriceContext';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -50,10 +51,12 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider onLayout={onLayoutRootView}>
-        <StatusBar style="dark" />
-        <AppNavigator />
-      </SafeAreaProvider>
+      <PriceProvider>
+        <SafeAreaProvider onLayout={onLayoutRootView}>
+          <StatusBar style="dark" />
+          <AppNavigator />
+        </SafeAreaProvider>
+      </PriceProvider>
     </GestureHandlerRootView>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, Platform, Alert, Image, Dimensions, FlatList, ActivityIndicator } from 'react-native';
 import { ArrowLeft, Send } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { usePrices } from '../../context/PriceContext';
 import { COLORS, FONTS } from '../../lib/theme';
 import { supabase } from '../../lib/supabase';
 import { fetchBalance } from '../../lib/blockcypher';
@@ -25,7 +26,7 @@ export default function SendScreen({ route, navigation }: any) {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const [currency, setCurrency] = useState<'IDR' | 'USD'>('IDR');
-  const [prices, setPrices] = useState<any>({});
+  const { prices } = usePrices();
 
   useEffect(() => {
     AsyncStorage.getItem('app_currency').then(val => {
@@ -71,7 +72,7 @@ export default function SendScreen({ route, navigation }: any) {
       
       // Fetch balances and prices
       if (userWallets.length > 0) {
-          fetchBalancesAndPrices(userWallets);
+          fetchBalances(userWallets);
       }
     } catch (e) {
       console.error('Error loading wallets:', e);
@@ -81,7 +82,7 @@ export default function SendScreen({ route, navigation }: any) {
     }
   };
 
-  const fetchBalancesAndPrices = async (walletsToFetch: any[]) => {
+  const fetchBalances = async (walletsToFetch: any[]) => {
       // Fetch Balances
       walletsToFetch.forEach(async (w) => {
         try {
@@ -92,51 +93,6 @@ export default function SendScreen({ route, navigation }: any) {
             console.error('Error fetching balance:', e);
         }
       });
-
-      // Fetch Prices
-      const uniqueIds = new Set<string>();
-      let fetchMnee = false;
-
-      walletsToFetch.forEach(w => {
-          if (w.coingeckoId) {
-              uniqueIds.add(w.coingeckoId);
-          } else {
-              const id = getCoinIdFromType(w.type);
-              if (id === 'mnee') {
-                  fetchMnee = true;
-              } else if (id) {
-                  uniqueIds.add(id);
-              }
-          }
-      });
-
-      const curr = currency.toLowerCase();
-
-      // Fetch MNEE
-      if (fetchMnee) {
-          try {
-              const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf&vs_currencies=${curr}`);
-              const data = await response.json();
-              const priceData = data['0x8ccedbae4916b79da7f3f612efb2eb93a2bfd6cf'];
-              if (priceData) {
-                  setPrices((prev: any) => ({ ...prev, 'mnee': priceData }));
-              }
-          } catch (e) {
-              console.error('Error fetching MNEE price:', e);
-          }
-      }
-
-      if (uniqueIds.size > 0) {
-          const ids = Array.from(uniqueIds).join(',');
-          try {
-              // Using hardcoded 'usd,idr' to get both for now to simplify
-              const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,idr`);
-              const data = await response.json();
-              setPrices((prev: any) => ({ ...prev, ...data }));
-          } catch (e) {
-              console.error('Error fetching prices:', e);
-          }
-      }
   };
 
   const getCoinIdFromType = (type: string) => {
