@@ -55,6 +55,7 @@ For most people, this complexity is a deal-breaker.
 ## 🛠 Tech Stack
 
 - **Framework**: [Expo](https://expo.dev/) (React Native)
+- **Thirdparty API**: [Coingecko](https://www.coingecko.com/) (Coingecko)
 - **Language**: TypeScript
 - **Backend / Database**: [Supabase](https://supabase.com/) (PostgreSQL)
 - **Navigation**: React Navigation (Stack)
